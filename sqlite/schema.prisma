@@ -1,20 +1,20 @@
 generator client {
-	provider = "prisma-client-js"
-	output   = "../node_modules/@prisma-sqlite-db"
+   provider = "prisma-client-js"
+   output   = "../node_modules/@prisma-sqlite-db"
 }
 
 datasource db {
-	provider = "sqlite"
-	url      = "file:./user.db"
+   provider = "sqlite"
+   url      = "file:./user.db"
 }
 
 model userData {
-	user       String
-	uid        String
-	mora       Int
-	credit     Int    @default(0)
-	points     Int    @default(0)
-	lastUpdate Int    @default(0)
+   user       String
+   uid        String
+   mora       Int
+   credit     Int    @default(0)
+   points     Int    @default(0)
+   lastUpdate Int    @default(0)
 
-	@@id([user])
+   @@id([user])
 }

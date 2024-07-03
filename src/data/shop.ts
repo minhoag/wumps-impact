@@ -14,11 +14,11 @@ export const ShopView: ShopItem[] = [
 		itemId: 107009,
 		name: 'Fragile Resin',
 		type: 'mora',
-		price: 100000000,
-		quantity: 5,
+		price: 10000000,
+		quantity: 1,
 		image: '<:FragileResin:1257820100325539861>',
 		description:
-			'An item used to restore Original Resin by 60 points.',
+			'An item used to restore Original Resin by 60 points.'
 	},
 	{
 		index: 2,
@@ -29,6 +29,6 @@ export const ShopView: ShopItem[] = [
 		quantity: 7500,
 		image: '',
 		description:
-			'Simple Description to test.',
-	},
-];
+			'Simple Description to test.'
+	}
+]

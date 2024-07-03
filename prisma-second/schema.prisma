@@ -1,0 +1,466 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/@prisma-second-db"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("USER_URL")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_block_data_0 {
+  uid            Int      @default(0)
+  block_id       Int      @default(0)
+  data_version   Int
+  bin_data       Bytes    @db.MediumBlob
+  last_save_time DateTime @default(now()) @db.Timestamp(0)
+
+  @@id([uid, block_id])
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_block_data_1 {
+  uid            Int      @default(0)
+  block_id       Int      @default(0)
+  data_version   Int
+  bin_data       Bytes    @db.MediumBlob
+  last_save_time DateTime @default(now()) @db.Timestamp(0)
+
+  @@id([uid, block_id])
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_block_data_2 {
+  uid            Int      @default(0)
+  block_id       Int      @default(0)
+  data_version   Int
+  bin_data       Bytes    @db.MediumBlob
+  last_save_time DateTime @default(now()) @db.Timestamp(0)
+
+  @@id([uid, block_id])
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_block_data_3 {
+  uid            Int      @default(0)
+  block_id       Int      @default(0)
+  data_version   Int
+  bin_data       Bytes    @db.MediumBlob
+  last_save_time DateTime @default(now()) @db.Timestamp(0)
+
+  @@id([uid, block_id])
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_block_data_4 {
+  uid            Int      @default(0)
+  block_id       Int      @default(0)
+  data_version   Int
+  bin_data       Bytes    @db.MediumBlob
+  last_save_time DateTime @default(now()) @db.Timestamp(0)
+
+  @@id([uid, block_id])
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_block_data_5 {
+  uid            Int      @default(0)
+  block_id       Int      @default(0)
+  data_version   Int
+  bin_data       Bytes    @db.MediumBlob
+  last_save_time DateTime @default(now()) @db.Timestamp(0)
+
+  @@id([uid, block_id])
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_block_data_6 {
+  uid            Int      @default(0)
+  block_id       Int      @default(0)
+  data_version   Int
+  bin_data       Bytes    @db.MediumBlob
+  last_save_time DateTime @default(now()) @db.Timestamp(0)
+
+  @@id([uid, block_id])
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_block_data_7 {
+  uid            Int      @default(0)
+  block_id       Int      @default(0)
+  data_version   Int
+  bin_data       Bytes    @db.MediumBlob
+  last_save_time DateTime @default(now()) @db.Timestamp(0)
+
+  @@id([uid, block_id])
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_block_data_8 {
+  uid            Int      @default(0)
+  block_id       Int      @default(0)
+  data_version   Int
+  bin_data       Bytes    @db.MediumBlob
+  last_save_time DateTime @default(now()) @db.Timestamp(0)
+
+  @@id([uid, block_id])
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_block_data_9 {
+  uid            Int      @default(0)
+  block_id       Int      @default(0)
+  data_version   Int
+  bin_data       Bytes    @db.MediumBlob
+  last_save_time DateTime @default(now()) @db.Timestamp(0)
+
+  @@id([uid, block_id])
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_home_data_0 {
+  uid            Int      @id @default(0)
+  bin_data       Bytes    @db.MediumBlob
+  data_version   Int      @default(0) @db.UnsignedInt
+  block_end_time DateTime @default(dbgenerated("'1970-01-01 00:00:00'")) @db.DateTime(0)
+  last_save_time DateTime @default(now()) @db.Timestamp(0)
+  is_delete      Boolean  @default(false)
+  reserved_1     Int      @default(0) @db.UnsignedInt
+  reserved_2     Int      @default(0) @db.UnsignedInt
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_home_data_1 {
+  uid            Int      @id @default(0)
+  bin_data       Bytes    @db.MediumBlob
+  data_version   Int      @default(0) @db.UnsignedInt
+  block_end_time DateTime @default(dbgenerated("'1970-01-01 00:00:00'")) @db.DateTime(0)
+  last_save_time DateTime @default(now()) @db.Timestamp(0)
+  is_delete      Boolean  @default(false)
+  reserved_1     Int      @default(0) @db.UnsignedInt
+  reserved_2     Int      @default(0) @db.UnsignedInt
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_home_data_2 {
+  uid            Int      @id @default(0)
+  bin_data       Bytes    @db.MediumBlob
+  data_version   Int      @default(0) @db.UnsignedInt
+  block_end_time DateTime @default(dbgenerated("'1970-01-01 00:00:00'")) @db.DateTime(0)
+  last_save_time DateTime @default(now()) @db.Timestamp(0)
+  is_delete      Boolean  @default(false)
+  reserved_1     Int      @default(0) @db.UnsignedInt
+  reserved_2     Int      @default(0) @db.UnsignedInt
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_home_data_3 {
+  uid            Int      @id @default(0)
+  bin_data       Bytes    @db.MediumBlob
+  data_version   Int      @default(0) @db.UnsignedInt
+  block_end_time DateTime @default(dbgenerated("'1970-01-01 00:00:00'")) @db.DateTime(0)
+  last_save_time DateTime @default(now()) @db.Timestamp(0)
+  is_delete      Boolean  @default(false)
+  reserved_1     Int      @default(0) @db.UnsignedInt
+  reserved_2     Int      @default(0) @db.UnsignedInt
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_home_data_4 {
+  uid            Int      @id @default(0)
+  bin_data       Bytes    @db.MediumBlob
+  data_version   Int      @default(0) @db.UnsignedInt
+  block_end_time DateTime @default(dbgenerated("'1970-01-01 00:00:00'")) @db.DateTime(0)
+  last_save_time DateTime @default(now()) @db.Timestamp(0)
+  is_delete      Boolean  @default(false)
+  reserved_1     Int      @default(0) @db.UnsignedInt
+  reserved_2     Int      @default(0) @db.UnsignedInt
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_home_data_5 {
+  uid            Int      @id @default(0)
+  bin_data       Bytes    @db.MediumBlob
+  data_version   Int      @default(0) @db.UnsignedInt
+  block_end_time DateTime @default(dbgenerated("'1970-01-01 00:00:00'")) @db.DateTime(0)
+  last_save_time DateTime @default(now()) @db.Timestamp(0)
+  is_delete      Boolean  @default(false)
+  reserved_1     Int      @default(0) @db.UnsignedInt
+  reserved_2     Int      @default(0) @db.UnsignedInt
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_home_data_6 {
+  uid            Int      @id @default(0)
+  bin_data       Bytes    @db.MediumBlob
+  data_version   Int      @default(0) @db.UnsignedInt
+  block_end_time DateTime @default(dbgenerated("'1970-01-01 00:00:00'")) @db.DateTime(0)
+  last_save_time DateTime @default(now()) @db.Timestamp(0)
+  is_delete      Boolean  @default(false)
+  reserved_1     Int      @default(0) @db.UnsignedInt
+  reserved_2     Int      @default(0) @db.UnsignedInt
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_home_data_7 {
+  uid            Int      @id @default(0)
+  bin_data       Bytes    @db.MediumBlob
+  data_version   Int      @default(0) @db.UnsignedInt
+  block_end_time DateTime @default(dbgenerated("'1970-01-01 00:00:00'")) @db.DateTime(0)
+  last_save_time DateTime @default(now()) @db.Timestamp(0)
+  is_delete      Boolean  @default(false)
+  reserved_1     Int      @default(0) @db.UnsignedInt
+  reserved_2     Int      @default(0) @db.UnsignedInt
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_home_data_8 {
+  uid            Int      @id @default(0)
+  bin_data       Bytes    @db.MediumBlob
+  data_version   Int      @default(0) @db.UnsignedInt
+  block_end_time DateTime @default(dbgenerated("'1970-01-01 00:00:00'")) @db.DateTime(0)
+  last_save_time DateTime @default(now()) @db.Timestamp(0)
+  is_delete      Boolean  @default(false)
+  reserved_1     Int      @default(0) @db.UnsignedInt
+  reserved_2     Int      @default(0) @db.UnsignedInt
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_home_data_9 {
+  uid            Int      @id @default(0)
+  bin_data       Bytes    @db.MediumBlob
+  data_version   Int      @default(0) @db.UnsignedInt
+  block_end_time DateTime @default(dbgenerated("'1970-01-01 00:00:00'")) @db.DateTime(0)
+  last_save_time DateTime @default(now()) @db.Timestamp(0)
+  is_delete      Boolean  @default(false)
+  reserved_1     Int      @default(0) @db.UnsignedInt
+  reserved_2     Int      @default(0) @db.UnsignedInt
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_player_data_0 {
+  uid                   Int      @id @default(0) @db.UnsignedInt
+  nickname              String   @default("0") @db.VarChar(128)
+  level                 Int      @default(0) @db.UnsignedInt
+  exp                   Int      @default(0) @db.UnsignedInt
+  vip_point             Int      @default(0) @db.UnsignedInt
+  json_data             String   @default("") @db.VarChar(512)
+  bin_data              Bytes    @db.MediumBlob
+  extra_bin_data        Bytes?   @db.Blob
+  data_version          Int      @default(0) @db.UnsignedInt
+  tag_list              String   @default("") @db.VarChar(128)
+  create_time           DateTime @default(now()) @db.Timestamp(0)
+  last_save_time        DateTime @default(now()) @db.Timestamp(0)
+  is_delete             Boolean  @default(false)
+  reserved_1            Int      @default(0) @db.UnsignedInt
+  reserved_2            Int      @default(0) @db.UnsignedInt
+  before_login_bin_data Bytes?   @db.Blob
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_player_data_1 {
+  uid                   Int      @id @default(0) @db.UnsignedInt
+  nickname              String   @default("0") @db.VarChar(128)
+  level                 Int      @default(0) @db.UnsignedInt
+  exp                   Int      @default(0) @db.UnsignedInt
+  vip_point             Int      @default(0) @db.UnsignedInt
+  json_data             String   @default("") @db.VarChar(512)
+  bin_data              Bytes    @db.MediumBlob
+  extra_bin_data        Bytes?   @db.Blob
+  data_version          Int      @default(0) @db.UnsignedInt
+  tag_list              String   @default("") @db.VarChar(128)
+  create_time           DateTime @default(now()) @db.Timestamp(0)
+  last_save_time        DateTime @default(now()) @db.Timestamp(0)
+  is_delete             Boolean  @default(false)
+  reserved_1            Int      @default(0) @db.UnsignedInt
+  reserved_2            Int      @default(0) @db.UnsignedInt
+  before_login_bin_data Bytes?   @db.Blob
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_player_data_2 {
+  uid                   Int      @id @default(0) @db.UnsignedInt
+  nickname              String   @default("0") @db.VarChar(128)
+  level                 Int      @default(0) @db.UnsignedInt
+  exp                   Int      @default(0) @db.UnsignedInt
+  vip_point             Int      @default(0) @db.UnsignedInt
+  json_data             String   @default("") @db.VarChar(512)
+  bin_data              Bytes    @db.MediumBlob
+  extra_bin_data        Bytes?   @db.Blob
+  data_version          Int      @default(0) @db.UnsignedInt
+  tag_list              String   @default("") @db.VarChar(128)
+  create_time           DateTime @default(now()) @db.Timestamp(0)
+  last_save_time        DateTime @default(now()) @db.Timestamp(0)
+  is_delete             Boolean  @default(false)
+  reserved_1            Int      @default(0) @db.UnsignedInt
+  reserved_2            Int      @default(0) @db.UnsignedInt
+  before_login_bin_data Bytes?   @db.Blob
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_player_data_3 {
+  uid                   Int      @id @default(0) @db.UnsignedInt
+  nickname              String   @default("0") @db.VarChar(128)
+  level                 Int      @default(0) @db.UnsignedInt
+  exp                   Int      @default(0) @db.UnsignedInt
+  vip_point             Int      @default(0) @db.UnsignedInt
+  json_data             String   @default("") @db.VarChar(512)
+  bin_data              Bytes    @db.MediumBlob
+  extra_bin_data        Bytes?   @db.Blob
+  data_version          Int      @default(0) @db.UnsignedInt
+  tag_list              String   @default("") @db.VarChar(128)
+  create_time           DateTime @default(now()) @db.Timestamp(0)
+  last_save_time        DateTime @default(now()) @db.Timestamp(0)
+  is_delete             Boolean  @default(false)
+  reserved_1            Int      @default(0) @db.UnsignedInt
+  reserved_2            Int      @default(0) @db.UnsignedInt
+  before_login_bin_data Bytes?   @db.Blob
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_player_data_4 {
+  uid                   Int      @id @default(0) @db.UnsignedInt
+  nickname              String   @default("0") @db.VarChar(128)
+  level                 Int      @default(0) @db.UnsignedInt
+  exp                   Int      @default(0) @db.UnsignedInt
+  vip_point             Int      @default(0) @db.UnsignedInt
+  json_data             String   @default("") @db.VarChar(512)
+  bin_data              Bytes    @db.MediumBlob
+  extra_bin_data        Bytes?   @db.Blob
+  data_version          Int      @default(0) @db.UnsignedInt
+  tag_list              String   @default("") @db.VarChar(128)
+  create_time           DateTime @default(now()) @db.Timestamp(0)
+  last_save_time        DateTime @default(now()) @db.Timestamp(0)
+  is_delete             Boolean  @default(false)
+  reserved_1            Int      @default(0) @db.UnsignedInt
+  reserved_2            Int      @default(0) @db.UnsignedInt
+  before_login_bin_data Bytes?   @db.Blob
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_player_data_5 {
+  uid                   Int      @id @default(0) @db.UnsignedInt
+  nickname              String   @default("0") @db.VarChar(128)
+  level                 Int      @default(0) @db.UnsignedInt
+  exp                   Int      @default(0) @db.UnsignedInt
+  vip_point             Int      @default(0) @db.UnsignedInt
+  json_data             String   @default("") @db.VarChar(512)
+  bin_data              Bytes    @db.MediumBlob
+  extra_bin_data        Bytes?   @db.Blob
+  data_version          Int      @default(0) @db.UnsignedInt
+  tag_list              String   @default("") @db.VarChar(128)
+  create_time           DateTime @default(now()) @db.Timestamp(0)
+  last_save_time        DateTime @default(now()) @db.Timestamp(0)
+  is_delete             Boolean  @default(false)
+  reserved_1            Int      @default(0) @db.UnsignedInt
+  reserved_2            Int      @default(0) @db.UnsignedInt
+  before_login_bin_data Bytes?   @db.Blob
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_player_data_6 {
+  uid                   Int      @id @default(0) @db.UnsignedInt
+  nickname              String   @default("0") @db.VarChar(128)
+  level                 Int      @default(0) @db.UnsignedInt
+  exp                   Int      @default(0) @db.UnsignedInt
+  vip_point             Int      @default(0) @db.UnsignedInt
+  json_data             String   @default("") @db.VarChar(512)
+  bin_data              Bytes    @db.MediumBlob
+  extra_bin_data        Bytes?   @db.Blob
+  data_version          Int      @default(0) @db.UnsignedInt
+  tag_list              String   @default("") @db.VarChar(128)
+  create_time           DateTime @default(now()) @db.Timestamp(0)
+  last_save_time        DateTime @default(now()) @db.Timestamp(0)
+  is_delete             Boolean  @default(false)
+  reserved_1            Int      @default(0) @db.UnsignedInt
+  reserved_2            Int      @default(0) @db.UnsignedInt
+  before_login_bin_data Bytes?   @db.Blob
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_player_data_7 {
+  uid                   Int      @id @default(0) @db.UnsignedInt
+  nickname              String   @default("0") @db.VarChar(128)
+  level                 Int      @default(0) @db.UnsignedInt
+  exp                   Int      @default(0) @db.UnsignedInt
+  vip_point             Int      @default(0) @db.UnsignedInt
+  json_data             String   @default("") @db.VarChar(512)
+  bin_data              Bytes    @db.MediumBlob
+  extra_bin_data        Bytes?   @db.Blob
+  data_version          Int      @default(0) @db.UnsignedInt
+  tag_list              String   @default("") @db.VarChar(128)
+  create_time           DateTime @default(now()) @db.Timestamp(0)
+  last_save_time        DateTime @default(now()) @db.Timestamp(0)
+  is_delete             Boolean  @default(false)
+  reserved_1            Int      @default(0) @db.UnsignedInt
+  reserved_2            Int      @default(0) @db.UnsignedInt
+  before_login_bin_data Bytes?   @db.Blob
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_player_data_8 {
+  uid                   Int      @id @default(0) @db.UnsignedInt
+  nickname              String   @default("0") @db.VarChar(128)
+  level                 Int      @default(0) @db.UnsignedInt
+  exp                   Int      @default(0) @db.UnsignedInt
+  vip_point             Int      @default(0) @db.UnsignedInt
+  json_data             String   @default("") @db.VarChar(512)
+  bin_data              Bytes    @db.MediumBlob
+  extra_bin_data        Bytes?   @db.Blob
+  data_version          Int      @default(0) @db.UnsignedInt
+  tag_list              String   @default("") @db.VarChar(128)
+  create_time           DateTime @default(now()) @db.Timestamp(0)
+  last_save_time        DateTime @default(now()) @db.Timestamp(0)
+  is_delete             Boolean  @default(false)
+  reserved_1            Int      @default(0) @db.UnsignedInt
+  reserved_2            Int      @default(0) @db.UnsignedInt
+  before_login_bin_data Bytes?   @db.Blob
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_player_data_9 {
+  uid                   Int      @id @default(0) @db.UnsignedInt
+  nickname              String   @default("0") @db.VarChar(128)
+  level                 Int      @default(0) @db.UnsignedInt
+  exp                   Int      @default(0) @db.UnsignedInt
+  vip_point             Int      @default(0) @db.UnsignedInt
+  json_data             String   @default("") @db.VarChar(512)
+  bin_data              Bytes    @db.MediumBlob
+  extra_bin_data        Bytes?   @db.Blob
+  data_version          Int      @default(0) @db.UnsignedInt
+  tag_list              String   @default("") @db.VarChar(128)
+  create_time           DateTime @default(now()) @db.Timestamp(0)
+  last_save_time        DateTime @default(now()) @db.Timestamp(0)
+  is_delete             Boolean  @default(false)
+  reserved_1            Int      @default(0) @db.UnsignedInt
+  reserved_2            Int      @default(0) @db.UnsignedInt
+  before_login_bin_data Bytes?   @db.Blob
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_player_online_id_data {
+  online_id String @id @db.VarChar(64)
+  uid       Int    @unique(map: "uid") @db.UnsignedInt
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_player_psn_online_id_data {
+  psn_id    String @id @db.VarChar(64)
+  online_id String @db.VarChar(64)
+  uid       Int    @unique(map: "uid") @db.UnsignedInt
+
+  @@index([online_id], map: "online_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_player_uid {
+  uid          Int      @id @default(autoincrement()) @db.UnsignedInt
+  account_type Int      @default(0) @db.UnsignedInt
+  account_uid  String   @default("") @db.VarChar(128)
+  create_time  DateTime @default(now()) @db.Timestamp(0)
+  ext          String   @default("") @db.VarChar(512)
+  tag          Int      @default(0) @db.UnsignedInt
+
+  @@unique([account_type, account_uid], map: "account_type_account_uid")
+}

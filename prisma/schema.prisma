@@ -1,0 +1,353 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_account_cancellation_config {
+  uid               Int      @id @db.UnsignedInt
+  account_uid       BigInt   @db.UnsignedBigInt
+  cancellation_time String   @db.VarChar(50)
+  create_timestamp  DateTime @default(now()) @db.DateTime(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_activity_data {
+  id            Int      @id @default(autoincrement()) @db.UnsignedInt
+  activity_id   Int      @db.UnsignedInt
+  schedule_id   Int      @db.UnsignedInt
+  activity_type Int      @db.UnsignedInt
+  bin_data      Bytes    @db.Blob
+  update_time   DateTime @db.DateTime(0)
+
+  @@unique([activity_id, schedule_id], map: "activity_schedule_id")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model t_activity_schedule_config {
+  schedule_id Int @id @default(autoincrement())
+  begin_time  DateTime? @db.DateTime(0)
+  end_time    DateTime? @db.DateTime(0)
+  desc        String?   @db.VarChar(255)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_announce_config {
+  id                                    Int      @id @default(autoincrement()) @db.UnsignedInt
+  begin_time                            DateTime @db.DateTime(0)
+  end_time                              DateTime @db.DateTime(0)
+  center_system_text                    String   @default("") @db.VarChar(200)
+  count_down_text                       String   @default("") @db.VarChar(200)
+  dungeon_confirm_text                  String   @default("") @db.VarChar(200)
+  center_system_frequency               Int
+  count_down_frequency                  Int
+  channel_config_str                    String   @db.VarChar(50)
+  is_center_system_last_5_every_minutes Int      @default(1) @db.TinyInt
+  channel_id_list                       String   @db.VarChar(50)
+  platform_type_list                    String   @db.VarChar(50)
+  enable                                Int      @default(1) @db.TinyInt
+  server_version                        String   @db.VarChar(64)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_anti_offline_whitelist {
+  uid Int @id @db.UnsignedInt
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_battle_pass_schedule_config {
+  schedule_id Int      @id
+  begin_date  DateTime @db.Date
+  end_date    DateTime @db.Date
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_chat_block_config {
+  uid      Int      @id @db.UnsignedInt
+  end_time DateTime @db.DateTime(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_client_watchdog_uid_list_config {
+  uid Int @id @db.UnsignedInt
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_cmd_frequency_config {
+  cmd_id                    Int   @db.UnsignedInt
+  frequency_limit           Float @db.Float
+  discard_packet_freq_limit Float @db.Float
+  disconnect_freq_limit     Float @db.Float
+
+  @@ignore
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_cmd_str_frequency_config {
+  id                        Int    @id @default(autoincrement()) @db.UnsignedInt
+  cmd_str                   String @db.VarChar(200)
+  frequency_limit           Float  @db.Float
+  discard_packet_freq_limit Float  @db.Float
+  disconnect_freq_limit     Float  @db.Float
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_feature_block_config {
+  uid        Int      @db.UnsignedInt
+  type       Int      @db.UnsignedInt
+  end_time   DateTime @db.DateTime(0)
+  begin_time DateTime @default(dbgenerated("'1970-01-01 00:00:00'")) @db.DateTime(0)
+
+  @@id([uid, type])
+  @@index([uid], map: "uid")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_feature_switch_off_config {
+  id   Int    @id @db.UnsignedInt
+  type Int    @db.UnsignedInt
+  msg  String @default("") @db.VarChar(1000)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_gacha_newbie_url_config {
+  priority         Int    @id @db.UnsignedInt
+  gacha_prob_url   String @default("") @db.VarChar(512)
+  gacha_record_url String @default("") @db.VarChar(512)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_gacha_schedule_config {
+  schedule_id               Int      @id @default(autoincrement())
+  gacha_type                Int      @default(0)
+  begin_time                DateTime @db.DateTime(0)
+  end_time                  DateTime @db.DateTime(0)
+  cost_item_id              Int      @db.UnsignedInt
+  cost_item_num             Int      @db.UnsignedInt
+  gacha_pool_id             Int      @db.UnsignedInt
+  gacha_prob_rule_id        Int      @db.UnsignedInt
+  gacha_up_config           String   @default("") @db.VarChar(512)
+  gacha_rule_config         String   @default("") @db.VarChar(512)
+  gacha_prefab_path         String   @default("") @db.VarChar(512)
+  gacha_preview_prefab_path String   @default("") @db.VarChar(512)
+  gacha_prob_url            String   @default("") @db.VarChar(512)
+  gacha_record_url          String   @default("") @db.VarChar(512)
+  gacha_prob_url_oversea    String   @default("") @db.VarChar(512)
+  gacha_record_url_oversea  String   @default("") @db.VarChar(512)
+  gacha_sort_id             Int      @db.UnsignedInt
+  enabled                   Int      @default(1) @db.TinyInt
+  title_textmap             String   @default("") @db.VarChar(256)
+  display_up4_item_list     String   @default("") @db.VarChar(512)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_gameplay_recommendation_config {
+  id         Int      @id @default(autoincrement()) @db.UnsignedInt
+  begin_time DateTime @unique(map: "begin_time") @db.DateTime(0)
+  json_str   String   @db.MediumText
+  enabled    Boolean  @default(true)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_h5_activity_schedule_config {
+  schedule_id        Int      @id
+  activity_id        Int
+  begin_time         DateTime @db.DateTime(0)
+  end_time           DateTime @db.DateTime(0)
+  content_close_time DateTime @db.DateTime(0)
+  prefab_path        String   @default("") @db.VarChar(512)
+  url_cn             String   @default("") @db.VarChar(512)
+  url_os             String   @default("") @db.VarChar(512)
+  is_entrance_open   Int      @default(1) @db.TinyInt
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_inject_fix_config {
+  config_id          Int      @id @db.UnsignedInt
+  inject_fix         Bytes    @db.Blob
+  uid_list           String   @default("") @db.VarChar(4096)
+  platform_type_list String   @default("") @db.VarChar(4096)
+  percent            Int      @default(0) @db.TinyInt
+  created_at         DateTime @default(now()) @db.Timestamp(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_live_schedule_config {
+  live_id        Int      @id @default(autoincrement())
+  begin_time     DateTime @db.DateTime(0)
+  end_time       DateTime @db.DateTime(0)
+  live_url       String   @default("") @db.VarChar(512)
+  spare_live_url String   @default("") @db.VarChar(512)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_login_black_ip_config {
+  ip     Int    @id @db.UnsignedInt
+  ip_str String @db.VarChar(64)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_login_black_uid_config {
+  id         Int      @id @default(autoincrement()) @db.UnsignedInt
+  uid        Int      @unique(map: "uid") @db.UnsignedInt
+  begin_time DateTime @db.DateTime(0)
+  end_time   DateTime @db.DateTime(0)
+  msg        String?  @db.VarChar(50)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_login_reward_config {
+  config_id                   Int      @id @default(autoincrement())
+  config_type                 Int      @default(0) @db.TinyInt
+  reward_rules                String   @db.VarChar(1024)
+  email_valid_days            Int
+  email_title                 String   @db.VarChar(200)
+  email_sender                String   @db.VarChar(200)
+  email_content               String   @db.Text
+  item_list                   String   @db.VarChar(1024)
+  effective_account_type_list String   @db.VarChar(100)
+  begin_time                  DateTime @db.DateTime(0)
+  end_time                    DateTime @db.DateTime(0)
+  enabled                     Int      @default(1) @db.TinyInt
+  tag                         String   @default("") @db.VarChar(200)
+  importance                  Int      @default(0)
+  is_collectible              Int      @default(0) @db.TinyInt
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_luashell_config {
+  luashell_config_id     Int      @id @db.UnsignedInt
+  lua_shell              Bytes    @db.MediumBlob
+  uid_list               String   @default("") @db.VarChar(4096)
+  platform_type_list     String   @default("") @db.VarChar(4096)
+  percent                Int      @default(0) @db.TinyInt
+  created_at             DateTime @default(now()) @db.Timestamp(0)
+  protocol_type          Int      @default(0) @db.UnsignedInt
+  use_type               Int      @default(1) @db.UnsignedInt
+  is_check_client_report Boolean  @default(false)
+  is_kick                Boolean  @default(false)
+  check_json_key         String   @default("") @db.VarChar(32)
+  channel                Int      @default(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_mail_block_tag_config {
+  id  Int     @id @default(autoincrement()) @db.UnsignedInt
+  tag String? @db.VarChar(200)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_mtp_blacklist_config {
+  ID   Int @id @default(autoincrement())
+  type Int @default(0) @db.UnsignedInt
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_mtp_whitelist_config {
+  id         Int
+  reason     String @db.VarChar(512)
+  match_type Int
+
+  @@ignore
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_op_activity_schedule_config {
+  schedule_id Int      @id @default(autoincrement())
+  config_id   Int      @default(0)
+  begin_time  DateTime @db.DateTime(0)
+  end_time    DateTime @db.DateTime(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_questionnaire_mail_config {
+  config_id        Int      @id @default(autoincrement())
+  email_valid_days Int
+  email_title      String   @db.VarChar(200)
+  email_sender     String   @db.VarChar(200)
+  email_content    String   @db.Text
+  item_list        String   @db.VarChar(1024)
+  begin_time       DateTime @db.DateTime(0)
+  end_time         DateTime @db.DateTime(0)
+  enabled          Int      @default(1) @db.TinyInt
+  tag              String   @default("") @db.VarChar(200)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_rebate_config {
+  account_type Int    @default(0) @db.UnsignedInt
+  account_uid  String @default("") @db.VarChar(128)
+  item_list    String @default("") @db.VarChar(128)
+
+  @@id([account_type, account_uid])
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_red_point_config {
+  id                   Int      @id @default(autoincrement()) @db.UnsignedInt
+  content_id           Int      @db.UnsignedInt
+  trigger_time         DateTime @db.DateTime(0)
+  expire_time          DateTime @db.DateTime(0)
+  red_point_type       Int      @db.UnsignedInt
+  is_daily_refresh     Int      @db.UnsignedInt
+  daily_refresh_second Int      @db.UnsignedInt
+  player_level         Int      @default(0) @db.UnsignedInt
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_register_black_ip_config {
+  ip      String @id @db.VarChar(64)
+  ip_desc String @default("") @db.VarChar(256)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_security_library_config {
+  platform_type_str String  @default("") @db.VarChar(64)
+  version_str       String  @default("") @db.VarChar(64)
+  md5_list          String  @db.Text
+  is_forbid_login   Boolean @default(false)
+  enabled           Boolean @default(true)
+
+  @@id([platform_type_str, version_str])
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_sign_in_schedule_config {
+  schedule_id Int      @id @default(autoincrement())
+  config_id   Int      @default(0)
+  begin_time  DateTime @db.DateTime(0)
+  end_time    DateTime @db.DateTime(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_stop_server_login_white_ip_config {
+  ip   String @id @db.VarChar(32)
+  desc String @db.VarChar(32)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_textmap_config {
+  text_id     Int      @id @default(autoincrement()) @db.UnsignedInt
+  delete_time DateTime @db.DateTime(0)
+  en          String   @db.Text
+  sc          String   @db.Text
+  tc          String   @db.Text
+  fr          String   @db.Text
+  de          String   @db.Text
+  es          String   @db.Text
+  pt          String   @db.Text
+  ru          String   @db.Text
+  jp          String   @db.Text
+  kr          String   @db.Text
+  th          String   @db.Text
+  vn          String   @db.Text
+  id          String   @db.Text
+  tr          String   @db.Text
+  it          String   @db.Text
+}

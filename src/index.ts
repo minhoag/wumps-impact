@@ -24,7 +24,7 @@ readdirSync(handlersDir).forEach((handler) => {
 	require(`${handlersDir}/${handler}`)(client);
 });
 process.on('unhandledRejection', error => {
-	console.error('Unhandled promise rejection:', error);
+	console.log('Unhandled promise rejection:', error);
 });
 export default client;
 client.login(process.env.TOKEN);

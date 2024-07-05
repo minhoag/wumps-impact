@@ -5,7 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="22be435b-3baa-4df6-b919-f8e9bb0714aa" name="Changes" comment="Upload to new git">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env.template" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/sqlite/schema.prisma" beforeDir="false" afterPath="$PROJECT_DIR$/sqlite/schema.prisma" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/slashCommands/register.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/slashCommands/register.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/slashCommands/shop.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/slashCommands/shop.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -13,6 +18,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="FormatOnSaveOptions">
+    <option name="myRunOnSave" value="false" />
     <option name="myAllFileTypesSelected" value="true" />
     <option name="mySelectedFileTypes">
       <set />
@@ -32,12 +38,12 @@
     &quot;assignee&quot;: &quot;wandak3&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/wandak3/wumps.git",
-    "accountId": "aea235dd-e71c-4421-8726-5544873586a4"
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/wandak3/wumps.git&quot;,
+    &quot;accountId&quot;: &quot;5bf1598d-5670-4e5f-9273-7cf6d05ceee9&quot;
   }
-}]]></component>
+}</component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 6
 }</component>
@@ -60,7 +66,7 @@
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "pnpm",
     "settings.editor.selected.configurable": "project.scopes",
-    "ts.external.directory.path": "/Users/hoangnguyen/Project/GSV/node_modules/typescript/lib",
+    "ts.external.directory.path": "C:\\Users\\hoang\\WebstormProjects\\wumps\\node_modules\\typescript\\lib",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -89,6 +95,10 @@
       <workItem from="1719168033271" duration="4069000" />
       <workItem from="1719466046616" duration="3615000" />
       <workItem from="1719947426728" duration="26915000" />
+      <workItem from="1720187744072" duration="3388000" />
+      <workItem from="1720198508092" duration="61000" />
+      <workItem from="1720198583473" duration="2338000" />
+      <workItem from="1720209298731" duration="1946000" />
     </task>
     <task id="LOCAL-00001" summary="Update Shop">
       <option name="closed" value="true" />

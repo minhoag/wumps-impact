@@ -12,12 +12,12 @@ import prismaSqlite from '../prisma/prisma-sqlite';
 const command: SlashCommand = {
 	command: new SlashCommandBuilder()
 		.setName('register')
-		.setDescription('Register your ingame account with Discord Server.')
+		.setDescription('Register your game account with Discord Server.')
 		.setDefaultMemberPermissions(PermissionFlagsBits.SendMessages)
 		.addStringOption((option) =>
 			option
 				.setName('uid')
-				.setDescription('UID của người chơi')
+				.setDescription('Your account uid.')
 				.setRequired(true),
 		),
 	cooldown: 1,
@@ -36,7 +36,10 @@ const command: SlashCommand = {
 		const regOTP: TextInputBuilder = new TextInputBuilder()
 			.setCustomId('registerOTP')
 			.setLabel('Verify OTP')
-			.setPlaceholder('Input your OTP')
+			.setPlaceholder('The OTP is sent to your game account mail. Login to game and check mail to get the OTP.')
+			.setMaxLength(10)
+			.setMinLength(4)
+			.setRequired(true)
 			.setStyle(TextInputStyle.Short);
 		const firstActionRow = new ActionRowBuilder().addComponents(regOTP);
 
@@ -55,7 +58,7 @@ const command: SlashCommand = {
 			if (interaction.customId === 'registerForm') {
 				const inputOtp: string = interaction.fields.getTextInputValue('registerOTP');
 				if (otp !== inputOtp) {
-					await interaction.reply('Registered Failed. Reason: Wrong OTP.');
+					await interaction.reply('Registered Failed. You have entered the wrong OTP. Re-use command and try again.');
 					return;
 				} else {
 					const briefData = await fetch(`http://${ip}:14861/api?cmd=5003&region=dev_gio&ticket=GM&uid=${uid}`).then(res => res.json());

@@ -65,20 +65,20 @@ class Shop {
 
 const command: SlashCommand = {
 	command: new SlashCommandBuilder()
-		.setName('shop')
+		.setName('buy')
 		.setDescription('Server Shop')
 		.addSubcommand(subcommand =>
 			subcommand
-				.setName('view')
-				.setDescription('View the server shop'))
+				.setName('shop')
+				.setDescription('View the server shop items.'))
 		.addSubcommand(subcommand =>
 			subcommand
 				.setName('mora')
-				.setDescription('Buy the item from server shop')
+				.setDescription('Buy server shop with Mora')
 				.addNumberOption(option =>
 					option.setName('uid')
 						.setRequired(true)
-						.setDescription('Your in-game uid'))
+						.setDescription('Your account uid'))
 				.addNumberOption(option =>
 					option.setName('id')
 						.setRequired(true)
@@ -110,6 +110,7 @@ const command: SlashCommand = {
 				'**Credits**: Earned by donating to the server.\n' +
 				'**Mora**: Exchange in-game Mora to buy premium items.\n' +
 				'**Interactive Coins**: Exchange points earned by chat in this server to exchange for goods.\n\n' +
+				'\nHow to buy: Register your account with `/register` and follow the instruction. This is to prevent using other account Mora.' +
 				'\nRemarks: Mora may take up to 1 minute to update. If you see that your Mora number is wrong. Please try again in 1 minute.',
 			);
 			embed.addFields({

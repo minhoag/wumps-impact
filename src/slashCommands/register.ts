@@ -4,11 +4,12 @@ import {
 	CommandInteraction, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, Events,
 } from 'discord.js';
 import {SlashCommand} from '../types';
-import {checkDatabase, generateOTP} from '../function';
+import { checkDatabase, generateOTP, sendOTP } from '../function'
 import moment from 'moment';
 import client from '../index';
 import prismaSqlite from '../prisma/prisma-sqlite';
 
+const sleep = (delay: number) => new Promise((resolve) => setTimeout(resolve, delay))
 const command: SlashCommand = {
 	command: new SlashCommandBuilder()
 		.setName('register')
@@ -36,7 +37,7 @@ const command: SlashCommand = {
 		const regOTP: TextInputBuilder = new TextInputBuilder()
 			.setCustomId('registerOTP')
 			.setLabel('Verify OTP')
-			.setPlaceholder('The OTP is sent to your game account mail. Login to game and check mail to get the OTP.')
+			.setPlaceholder('Check your in-game mail for the OTP.')
 			.setMaxLength(10)
 			.setMinLength(4)
 			.setRequired(true)
@@ -47,20 +48,17 @@ const command: SlashCommand = {
 		modal.addComponents(
 			firstActionRow as ActionRowBuilder<TextInputBuilder>,
 		);
-		const otp: string = await generateOTP(uid);
 		// Show the modal to the user
 		await interaction.showModal(modal);
+		const otp: string = generateOTP();
+		await sendOTP(uid, otp);
 
-		// Process modal
-		client.on(Events.InteractionCreate, async interaction => {
-			if (!interaction.isModalSubmit()) return;
-			// Get the data entered by the user
-			if (interaction.customId === 'registerForm') {
+		const filter = (interaction: any) => interaction.customId === 'registerForm';
+		interaction.awaitModalSubmit({ filter, time: 30_000 })
+			.then(async (interaction) => {
+				await interaction.deferReply()
 				const inputOtp: string = interaction.fields.getTextInputValue('registerOTP');
-				if (otp !== inputOtp) {
-					await interaction.reply('Registered Failed. You have entered the wrong OTP. Re-use command and try again.');
-					return;
-				} else {
+				if (inputOtp == otp) {
 					const briefData = await fetch(`http://${ip}:14861/api?cmd=5003&region=dev_gio&ticket=GM&uid=${uid}`).then(res => res.json());
 					const mora = briefData.data.scoin;
 					const lastUpdate: number = moment().unix();
@@ -72,12 +70,14 @@ const command: SlashCommand = {
 							lastUpdate: lastUpdate,
 						},
 					});
-					await interaction.reply('Successfully registered');
-					return;
+					console.log('success');
+					await interaction.editReply('Successfully registered');
+				} else {
+					console.log(`Fail. OTP: ${otp}, input: ${inputOtp}`);
+					await interaction.editReply('Registered Failed. You have entered the wrong OTP. Re-use command and try again.');
 				}
-			}
-		});
+			})
+			.catch(console.error);
 	},
 };
-
 export default command;

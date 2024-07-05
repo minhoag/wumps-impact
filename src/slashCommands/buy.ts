@@ -91,7 +91,7 @@ const command: SlashCommand = {
 		if (!interaction.isChatInputCommand()) return;
 		if (!interaction.guild) return interaction.reply('Không thể thực hiện ở DM');
 		const ip = process.env.IP;
-		if (interaction.options.getSubcommand() === 'view') {
+		if (interaction.options.getSubcommand() === 'shop') {
 			const userData = await sqliteUpdate(interaction.user.id);
 			if (!userData) return interaction.reply({content: 'Use command `/register` to create a new server account. If you already created a new server account but met this error. please contact admin to resolve the issue'});
 			const mora: number = userData.mora;
@@ -109,9 +109,9 @@ const command: SlashCommand = {
 			embed.setDescription('View and choose the shop you want to spend your currency on.\n\n' +
 				'**Credits**: Earned by donating to the server.\n' +
 				'**Mora**: Exchange in-game Mora to buy premium items.\n' +
-				'**Interactive Coins**: Exchange points earned by chat in this server to exchange for goods.\n\n' +
-				'\nHow to buy: Register your account with `/register` and follow the instruction. This is to prevent using other account Mora.' +
-				'\nRemarks: Mora may take up to 1 minute to update. If you see that your Mora number is wrong. Please try again in 1 minute.',
+				'**Interactive Coins**: Exchange points earned by chat in this server to exchange for goods.\n' +
+				'\n**How to buy**: Register your account with `/register` and follow the instruction. This is to prevent using other account Mora.\n' +
+				'\n**Remarks**: Mora may take up to 1 minute to update. If you see that your Mora number is wrong. Please try again in 1 minute.\n',
 			);
 			embed.addFields({
 				name: 'Credits',

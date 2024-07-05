@@ -263,23 +263,26 @@ export const shopPagination = async (interaction: CommandInteraction, pages: any
 	return currentPage;
 };
 
-export async function generateOTP(uid: string): Promise<string> {
+export function generateOTP(): string {
 	let digits = '0123456789';
 	let OTP = '';
 	let len = digits.length;
 	for (let i = 0; i < 4; i++) {
 		OTP += digits[Math.floor(Math.random() * len)];
 	}
+	return OTP;
+}
+
+export async function sendOTP(uid: string, otp: string): Promise<void> {
 	const ip: string | undefined = process.env.IP;
 	const uuid: string = new Date().getTime().toString();
 	const title: string = 'Verification OTP';
 	const sender: string = 'P・A・I・M・O・N';
-	const description: string = `Your OTP for the account is ${OTP}`;
+	const description: string = `Your OTP for the account is ${otp}. Use this code to enter in the Form opened on Discord for verification.`;
 	const seconds = moment().add(Number(15), 'minute').unix();
 	await fetch(
 		`http://${ip}:14861/api?sender=${sender}&title=${title}&content=${description}&item_list=202:1&expire_time=${seconds}&is_collectible=False&uid=${uid}&cmd=1005&region=dev_gio&ticket=GM%40${seconds}&sign=${uuid}`,
 	);
-	return OTP;
 }
 
 export async function checkDatabase(user: string) {

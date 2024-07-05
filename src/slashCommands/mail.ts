@@ -1,13 +1,17 @@
 import {
-  SlashCommandBuilder,
-  PermissionFlagsBits,
-  CommandInteraction,
-  ModalBuilder,
-  ActionRowBuilder,
-  TextInputBuilder,
-  TextInputStyle,
-} from 'discord.js';
-import { SlashCommand } from '../types';
+	ActionRowBuilder,
+	CommandInteraction,
+	Events,
+	ModalBuilder,
+	PermissionFlagsBits,
+	SlashCommandBuilder,
+	TextInputBuilder,
+	TextInputStyle
+} from 'discord.js'
+import { SlashCommand, User } from '../types'
+import client from '../index'
+import moment from 'moment/moment'
+import { getUsers } from '../function'
 
 const command: SlashCommand = {
   command: new SlashCommandBuilder()
@@ -71,6 +75,73 @@ const command: SlashCommand = {
 
     // Show the modal to the user
     await interaction.showModal(modal);
+
+	  // Process modal
+	  client.on(Events.InteractionCreate, async interaction => {
+		  if (!interaction.isModalSubmit()) return;
+		  const ip: string | undefined = process.env.IP;
+		  if (interaction.customId === 'mailForm') {
+			  const receiver = interaction.fields.getTextInputValue('receiverInput');
+			  const expiry = interaction.fields.getTextInputValue('expiryInput');
+			  const title = interaction.fields.getTextInputValue('titleInput');
+			  const description = interaction.fields.getTextInputValue(
+				  'descriptionInput',
+			  );
+			  const item = interaction.fields
+				  .getTextInputValue('itemInput')
+				  .replace(/\s/g, '');
+			  // Xử lý tên
+			  const name = receiver.split(':');
+			  // Ngày sang giây
+			  const seconds = moment().add(Number(expiry), 'days').unix();
+			  try {
+				  const uuid = new Date().getTime();
+				  if (name[0] === 'all') {
+					  const users = await getUsers();
+					  let error: number[] = [];
+					  users.map(async (user: User) => {
+						  const res = await fetch(
+							  `http://${ip}:14861/api?sender=${name[1]}&title=${title}&content=${description}&item_list=${item}&expire_time=${seconds}&is_collectible=False&uid=${user.uid}&cmd=1005&region=dev_gio&ticket=GM%40${seconds}&sign=${uuid}`,
+						  );
+						  const json = await res.json();
+						  if (json.msg !== 'succ') error.push(user.uid);
+					  });
+					  if (!error.length) {
+						  await interaction.reply({
+							  content: 'Gửi thư thành công',
+							  ephemeral: true,
+						  });
+					  } else {
+						  await interaction.reply({
+							  content:
+								  'Gửi thư không thành công ở các UID: `' +
+								  error.join(', ') +
+								  '`',
+							  ephemeral: true,
+						  });
+					  }
+				  } else {
+					  const res = await fetch(
+						  `http://${ip}:14861/api?sender=${name[1]}&title=${title}&content=${description}&item_list=${item}&expire_time=${seconds}&is_collectible=False&uid=${name[0]}&cmd=1005&region=dev_gio&ticket=GM%40${seconds}&sign=${uuid}`,
+					  );
+					  const json = await res.json();
+					  if (json.msg !== 'succ') {
+						  await interaction.reply({
+							  content: 'Gửi thư không thành công. Lỗi: `' + json.msg + '`',
+							  ephemeral: true,
+						  });
+						  return;
+					  }
+					  await interaction.reply({
+						  content: 'Gửi thư thành công',
+						  ephemeral: true,
+					  });
+				  }
+			  } catch (error) {
+				  console.log(error.message);
+			  }
+		  }
+	  })
   },
 };
 

@@ -23,8 +23,17 @@ const handlersDir = join(__dirname, './handlers');
 readdirSync(handlersDir).forEach((handler) => {
 	require(`${handlersDir}/${handler}`)(client);
 });
+
+// Prevent Rejection
 process.on('unhandledRejection', error => {
 	console.log('Unhandled promise rejection:', error);
 });
+process.on('uncaughtException', error => {
+	console.log('Uncaught Exception:', error);
+});
+process.on('uncaughtExceptionMonitor', error => {
+	console.log('Uncaught Exception Monitor:', error);
+});
+
 export default client;
 client.login(process.env.TOKEN);

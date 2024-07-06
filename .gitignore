@@ -4,4 +4,3 @@ pnpm-lock.yaml
 .env
 user.db
 cmd.bat
-**/[Tt]est*

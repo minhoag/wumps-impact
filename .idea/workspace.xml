@@ -4,9 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="22be435b-3baa-4df6-b919-f8e9bb0714aa" name="Changes" comment="Update data">
+    <list default="true" id="22be435b-3baa-4df6-b919-f8e9bb0714aa" name="Changes" comment="Update .gitignore">
       <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/slashCommands/register.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/slashCommands/register.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -105,7 +106,7 @@
       <workItem from="1720213461469" duration="1538000" />
       <workItem from="1720215352180" duration="4853000" />
       <workItem from="1720256514876" duration="49000" />
-      <workItem from="1720296575791" duration="4015000" />
+      <workItem from="1720296575791" duration="7209000" />
     </task>
     <task id="LOCAL-00001" summary="Update Shop">
       <option name="closed" value="true" />
@@ -203,7 +204,15 @@
       <option name="project" value="LOCAL" />
       <updated>1720300907071</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="Update .gitignore">
+      <option name="closed" value="true" />
+      <created>1720301856447</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1720301856447</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -215,8 +224,8 @@
     <MESSAGE value="Update new feature" />
     <MESSAGE value="Update shop command to buy.  Add new description for buy command" />
     <MESSAGE value="Update OTP system." />
-    <MESSAGE value="Update .gitignore" />
     <MESSAGE value="Update data" />
-    <option name="LAST_COMMIT_MESSAGE" value="Update data" />
+    <MESSAGE value="Update .gitignore" />
+    <option name="LAST_COMMIT_MESSAGE" value="Update .gitignore" />
   </component>
 </project>

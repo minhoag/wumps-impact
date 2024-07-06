@@ -68,10 +68,8 @@ const command: SlashCommand = {
 							lastUpdate: lastUpdate,
 						},
 					});
-					console.log('success');
 					await interaction.editReply('Successfully registered');
 				} else {
-					console.log(`Fail. OTP: ${otp}, input: ${inputOtp}`);
 					await interaction.editReply('Registered Failed. You have entered the wrong OTP. Re-use command and try again.');
 				}
 			})

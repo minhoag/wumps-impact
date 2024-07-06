@@ -1,15 +1,13 @@
 import {
 	SlashCommandBuilder,
 	PermissionFlagsBits,
-	CommandInteraction, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, Events,
+	CommandInteraction, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder,
 } from 'discord.js';
 import {SlashCommand} from '../types';
 import { checkDatabase, generateOTP, sendOTP } from '../function'
 import moment from 'moment';
-import client from '../index';
 import prismaSqlite from '../prisma/prisma-sqlite';
 
-const sleep = (delay: number) => new Promise((resolve) => setTimeout(resolve, delay))
 const command: SlashCommand = {
 	command: new SlashCommandBuilder()
 		.setName('register')
@@ -54,7 +52,7 @@ const command: SlashCommand = {
 		await sendOTP(uid, otp);
 
 		const filter = (interaction: any) => interaction.customId === 'registerForm';
-		interaction.awaitModalSubmit({ filter, time: 30_000 })
+		interaction.awaitModalSubmit({ filter, time: 90_000 })
 			.then(async (interaction) => {
 				await interaction.deferReply()
 				const inputOtp: string = interaction.fields.getTextInputValue('registerOTP');

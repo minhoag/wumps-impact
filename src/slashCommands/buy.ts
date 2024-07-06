@@ -94,7 +94,7 @@ const command: SlashCommand = {
 		if (interaction.options.getSubcommand() === 'shop') {
 			const userData = await sqliteUpdate(interaction.user.id);
 			if (!userData) return interaction.reply({content: 'Use command `/register` to create a new server account. If you already created a new server account but met this error. please contact admin to resolve the issue'});
-			const mora: number = userData.mora;
+			const mora: bigint = userData.mora;
 			const credit: number = userData.credit;
 			const points: number = userData.points;
 			const embed: EmbedBuilder = new EmbedBuilder()
@@ -196,7 +196,7 @@ const command: SlashCommand = {
 					//check if sufficient
 					const userData = await sqliteUpdate(interaction.user.id);
 					if (!userData) return await confirmation.update({content: 'Use command `/register` to create a new server account. If you already created a new server account but met this error. please contact admin to resolve the issue'});
-					if (userData.mora - finalPrice < 0) return await confirmation.update({
+					if (userData.mora - BigInt(finalPrice) < 0) return await confirmation.update({
 						content: 'You have insufficient to purchase. If you believe that this is a mistake, contact admin to resolve.',
 						embeds: [],
 						components: [],

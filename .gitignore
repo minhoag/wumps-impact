@@ -2,6 +2,6 @@ node_modules
 bun.lockb
 pnpm-lock.yaml
 .env
-*.db
+user.db
 cmd.bat
 **/[Tt]est*

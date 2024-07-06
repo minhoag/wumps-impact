@@ -5,9 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="22be435b-3baa-4df6-b919-f8e9bb0714aa" name="Changes" comment="Update .gitignore">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/slashCommands/register.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/slashCommands/register.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/shop.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/shop.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -106,7 +105,7 @@
       <workItem from="1720213461469" duration="1538000" />
       <workItem from="1720215352180" duration="4853000" />
       <workItem from="1720256514876" duration="49000" />
-      <workItem from="1720296575791" duration="7209000" />
+      <workItem from="1720296575791" duration="8279000" />
     </task>
     <task id="LOCAL-00001" summary="Update Shop">
       <option name="closed" value="true" />
@@ -212,7 +211,15 @@
       <option name="project" value="LOCAL" />
       <updated>1720301856447</updated>
     </task>
-    <option name="localTasksCounter" value="14" />
+    <task id="LOCAL-00014" summary="Update .gitignore">
+      <option name="closed" value="true" />
+      <created>1720305976034</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1720305976034</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

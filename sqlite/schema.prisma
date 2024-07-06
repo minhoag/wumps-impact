@@ -11,7 +11,7 @@ datasource db {
 model userData {
   user       String @id
   uid        String
-  mora       Int
+  mora       BigInt
   credit     Int    @default(0)
   points     Int    @default(0)
   lastUpdate Int    @default(0)

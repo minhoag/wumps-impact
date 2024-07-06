@@ -71,10 +71,16 @@ const command: SlashCommand = {
 			subcommand
 				.setName('shop')
 				.setDescription('View the server shop items.'))
+				.setDescriptionLocalizations({
+					vi: 'Xem các vật phẩm hiện có trong cửa hàng.'
+				})
 		.addSubcommand(subcommand =>
 			subcommand
 				.setName('mora')
-				.setDescription('Buy server shop with Mora')
+				.setDescription('Buy server shop with Mora.')
+				.setDescriptionLocalizations({
+					vi: 'Xem các vật phẩm hiện có trong cửa hàng máy chủ.'
+				})
 				.addNumberOption(option =>
 					option.setName('uid')
 						.setRequired(true)
@@ -82,7 +88,7 @@ const command: SlashCommand = {
 				.addNumberOption(option =>
 					option.setName('id')
 						.setRequired(true)
-						.setDescription('The id of the item in shop'))
+						.setDescription('Mua vật phẩm trong cửa hàng bằng Mora.'))
 				.addNumberOption(option =>
 					option.setName('quantity')
 						.setDescription('Item Quantity'))),

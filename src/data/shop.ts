@@ -23,7 +23,7 @@ export const ShopView: ShopItem[] = [
 	{
 		index: 202002,
 		itemId: 104319,
-		name: 'Crown of Insight (Vương miện tri thức)',
+		name: 'Crown of Insight (Vương Miện tri thức)',
 		type: 'mora',
 		price: 10000000,
 		quantity: 1,

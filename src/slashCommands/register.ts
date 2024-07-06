@@ -25,7 +25,7 @@ const command: SlashCommand = {
 		if (!interaction.guild)
 			return interaction.reply('Không thể thực hiện ở DM');
 		const res = await checkDatabase(interaction.user.id);
-		if (res) return interaction.reply('You have already registered');
+		if (res) return interaction.reply({content: 'You have already registered', ephemeral: true});
 		const uid: string = interaction.options.getString('uid', true);
 		const ip: string | undefined = process.env.IP;
 		// Create Modal

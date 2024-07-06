@@ -6,13 +6,13 @@ import {
 	ComponentType,
 	EmbedBuilder,
 	InteractionCollector,
-	SlashCommandBuilder,
-} from 'discord.js';
-import {SlashCommand} from '../types';
-import {shopPagination, sqliteUpdate} from '../function';
-import {ShopItem, ShopView} from '../data/shop';
-import moment from 'moment/moment';
-import prisma_sqlite from '../prisma/prisma-sqlite';
+	SlashCommandBuilder
+} from 'discord.js'
+import { SlashCommand } from '../types'
+import { shopPagination, sqliteUpdate } from '../function'
+import { ShopItem, ShopView } from '../data/shop'
+import moment from 'moment/moment'
+import prisma_sqlite from '../prisma/prisma-sqlite'
 
 class Shop {
 	name: string;
@@ -95,11 +95,16 @@ const command: SlashCommand = {
 	cooldown: 5,
 	execute: async (interaction: CommandInteraction) => {
 		if (!interaction.isChatInputCommand()) return;
-		if (!interaction.guild) return interaction.reply('Không thể thực hiện ở DM');
+		if (!interaction.guild) return interaction.reply({content: 'Không thể thực hiện ở DM', ephemeral: true});
 		const ip = process.env.IP;
 		if (interaction.options.getSubcommand() === 'shop') {
 			const userData = await sqliteUpdate(interaction.user.id);
-			if (!userData) return interaction.reply({content: 'Use command `/register` to create a new server account. If you already created a new server account but met this error. please contact admin to resolve the issue'});
+			if (!userData)
+				return interaction.reply(
+					{
+						content: 'Use command `/register` to create a new server account. If you already created a new server account but met this error. please contact admin to resolve the issue',
+						ephemeral: true
+					})
 			const mora: bigint = userData.mora;
 			const credit: number = userData.credit;
 			const points: number = userData.points;
@@ -144,6 +149,7 @@ const command: SlashCommand = {
 			const response = await interaction.reply({
 				embeds: [embed],
 				components: [buttonRow],
+				ephemeral: true
 			});
 			//@interaction-reply
 			const collector: InteractionCollector<any> = response.createMessageComponentCollector({
@@ -157,7 +163,7 @@ const command: SlashCommand = {
 					// const credit = new Shop('Credit', i, items);
 					// await i.deferReply();
 					// await credit.sendResponse();
-					i.reply('This shop is not yet available');
+					i.reply({ content: 'This shop is not yet available', ephemeral: true })
 				} else if (i.customId === 'shopMora') {
 					const items: ShopItem[] = ShopView.filter(i => i.type === 'mora');
 					const mora = new Shop('Mora', i, items, '<:Mora:1257820686269939824>');
@@ -167,7 +173,7 @@ const command: SlashCommand = {
 					// const point = new Shop('Point', i, items);
 					// await i.deferReply();
 					// await point.sendResponse();
-					i.reply('This shop is not yet available');
+					i.reply({ content: 'This shop is not yet available', ephemeral: true })
 				}
 			});
 		} else if (interaction.options.getSubcommand() === 'mora') {
@@ -175,7 +181,7 @@ const command: SlashCommand = {
 			const itemId: number = interaction.options.getNumber('id', true);
 			const quantity: number = interaction.options.getNumber('quantity') ?? 1;
 			const price: ShopItem | undefined = ShopView.find((i: ShopItem) => i.index === itemId);
-			if (!price) return await interaction.reply('Cannot find item');
+			if (!price) return await interaction.reply({ content: 'Cannot find item', ephemeral: true })
 			const uuid: string = new Date().getTime().toString();
 			// Confirmation
 			const finalPrice = price.price * quantity;
@@ -193,6 +199,7 @@ const command: SlashCommand = {
 			const response = await interaction.reply({
 				embeds: [embed],
 				components: [buttonRow],
+				ephemeral: true
 			});
 			const collectorFilter = (i: any) => i.user.id === interaction.user.id;
 

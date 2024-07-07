@@ -6,12 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="22be435b-3baa-4df6-b919-f8e9bb0714aa" name="Changes" comment="Implement Vietnamese for buy command and register command">
       <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/slashCommands/cmd.js" beforeDir="false" afterPath="$PROJECT_DIR$/build/slashCommands/cmd.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/slashCommands/shop.js" beforeDir="false" afterPath="$PROJECT_DIR$/build/slashCommands/shop.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/data/shop.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/shop.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/slashCommands/buy.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/slashCommands/buy.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/slashCommands/cmd.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/slashCommands/cmd.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -110,7 +105,7 @@
       <workItem from="1720213461469" duration="1538000" />
       <workItem from="1720215352180" duration="4853000" />
       <workItem from="1720256514876" duration="49000" />
-      <workItem from="1720296575791" duration="16061000" />
+      <workItem from="1720296575791" duration="16286000" />
     </task>
     <task id="LOCAL-00001" summary="Update Shop">
       <option name="closed" value="true" />
@@ -248,7 +243,15 @@
       <option name="project" value="LOCAL" />
       <updated>1720310023094</updated>
     </task>
-    <option name="localTasksCounter" value="18" />
+    <task id="LOCAL-00018" summary="Implement Vietnamese for buy command and register command">
+      <option name="closed" value="true" />
+      <created>1720314673954</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1720314673954</updated>
+    </task>
+    <option name="localTasksCounter" value="19" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

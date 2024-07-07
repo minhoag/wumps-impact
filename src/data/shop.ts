@@ -17,7 +17,7 @@ export const ShopView: ShopItem[] = [
 			vi: 'Nhựa Dễ Vỡ'
 		},
 		type: 'mora',
-		price: 10000000,
+		price: 10_000_000,
 		quantity: 1,
 		image: '<:FragileResin:1257820100325539861>',
 		description: {
@@ -33,7 +33,7 @@ export const ShopView: ShopItem[] = [
 			vi: 'Vương Miện tri thức'
 		},
 		type: 'mora',
-		price: 10000000,
+		price: 500_000_000,
 		quantity: 1,
 		image: '<:FragileResin:1257820100325539861>',
 		description: {

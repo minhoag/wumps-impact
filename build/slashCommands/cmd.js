@@ -55,7 +55,7 @@ const command = {
 				if (!result || result.length === 0)
 					return interaction.reply('Không tìm thấy thông tin người chơi.');
 				const embed = new discord_js_1.EmbedBuilder()
-					.setColor('#2F3137')
+					.setColor('#151220')
 					.setTitle(`Kết quả tìm kiếm: **${result['data']['data']['basic_brief']['nickname']}**`)
 					.setAuthor({
 						name: __1.default.user?.username,

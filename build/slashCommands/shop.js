@@ -19,7 +19,7 @@ const command = {
 		for (let i = 0; i < pages; i++) {
 			const embed = new discord_js_1.EmbedBuilder()
 				.setTitle('Credit Exchange Shop`')
-				.setColor('#2F3137')
+				.setColor('#151220')
 				.setTimestamp()
 				.setFooter({
 					text: `Credit Exchange Shop`,

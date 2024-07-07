@@ -39,21 +39,26 @@ class Shop {
 			},
 		];
 		const imageUrl: string | undefined = thumbnail.filter(i => i.name == this.name)[0].link ?? '';
+		let locale: string = this.interaction.locale
+		if (locale !== 'vi' && locale !== 'en-US' || !locale) locale = 'en-US';
+		const title: Record<string, string> = {
+			vi: `Chào mừng đến với ${this.name} shop`,
+			'en-US': `Welcome to ${this.name} shop`
+		}
 		for (let i: number = 0; i < 3; i++) {
 			const embed: EmbedBuilder = new EmbedBuilder()
-				.setTitle(`Welcome to ${this.name} shop`)
-				.setColor('#2F3137')
-				.setTimestamp()
+				.setTitle(`${title[locale]}`)
+				.setColor('#151220')
 				.setThumbnail(imageUrl)
 				.setFooter({
-					text: 'To buy the item, use command `/shop mora <\/ID>` to buy it.',
+					text: `${locale == "vi" ? "Để mua vật phẩm, sử dụng lệnh `shop mora <\/ID>` để giao dịch" : "To buy the item, use command `shop mora <\/ID>` to buy it."}`,
 					iconURL:
 						'https://ik.imagekit.io/asiatarget/genshin/icon_128x128.png?updatedAt=1699385494260',
 				});
-			this.item.slice(i * 3, i * 3 + 3).map((item: ShopItem) => {
+			this.item.slice(i * 3, i * 3 + 3).map((item: ShopItem, index: number) => {
 				embed.addFields({
-					name: `**${i + 1}. ${item.name} ${item.image} (ID: ${item.index})**`,
-					value: `**Price**: ${item.price.toLocaleString()} ${this.emoji ?? this.name}\n**Quantity**: ${item.quantity}\n**Description**: ${item.description}`,
+					name: `**${index + 1}. ${item.name[locale]} ${item.image} (ID: ${item.index})**`,
+					value: `**${locale == "vi" ? "Giá" : "Price"}**: ${item.price.toLocaleString()} ${this.emoji ?? this.name}\n**${locale == "vi" ? "Số lượng" : "Quantity"}**: ${item.quantity}\n**${locale == "vi" ? "Mô tả" : "Description"}**: ${item.description[locale]}`,
 					inline: false,
 				});
 			});
@@ -67,13 +72,16 @@ const command: SlashCommand = {
 	command: new SlashCommandBuilder()
 		.setName('buy')
 		.setDescription('Server Shop')
+		.setDescriptionLocalizations({
+			vi: 'Cửa hàng server'
+		})
 		.addSubcommand(subcommand =>
 			subcommand
 				.setName('shop')
-				.setDescription('View the server shop items.'))
+				.setDescription('View the server shop items.')
 				.setDescriptionLocalizations({
 					vi: 'Xem các vật phẩm hiện có trong cửa hàng.'
-				})
+				}))
 		.addSubcommand(subcommand =>
 			subcommand
 				.setName('mora')
@@ -84,19 +92,30 @@ const command: SlashCommand = {
 				.addNumberOption(option =>
 					option.setName('uid')
 						.setRequired(true)
-						.setDescription('Your account uid'))
+						.setDescription('Your account uid')
+						.setDescriptionLocalizations({
+							vi: 'UID trong game của bạn'
+						}))
 				.addNumberOption(option =>
 					option.setName('id')
 						.setRequired(true)
-						.setDescription('Mua vật phẩm trong cửa hàng bằng Mora.'))
+						.setDescription('Input item id')
+						.setDescriptionLocalizations({
+							vi: 'Nhập ID vật phẩm bạn cần mua'
+						}))
 				.addNumberOption(option =>
 					option.setName('quantity')
-						.setDescription('Item Quantity'))),
+						.setDescription('Item Quantity')
+						.setDescriptionLocalizations({
+							vi: 'Nhập số lượng vật phẩm bạn cần mua'
+						}))),
 	cooldown: 5,
 	execute: async (interaction: CommandInteraction) => {
 		if (!interaction.isChatInputCommand()) return;
 		if (!interaction.guild) return interaction.reply({content: 'Không thể thực hiện ở DM', ephemeral: true});
 		const ip = process.env.IP;
+		let locale: string = interaction.locale;
+		if (locale !== 'vi' && locale !== 'en-US' || !locale) locale = 'en-US';
 		if (interaction.options.getSubcommand() === 'shop') {
 			const userData = await sqliteUpdate(interaction.user.id);
 			if (!userData)
@@ -109,21 +128,28 @@ const command: SlashCommand = {
 			const credit: number = userData.credit;
 			const points: number = userData.points;
 			const embed: EmbedBuilder = new EmbedBuilder()
-				.setTitle('Choose the shop you want to view.')
-				.setColor('#2F3137')
-				.setTimestamp()
+				.setTitle(`${locale == "vi" ? "Chọn cửa hàng bạn muốn xem" : "Choose the shop you want to view."}`)
+				.setColor('#151220')
 				.setThumbnail('https://static.wikia.nocookie.net/gensin-impact/images/a/a8/System_Shop.png/revision/latest?cb=20210911040807')
 				.setFooter({
-					text: `Credit Exchange Shop`,
-					iconURL: 'https://ik.imagekit.io/asiatarget/genshin/icon_128x128.png?updatedAt=1699385494260',
+					text: `${locale == "vi" ? "Để mua vật phẩm, sử dụng lệnh `shop mora <\/ID>` để giao dịch" : "To buy the item, use command `shop mora <\/ID>` to buy it."}`,
+					iconURL:
+						'https://ik.imagekit.io/asiatarget/genshin/icon_128x128.png?updatedAt=1699385494260',
 				});
-			embed.setDescription('View and choose the shop you want to spend your currency on.\n\n' +
-				'**Credits**: Earned by donating to the server.\n' +
-				'**Mora**: Exchange in-game Mora to buy premium items.\n' +
-				'**Interactive Coins**: Exchange points earned by chat in this server to exchange for goods.\n' +
-				'\n**How to buy**: Register your account with `/register` and follow the instruction. This is to prevent using other account Mora.\n' +
-				'\n**Remarks**: Mora may take up to 1 minute to update. If you see that your Mora number is wrong. Please try again in 1 minute.\n',
-			);
+			locale == "vi" ?
+				embed.setDescription('Xem và chọn cửa hàng bạn muốn sử dụng tiền của mình.\n\n' +
+					'**Credits**: Kiếm được bằng cách quyên góp cho máy chủ (sắp có).\n' +
+					'**Mora**: Đổi Mora trong game để mua các vật phẩm cao cấp.\n' +
+					'**Interactive Coins**: Đổi điểm kiếm được khi chat trong máy chủ này để đổi lấy hàng hóa (sắp có).\n' +
+					'\n**Cách mua**: Đăng ký tài khoản của bạn với lệnh `/register` và làm theo hướng dẫn. Việc này nhằm ngăn chặn việc sử dụng Mora từ tài khoản khác.\n' +
+					'\n**Lưu ý**: Số luượng Mora có thể mất đến 1 phút để cập nhật. Nếu bạn thấy số Mora của mình sai, vui lòng thử lại sau 1 phút.\n'
+				): embed.setDescription('View and choose the shop you want to spend your currency on.\n\n' +
+					'**Credits**: Earned by donating to the server (coming soon).\n' +
+					'**Mora**: Exchange in-game Mora to buy premium items.\n' +
+					'**Interactive Coins**: Exchange points earned by chat in this server to exchange for goods (coming soon).\n' +
+					'\n**How to buy**: Register your account with `/register` and follow the instruction. This is to prevent using other account Mora.\n' +
+					'\n**Remarks**: Mora may take up to 1 minute to update. If you see that your Mora number is wrong. Please try again in 1 minute.\n',
+				)
 			embed.addFields({
 				name: 'Credits',
 				value: `\`\`\`${credit.toLocaleString()}\`\`\``,
@@ -163,7 +189,7 @@ const command: SlashCommand = {
 					// const credit = new Shop('Credit', i, items);
 					// await i.deferReply();
 					// await credit.sendResponse();
-					i.reply({ content: 'This shop is not yet available', ephemeral: true })
+					i.reply({ content: `${locale == "vi" ? "Shop tạm thời không khả dụng" : "This shop is not yet available"}`, ephemeral: true })
 				} else if (i.customId === 'shopMora') {
 					const items: ShopItem[] = ShopView.filter(i => i.type === 'mora');
 					const mora = new Shop('Mora', i, items, '<:Mora:1257820686269939824>');
@@ -173,7 +199,7 @@ const command: SlashCommand = {
 					// const point = new Shop('Point', i, items);
 					// await i.deferReply();
 					// await point.sendResponse();
-					i.reply({ content: 'This shop is not yet available', ephemeral: true })
+					i.reply({ content: `${locale == "vi" ? "Shop tạm thời không khả dụng" : "This shop is not yet available"}`, ephemeral: true })
 				}
 			});
 		} else if (interaction.options.getSubcommand() === 'mora') {
@@ -186,15 +212,15 @@ const command: SlashCommand = {
 			// Confirmation
 			const finalPrice = price.price * quantity;
 			const embed: EmbedBuilder = new EmbedBuilder()
-				.setTitle('Pending Confirmation')
-				.setColor('#2F3137')
-				.setDescription(`Would you like to confirm buying following item?\n
-				\` ${price.quantity * quantity}x \` ${price.image ?? ''}  ${price.name} (${finalPrice.toLocaleString()} <:Mora:1257820686269939824>)
-				\nTotal: **${finalPrice.toLocaleString()}** <:Mora:1257820686269939824>`);
+				.setTitle(`${locale == "vi" ? "Xác nhận mua" : "Pending Confirmation"}`)
+				.setColor('#151220')
+				.setDescription(`${locale == "vi" ? "Bạn có xác nhận muốn mua vật phẩm này?" : "Would you like to confirm buying following item?"}\n
+				\` ${price.quantity * quantity}x \` ${price.image ?? ''}  ${price.name[locale]} (${finalPrice.toLocaleString()} <:Mora:1257820686269939824>)
+				\n${locale == "vi" ? "Tổng" : "Total"}: **${finalPrice.toLocaleString()}** <:Mora:1257820686269939824>`);
 			//@ts-ignore
-			const confirm: ButtonBuilder = new ButtonBuilder().setCustomId('confirm').setLabel('Confirm').setStyle(ButtonStyle.Success);
+			const confirm: ButtonBuilder = new ButtonBuilder().setCustomId('confirm').setLabel(`${locale == "vi" ? "Xác nhận" : "Confirm"}`).setStyle(ButtonStyle.Success);
 			//@ts-ignore
-			const cancel: ButtonBuilder = new ButtonBuilder().setCustomId('cancel').setStyle(ButtonStyle.Danger).setLabel('Cancel');
+			const cancel: ButtonBuilder = new ButtonBuilder().setCustomId('cancel').setStyle(ButtonStyle.Danger).setLabel(`${locale == "vi" ? "Hủy" : "Cancel"}`);
 			const buttonRow: ActionRowBuilder<ButtonBuilder> = new ActionRowBuilder<ButtonBuilder>().addComponents([cancel, confirm]);
 			const response = await interaction.reply({
 				embeds: [embed],
@@ -210,7 +236,7 @@ const command: SlashCommand = {
 					const userData = await sqliteUpdate(interaction.user.id);
 					if (!userData) return await confirmation.update({content: 'Use command `/register` to create a new server account. If you already created a new server account but met this error. please contact admin to resolve the issue'});
 					if (userData.mora - BigInt(finalPrice) < 0) return await confirmation.update({
-						content: 'You have insufficient to purchase. If you believe that this is a mistake, contact admin to resolve.',
+						content: `${locale == "vi" ? "Bạn không đủ tiền. Nếu bạn tin rằng đây là lỗi, vui lòng liên hệ với quản trị viên để giải quyết." : "You have insufficient to purchase. If you believe that this is a mistake, contact admin to resolve."}`,
 						embeds: [],
 						components: [],
 					});
@@ -237,20 +263,20 @@ const command: SlashCommand = {
 								`http://${ip}:14861/api?sender=${sender}&title=${title}&content=${description}&item_list=${price.itemId}:${price.quantity}&expire_time=${seconds}&is_collectible=False&uid=${uid}&cmd=1005&region=dev_gio&ticket=GM%40${seconds}&sign=${uuid}`,
 							);
 							await confirmation.update({
-								content: 'Item buy successfully. Please check your email.',
+								content: `${locale == "vi" ? "Vật phẩm thành công và đã được gửi vào mail tài khoản của bạn." : "Item buy successfully. Please check your email."}`,
 								embeds: [],
 								components: [],
 							});
 						} else {
 							await confirmation.update({
-								content: 'There is an error in transferring item. Please contact admin team to resolve the issue.',
+								content: `${locale == "vi" ? "Xác nhận" : "Confirm"}`,
 								embeds: [],
 								components: [],
 							});
 						}
 					});
 				} else if (confirmation.customId === 'cancel') {
-					await confirmation.update({content: 'Buying cancelled', embeds: [], components: []});
+					await confirmation.update({content: `${locale == "vi" ? "Giao dịch đã được hủy" : "Buying cancelled"}`, embeds: [], components: []});
 				}
 			} catch (e) {
 				console.log(e);

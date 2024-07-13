@@ -203,6 +203,7 @@ export const extractSubstats = (substatsString: string) => {
 
 /* Function Pagination */
 export const shopPagination = async (interaction: CommandInteraction, pages: any[], time: number) => {
+	console.log(pages.length)
 	if (pages.length === 1) {
 		const page: any = await interaction.editReply({
 			embeds: [pages[0]],
@@ -280,9 +281,13 @@ export async function sendOTP(uid: string, otp: string): Promise<void> {
 	const sender: string = 'P・A・I・M・O・N';
 	const description: string = `Your OTP for the account is ${otp}. Use this code to enter in the Form opened on Discord for verification.`;
 	const seconds = moment().add(Number(15), 'minute').unix();
-	await fetch(
-		`http://${ip}:14861/api?sender=${sender}&title=${title}&content=${description}&item_list=202:1&expire_time=${seconds}&is_collectible=False&uid=${uid}&cmd=1005&region=dev_gio&ticket=GM%40${seconds}&sign=${uuid}`,
-	);
+	try {
+		await fetch(
+			`http://${ip}:14861/api?sender=${sender}&title=${title}&content=${description}&item_list=202:1&expire_time=${seconds}&is_collectible=False&uid=${uid}&cmd=1005&region=dev_gio&ticket=GM%40${seconds}&sign=${uuid}`,
+		);
+	} catch {
+		console.log(otp);
+	}
 }
 
 export async function checkDatabase(user: string) {
@@ -306,17 +311,21 @@ export async function sqliteUpdate(user: string) {
 	const lastUpdate: number = userData.lastUpdate;
 	const timeDiff: number = timeNow - lastUpdate;
 	if (timeDiff > 60) {
-		const briefData = await fetch(`http://${ip}:14861/api?cmd=5003&region=dev_gio&ticket=GM&uid=${userData.uid}`).then(res => res.json());
-		const moraUpdate = briefData.data.scoin;
-		await prisma_sqlite.userData.update({
-			where: {
-				user: user,
-			},
-			data: {
-				mora: moraUpdate,
-				lastUpdate: timeNow,
-			},
-		});
+		try {
+			const briefData = await fetch(`http://${ip}:14861/api?cmd=5003&region=dev_gio&ticket=GM&uid=${userData.uid}`).then(res => res.json());
+			const moraUpdate = briefData.data.scoin;
+			await prisma_sqlite.userData.update({
+				where: {
+					user: user,
+				},
+				data: {
+					mora: moraUpdate,
+					lastUpdate: timeNow,
+				},
+			});
+		} catch {
+			console.log("Cannot fetch data. Might because database is not connected.")
+		}
 	}
 	return userData;
 }

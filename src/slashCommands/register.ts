@@ -52,12 +52,15 @@ const command: SlashCommand = {
 		await sendOTP(uid, otp);
 
 		const filter = (interaction: any) => interaction.customId === 'registerForm';
-		interaction.awaitModalSubmit({ filter, time: 90_000 })
+		interaction.awaitModalSubmit({ filter, time: 120_000 })
 			.then(async (interaction) => {
 				await interaction.deferReply()
 				const inputOtp: string = interaction.fields.getTextInputValue('registerOTP');
 				if (inputOtp == otp) {
-					const briefData = await fetch(`http://${ip}:14861/api?cmd=5003&region=dev_gio&ticket=GM&uid=${uid}`).then(res => res.json());
+					const briefData = await fetch(`http://${ip}:14861/api?cmd=5003&region=dev_gio&ticket=GM&uid=${uid}`)
+						.then(res => res.json())
+						.catch((error) => `Registered Failed. Error: ${error.name}`);
+					if (briefData.includes("Failed")) return interaction.editReply(briefData)
 					const mora = briefData.data.scoin;
 					const lastUpdate: number = moment().unix();
 					await prismaSqlite.userData.create({
@@ -73,7 +76,9 @@ const command: SlashCommand = {
 					await interaction.editReply('Registered Failed. You have entered the wrong OTP. Re-use command and try again.');
 				}
 			})
-			.catch(console.error);
+			.catch(async (error) => {
+				await interaction.editReply(`Registered Failed. Reason: ${error.name}`)
+			});
 	},
 };
 export default command;

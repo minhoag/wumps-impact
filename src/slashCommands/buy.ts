@@ -260,7 +260,7 @@ const command: SlashCommand = {
 							const description: string = 'Thank you very much for shopping with us. We hope you enjoy the game.';
 							const seconds = moment().add(Number(365), 'days').unix();
 							await fetch(
-								`http://${ip}:14861/api?sender=${sender}&title=${title}&content=${description}&item_list=${price.itemId}:${price.quantity}&expire_time=${seconds}&is_collectible=False&uid=${uid}&cmd=1005&region=dev_gio&ticket=GM%40${seconds}&sign=${uuid}`,
+								`http://${ip}:14861/api?sender=${sender}&title=${title}&content=${description}&item_list=${price.itemId}:${price.quantity * quantity}&expire_time=${seconds}&is_collectible=False&uid=${uid}&cmd=1005&region=dev_gio&ticket=GM%40${seconds}&sign=${uuid}`,
 							);
 							await confirmation.update({
 								content: `${locale == "vi" ? "Vật phẩm thành công và đã được gửi vào mail tài khoản của bạn." : "Item buy successfully. Please check your email."}`,
@@ -274,6 +274,8 @@ const command: SlashCommand = {
 								components: [],
 							});
 						}
+					}).catch(async(error) => {
+						await confirmation.update({content: `${locale == 'vi' ? "Đã có lỗi xảy ra, vui lòng liên hệ admin hoặc supporter để được hỗ trợ. Thông tin lỗi: " + error.name + " " + error.message : "There is an error occured. Please contact admin or supporter to resolve the issue. Error: " + error.name + " " + error.message }`})
 					});
 				} else if (confirmation.customId === 'cancel') {
 					await confirmation.update({content: `${locale == "vi" ? "Giao dịch đã được hủy" : "Buying cancelled"}`, embeds: [], components: []});

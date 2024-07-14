@@ -17,7 +17,7 @@ export const ShopView: ShopItem[] = [
 			vi: 'Nhựa Dễ Vỡ'
 		},
 		type: 'mora',
-		price: 10_000_000,
+		price: 5_000_000,
 		quantity: 1,
 		image: '<:FragileResin:1257820100325539861>',
 		description: {
@@ -33,9 +33,9 @@ export const ShopView: ShopItem[] = [
 			vi: 'Vương Miện tri thức'
 		},
 		type: 'mora',
-		price: 500_000_000,
+		price: 50_000_000,
 		quantity: 1,
-		image: '<:FragileResin:1257820100325539861>',
+		image: '<:Crown_of_Insight:1261349069280903278>',
 		description: {
 			"en-US": 'Character Talent Material used when leveling Combat Talents.',
 			vi: 'Vật liệu Thiên Phú Nhân Vật được sử dụng khi nâng cấp Thiên Phú Chiến Đấu.'
@@ -53,8 +53,24 @@ export const ShopView: ShopItem[] = [
 		quantity: 1,
 		image: '<:IntertwinedFate:1184076475813597187>',
 		description: {
-			"en-US": 'Intertwined Fate can be used for Event Wishes. ',
+			"en-US": 'Intertwined Fate can be used for Event Wishes.',
 			vi: 'Mối Duyên Tương Ngộ sử dụng trong Sự kiện ước nguyện giới hạn.'
+		}
+	},
+	{
+		index: 202002,
+		itemId: 223,
+		name: {
+			"en-US": 'Acquaint Fate',
+			vi: 'Mối Duyên Vương Vấn'
+		},
+		type: 'mora',
+		price: 5_000_000,
+		quantity: 1,
+		image: '<:IntertwinedFate:1184076475813597187>',
+		description: {
+			"en-US": 'Acquaint Fate can be used for Standard Wishes and Beginners\' Wish.',
+			vi: 'Mối Duyên Vương sử dụng trong Ước nguyện Tiêu Chuẩn và Ước Nguyện người chơi mới.'
 		}
 	},
 ]

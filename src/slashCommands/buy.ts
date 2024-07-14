@@ -45,7 +45,7 @@ class Shop {
 			vi: `Chào mừng đến với ${this.name} shop`,
 			'en-US': `Welcome to ${this.name} shop`
 		}
-		for (let i: number = 0; i < 3; i++) {
+		for (let i: number = 0; i < this.item.length / 3; i++) {
 			const embed: EmbedBuilder = new EmbedBuilder()
 				.setTitle(`${title[locale]}`)
 				.setColor('#151220')
@@ -175,7 +175,6 @@ const command: SlashCommand = {
 			const response = await interaction.reply({
 				embeds: [embed],
 				components: [buttonRow],
-				ephemeral: true
 			});
 			//@interaction-reply
 			const collector: InteractionCollector<any> = response.createMessageComponentCollector({
@@ -183,7 +182,6 @@ const command: SlashCommand = {
 				time: 3_600_000,
 			});
 			collector.on('collect', async i => {
-				await i.deferReply();
 				if (i.customId === 'shopCredit') {
 					// const items: ShopItem[] = ShopView.filter(i => i.type === 'credit');
 					// const credit = new Shop('Credit', i, items);

@@ -203,18 +203,27 @@ export const extractSubstats = (substatsString: string) => {
 
 /* Function Pagination */
 export const shopPagination = async (interaction: CommandInteraction, pages: any[], time: number) => {
-	console.log(pages.length)
+	await interaction.deferReply()
 	if (pages.length === 1) {
-		const page: any = await interaction.editReply({
+		const page = await interaction.editReply({
 			embeds: [pages[0]],
 			components: [],
 		});
 		return page;
 	}
-	//@ts-ignore
-	const prev = new ButtonBuilder().setCustomId('prev').setLabel('Previous').setStyle(ButtonStyle.Primary).setDisabled(true);
-	//@ts-ignore
-	const next = new ButtonBuilder().setCustomId('next').setStyle(ButtonStyle.Primary).setLabel('Next');
+
+	const prev = new ButtonBuilder()
+		.setCustomId('prev')
+		.setLabel('Previous')
+		// @ts-ignore
+		.setStyle(ButtonStyle.Primary)
+		.setDisabled(true);
+
+	const next = new ButtonBuilder()
+		.setCustomId('next')
+		.setLabel('Next')
+		// @ts-ignore
+		.setStyle(ButtonStyle.Primary);
 
 	const buttonRow = new ActionRowBuilder<ButtonBuilder>().addComponents([prev, next]);
 	let index = 0;
@@ -223,43 +232,49 @@ export const shopPagination = async (interaction: CommandInteraction, pages: any
 		components: [buttonRow],
 	});
 
-	const collector: InteractionCollector<any> = currentPage.createMessageComponentCollector({
+	const collector = currentPage.createMessageComponentCollector({
 		componentType: ComponentType.Button,
 		time,
 	});
 
 	collector.on('collect', async (i) => {
-		if (i.user.id !== interaction.user.id) {
-			await i.reply({
-				content: 'You don\'t have the permission to use this command.',
-				ephemeral: true,
+		try {
+			if (i.user.id !== interaction.user.id) {
+				await i.reply({
+					content: 'Bạn không có quyền sử dụng lệnh này.',
+					ephemeral: true,
+				});
+			}
+			await i.deferUpdate();
+
+			if (i.customId === 'prev') {
+				index--;
+				prev.setDisabled(index === 0);
+				next.setDisabled(false);
+			} else if (i.customId === 'next') {
+				index++;
+				prev.setDisabled(false);
+				next.setDisabled(index === pages.length - 1);
+			}
+			await currentPage.edit({
+				embeds: [pages[index]],
+				components: [buttonRow],
 			});
+			collector.resetTimer();
+		} catch (error) {
+			console.log(error);
 		}
-		await i.deferUpdate();
-
-		if (i.customId === 'prev') {
-			index--;
-			prev.setDisabled(index === 0);
-			next.setDisabled(false);
-		} else if (i.customId === 'next') {
-			index++;
-			prev.setDisabled(false);
-			next.setDisabled(index === pages.length - 1);
-		}
-
-		await currentPage.edit({
-			embeds: [pages[index]],
-			components: [buttonRow],
-		});
-
-		collector.resetTimer();
 	});
 
 	collector.on('end', async () => {
-		await currentPage.edit({
-			embeds: [pages[index]],
-			components: [],
-		});
+		try {
+			await currentPage.edit({
+				embeds: [pages[index]],
+				components: [],
+			});
+		} catch (error) {
+			console.log(error);
+		}
 	});
 	return currentPage;
 };

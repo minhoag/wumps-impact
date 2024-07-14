@@ -203,7 +203,7 @@ export const extractSubstats = (substatsString: string) => {
 
 /* Function Pagination */
 export const shopPagination = async (interaction: CommandInteraction, pages: any[], time: number) => {
-	await interaction.deferReply()
+	await interaction.deferReply();
 	if (pages.length === 1) {
 		const page = await interaction.editReply({
 			embeds: [pages[0]],

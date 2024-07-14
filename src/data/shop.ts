@@ -46,7 +46,7 @@ export const ShopView: ShopItem[] = [
 		itemId: 223,
 		name: {
 			"en-US": 'Intertwined Fate',
-			vi: 'Mối Duyên Tương Ngộ'
+			vi: 'Mối Duyên Vương Vấn'
 		},
 		type: 'mora',
 		price: 5_000_000,
@@ -62,7 +62,7 @@ export const ShopView: ShopItem[] = [
 		itemId: 224,
 		name: {
 			"en-US": 'Acquaint Fate',
-			vi: 'Mối Duyên Vương Vấn'
+			vi: 'Mối Duyên Tương Ngộ'
 		},
 		type: 'mora',
 		price: 5_000_000,

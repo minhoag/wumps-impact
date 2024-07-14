@@ -67,7 +67,7 @@ export const ShopView: ShopItem[] = [
 		type: 'mora',
 		price: 5_000_000,
 		quantity: 1,
-		image: '<:IntertwinedFate:1184076475813597187>',
+		image: '<:AcquaintFate:1184076479324229652>',
 		description: {
 			"en-US": 'Acquaint Fate can be used for Standard Wishes and Beginners\' Wish.',
 			vi: 'Mối Duyên Vương sử dụng trong Ước nguyện Tiêu Chuẩn và Ước Nguyện người chơi mới.'

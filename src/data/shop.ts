@@ -35,14 +35,14 @@ export const ShopView: ShopItem[] = [
 		type: 'mora',
 		price: 500_000_000,
 		quantity: 1,
-		image: '<:Crown_of_Insight:1261349069280903278>',
+		image: '<:CrownofInsight:1262128515533508671>',
 		description: {
 			"en-US": 'Character Talent Material used when leveling Combat Talents.',
 			vi: 'Vật liệu Thiên Phú Nhân Vật được sử dụng khi nâng cấp Thiên Phú Chiến Đấu.'
 		}
 	},
 	{
-		index: 202002,
+		index: 202003,
 		itemId: 223,
 		name: {
 			"en-US": 'Intertwined Fate',
@@ -58,7 +58,7 @@ export const ShopView: ShopItem[] = [
 		}
 	},
 	{
-		index: 202002,
+		index: 202004,
 		itemId: 224,
 		name: {
 			"en-US": 'Acquaint Fate',

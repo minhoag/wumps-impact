@@ -4,11 +4,11 @@ import {
 	ButtonStyle,
 	CommandInteraction,
 	ComponentType,
-	GuildMember, InteractionCollector,
+	GuildMember, Message,
 	PermissionFlagsBits,
 	PermissionResolvable,
-	TextChannel,
-} from 'discord.js';
+	TextChannel
+} from 'discord.js'
 import {schedule} from './data/schedule';
 import prisma from './prisma/prisma';
 import prisma_second from './prisma/prisma-second';
@@ -203,9 +203,9 @@ export const extractSubstats = (substatsString: string) => {
 
 /* Function Pagination */
 export const shopPagination = async (interaction: CommandInteraction, pages: any[], time: number) => {
-	await interaction.deferReply();
+	await interaction.deferReply()
 	if (pages.length === 1) {
-		const page = await interaction.editReply({
+		const page: Message<any> = await interaction.editReply({
 			embeds: [pages[0]],
 			components: [],
 		});

@@ -42,7 +42,7 @@ export const ShopView: ShopItem[] = [
 		}
 	},
 	{
-		index: 202002,
+		index: 202003,
 		itemId: 223,
 		name: {
 			"en-US": 'Intertwined Fate',
@@ -58,7 +58,7 @@ export const ShopView: ShopItem[] = [
 		}
 	},
 	{
-		index: 202002,
+		index: 202004,
 		itemId: 224,
 		name: {
 			"en-US": 'Acquaint Fate',

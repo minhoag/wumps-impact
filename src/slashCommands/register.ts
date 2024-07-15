@@ -71,9 +71,9 @@ const command: SlashCommand = {
 							lastUpdate: lastUpdate,
 						},
 					});
-					await interaction.reply('Successfully registered');
+					await interaction.editReply('Successfully registered');
 				} else {
-					await interaction.reply('Registered Failed. You have entered the wrong OTP. Re-use command and try again.');
+					await interaction.editReply('Registered Failed. You have entered the wrong OTP. Re-use command and try again.');
 				}
 			})
 			.catch(async (error) => {

@@ -60,7 +60,7 @@ const command: SlashCommand = {
 					const briefData = await fetch(`http://${ip}:14861/api?cmd=5003&region=dev_gio&ticket=GM&uid=${uid}`)
 						.then(res => res.json())
 						.catch((error) => `Registered Failed. Error: ${error.name}. Message: ${error.message}`);
-					if (briefData.includes("Failed")) return interaction.editReply(briefData)
+					console.log('This is briefData: ' + briefData);
 					const mora: bigint = briefData.data.scoin;
 					const lastUpdate: number = moment().unix();
 					await prismaSqlite.userData.create({

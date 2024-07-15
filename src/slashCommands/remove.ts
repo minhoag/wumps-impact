@@ -60,8 +60,10 @@ const command: SlashCommand = {
 		if (!interaction.guild) return interaction.reply('Không thể thực hiện ở DM');
 		const event = interaction.options.getString('event', true);
 		const eventName = items.find((item) => item.value == event);
-		const confirm = new ButtonBuilder().setCustomId('confirm').setLabel('Xác nhận');
-		const cancel = new ButtonBuilder().setCustomId('cancel').setLabel('Hủy');
+		// @ts-ignore
+		const confirm = new ButtonBuilder().setCustomId('confirm').setLabel('Xác nhận').setStyle(ButtonStyle.Primary);
+		// @ts-ignore
+		const cancel = new ButtonBuilder().setCustomId('cancel').setLabel('Hủy').setStyle(ButtonStyle.Primary);
 		const row: ActionRowBuilder<ButtonBuilder> = new ActionRowBuilder<ButtonBuilder>().addComponents(confirm, cancel);
 		const response = await interaction.reply({
 			content: `Xác nhận xóa sự kiện ${eventName?.name}?`,

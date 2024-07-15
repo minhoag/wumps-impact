@@ -61,7 +61,7 @@ const command: SlashCommand = {
 						.then(res => res.json())
 						.catch((error) => `Registered Failed. Error: ${error.name}. Message: ${error.message}`);
 					if (briefData.includes("Failed")) return interaction.editReply(briefData)
-					const mora: bigint | number = briefData.data.scoin;
+					const mora: bigint = briefData.data.scoin;
 					const lastUpdate: number = moment().unix();
 					await prismaSqlite.userData.create({
 						data: {

@@ -54,9 +54,9 @@ const command: SlashCommand = {
 		const filter = (interaction: any) => interaction.customId === 'registerForm';
 		interaction.awaitModalSubmit({ filter, time: 120_000 })
 			.then(async (interaction) => {
-				await interaction.deferReply()
 				const inputOtp: string = interaction.fields.getTextInputValue('registerOTP');
 				if (inputOtp == otp) {
+					await interaction.deferReply()
 					const briefData = await fetch(`http://${ip}:14861/api?cmd=5003&region=dev_gio&ticket=GM&uid=${uid}`)
 						.then(res => res.json())
 						.catch((error) => `Registered Failed. Error: ${error.name}`);
@@ -71,9 +71,9 @@ const command: SlashCommand = {
 							lastUpdate: lastUpdate,
 						},
 					});
-					await interaction.editReply('Successfully registered');
+					await interaction.reply('Successfully registered');
 				} else {
-					await interaction.editReply('Registered Failed. You have entered the wrong OTP. Re-use command and try again.');
+					await interaction.reply('Registered Failed. You have entered the wrong OTP. Re-use command and try again.');
 				}
 			})
 			.catch(async (error) => {

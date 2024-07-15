@@ -59,9 +59,9 @@ const command: SlashCommand = {
 					await interaction.deferReply()
 					const briefData = await fetch(`http://${ip}:14861/api?cmd=5003&region=dev_gio&ticket=GM&uid=${uid}`)
 						.then(res => res.json())
-						.catch((error) => `Registered Failed. Error: ${error.name}`);
+						.catch((error) => `Registered Failed. Error: ${error.name}. Message: ${error.message}`);
 					if (briefData.includes("Failed")) return interaction.editReply(briefData)
-					const mora = briefData.data.scoin;
+					const mora: bigint | number = briefData.data.scoin;
 					const lastUpdate: number = moment().unix();
 					await prismaSqlite.userData.create({
 						data: {
@@ -77,7 +77,7 @@ const command: SlashCommand = {
 				}
 			})
 			.catch(async (error) => {
-				await interaction.editReply(`Registered Failed. Reason: ${error.name}`)
+				await interaction.editReply(`Registered Failed. Reason: ${error.name}. Message: ${error.message}`)
 			});
 	},
 };

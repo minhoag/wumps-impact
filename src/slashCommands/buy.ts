@@ -106,6 +106,7 @@ const command: SlashCommand = {
 				.addNumberOption(option =>
 					option.setName('quantity')
 						.setDescription('Item Quantity')
+						.setMaxValue(30)
 						.setDescriptionLocalizations({
 							vi: 'Nhập số lượng vật phẩm bạn cần mua'
 						}))),

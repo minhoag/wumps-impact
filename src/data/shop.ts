@@ -73,4 +73,52 @@ export const ShopView: ShopItem[] = [
 			vi: 'Mối Duyên Vương sử dụng trong Ước nguyện Tiêu Chuẩn và Ước Nguyện người chơi mới.'
 		}
 	},
+	{
+		index: 202005,
+		itemId: 115024,
+		name: {
+			"en-US": 'Material Share Bundle',
+			vi: 'Gói Chia Sẻ Tài Nguyên'
+		},
+		type: 'mora',
+		price: 5_000_000,
+		quantity: 5,
+		image: '<:MaterialBundle:1263397840164487289>',
+		description: {
+			"en-US": 'The Guild will routinely give out materials of excellent quality, some of which possess limitless potential.',
+			vi: 'Một số nguyên liệu tốt được hiệp hội chia sẻ thường xuyên, một số trong số đó có tiềm năng vô hạn.'
+		}
+	},
+	{
+		index: 202006,
+		itemId: 117011,
+		name: {
+			"en-US": 'Domain Reliquary: Type 1',
+			vi: 'Hộp Thánh Vật Thần Bí: Loại 1'
+		},
+		type: 'mora',
+		price: 50_000_000,
+		quantity: 1,
+		image: '<:DomainReliquary:1263401902247247962>',
+		description: {
+			"en-US": 'The Reliquary Box contains either **Desert Pavilion Chronicle** or **Lost Prayer to the Sacred Winds**.',
+			vi: 'Hộp Thánh Dị Vật có chứa 1 mảnh **Sử Ký Đình Đài Cát** hoặc **Đoá Hoa Trang Viên Thất Lạc**.'
+		}
+	},
+	{
+		index: 202007,
+		itemId: 117009,
+		name: {
+			"en-US": 'Domain Reliquary: Type 2',
+			vi: 'Hộp Thánh Vật Thần Bí: Loại 2'
+		},
+		type: 'mora',
+		price: 50_000_000,
+		quantity: 1,
+		image: '<:DomainReliquary:1263401902247247962>',
+		description: {
+			"en-US": 'The Reliquary Box contains either **Deepwood Memory** or **Gilded Dream**.',
+			vi: 'Hộp Thánh Dị Vật có chứa 1 mảnh **Ký Ức Rừng Sâu** hoặc **Giấc Mộng Hoàng Kim**.'
+		}
+	},
 ]

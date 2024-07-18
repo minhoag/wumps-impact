@@ -57,7 +57,7 @@ class Shop {
 				});
 			this.item.slice(i * 3, i * 3 + 3).map((item: ShopItem, index: number) => {
 				embed.addFields({
-					name: `**${index + 1}. ${item.name[locale]} ${item.image} (ID: ${item.index})**`,
+					name: `**${index + 1 + i * 3}. ${item.name[locale]} ${item.image} (ID: ${item.index})**`,
 					value: `**${locale == "vi" ? "Giá" : "Price"}**: ${item.price.toLocaleString()} ${this.emoji ?? this.name}\n**${locale == "vi" ? "Số lượng" : "Quantity"}**: ${item.quantity}\n**${locale == "vi" ? "Mô tả" : "Description"}**: ${item.description[locale]}`,
 					inline: false,
 				});

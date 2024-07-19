@@ -9,9 +9,8 @@ import {
 	SlashCommandBuilder
 } from 'discord.js'
 import { SlashCommand } from '../types'
-import { shopPagination, sqliteUpdate } from '../function'
+import { sendThankYouMail, shopPagination, sqliteUpdate } from '../function'
 import { ShopItem, ShopView } from '../data/shop'
-import moment from 'moment/moment'
 import prisma_sqlite from '../prisma/prisma-sqlite'
 
 class Shop {
@@ -37,6 +36,10 @@ class Shop {
 				name: 'Mora',
 				link: 'https://static.wikia.nocookie.net/gensin-impact/images/8/84/Item_Mora.png',
 			},
+			{
+				name: 'Points',
+				link: 'https://static.wikia.nocookie.net/gensin-impact/images/2/29/Item_Adepti_Sigil.png',
+			},
 		];
 		const imageUrl: string | undefined = thumbnail.filter(i => i.name == this.name)[0].link ?? '';
 		let locale: string = this.interaction.locale
@@ -51,7 +54,7 @@ class Shop {
 				.setColor('#151220')
 				.setThumbnail(imageUrl)
 				.setFooter({
-					text: `${locale == "vi" ? "Để mua vật phẩm, sử dụng lệnh `shop mora <\/ID>` để giao dịch" : "To buy the item, use command `shop mora <\/ID>` to buy it."}`,
+					text: `${locale == "vi" ? "Để mua vật phẩm, sử dụng lệnh `shop mora <\/ID>` để giao dịch" : "To buy the item, use command `buy mora <\/ID>` to buy it."}`,
 					iconURL:
 						'https://ik.imagekit.io/asiatarget/genshin/icon_128x128.png?updatedAt=1699385494260',
 				});
@@ -82,6 +85,34 @@ const command: SlashCommand = {
 				.setDescriptionLocalizations({
 					vi: 'Xem các vật phẩm hiện có trong cửa hàng.'
 				}))
+		.addSubcommand(subcommand =>
+			subcommand
+				.setName('points')
+				.setDescription('Buy server shop with Points.')
+				.setDescriptionLocalizations({
+					vi: 'Xem các vật phẩm hiện có trong cửa hàng.'
+				})
+				.addNumberOption(option =>
+					option.setName('uid')
+						.setRequired(true)
+						.setDescription('Your account uid')
+						.setDescriptionLocalizations({
+							vi: 'UID trong game của bạn'
+						}))
+				.addNumberOption(option =>
+					option.setName('id')
+						.setRequired(true)
+						.setDescription('Input item id')
+						.setDescriptionLocalizations({
+							vi: 'Nhập ID vật phẩm bạn cần mua'
+						}))
+				.addNumberOption(option =>
+					option.setName('quantity')
+						.setDescription('Item Quantity')
+						.setMaxValue(30)
+						.setDescriptionLocalizations({
+							vi: 'Nhập số lượng vật phẩm bạn cần mua'
+						})))
 		.addSubcommand(subcommand =>
 			subcommand
 				.setName('mora')
@@ -133,7 +164,7 @@ const command: SlashCommand = {
 				.setColor('#151220')
 				.setThumbnail('https://static.wikia.nocookie.net/gensin-impact/images/a/a8/System_Shop.png/revision/latest?cb=20210911040807')
 				.setFooter({
-					text: `${locale == "vi" ? "Để mua vật phẩm, sử dụng lệnh `shop mora <\/ID>` để giao dịch" : "To buy the item, use command `shop mora <\/ID>` to buy it."}`,
+					text: `${locale == "vi" ? "Để mua vật phẩm, sử dụng lệnh `shop mora <\/ID>` để giao dịch" : "To buy the item, use command `buy points <\/ID>` to buy it."}`,
 					iconURL:
 						'https://ik.imagekit.io/asiatarget/genshin/icon_128x128.png?updatedAt=1699385494260',
 				});
@@ -194,11 +225,9 @@ const command: SlashCommand = {
 					const mora = new Shop('Mora', i, items, '<:Mora:1257820686269939824>');
 					await mora.sendResponse();
 				} else if (i.customId === 'shopPoint') {
-					// const items: ShopItem[] = ShopView.filter(i => i.type === 'point');
-					// const point = new Shop('Point', i, items);
-					// await i.deferReply();
-					// await point.sendResponse();
-					i.reply({ content: `${locale == "vi" ? "Shop tạm thời không khả dụng" : "This shop is not yet available"}`, ephemeral: true })
+					const items: ShopItem[] = ShopView.filter(i => i.type === 'points');
+					const point = new Shop('Points', i, items, '<:Points:1263907506535534592>');
+					await point.sendResponse();
 				}
 			});
 		} else if (interaction.options.getSubcommand() === 'mora') {
@@ -254,13 +283,7 @@ const command: SlashCommand = {
 					).then(async (res: Response) => {
 						const response: any = await res.json();
 						if (response.msg === 'succ') {
-							const title: string = 'Thank you for your purchasing';
-							const sender: string = 'P・A・I・M・O・N';
-							const description: string = 'Thank you very much for shopping with us. We hope you enjoy the game.';
-							const seconds = moment().add(Number(365), 'days').unix();
-							await fetch(
-								`http://${ip}:14861/api?sender=${sender}&title=${title}&content=${description}&item_list=${price.itemId}:${price.quantity * quantity}&expire_time=${seconds}&is_collectible=False&uid=${uid}&cmd=1005&region=dev_gio&ticket=GM%40${seconds}&sign=${uuid}`,
-							);
+							await sendThankYouMail(price, quantity, uid, uuid)
 							await confirmation.update({
 								content: `${locale == "vi" ? "Vật phẩm thành công và đã được gửi vào mail tài khoản của bạn." : "Item buy successfully. Please check your email."}`,
 								embeds: [],
@@ -275,6 +298,71 @@ const command: SlashCommand = {
 						}
 					}).catch(async(error) => {
 						await confirmation.update({content: `${locale == 'vi' ? "Đã có lỗi xảy ra, vui lòng liên hệ admin hoặc supporter để được hỗ trợ. Thông tin lỗi: " + error.name + " " + error.message : "There is an error occured. Please contact admin or supporter to resolve the issue. Error: " + error.name + " " + error.message }`})
+					});
+				} else if (confirmation.customId === 'cancel') {
+					await confirmation.update({content: `${locale == "vi" ? "Giao dịch đã được hủy" : "Buying cancelled"}`, embeds: [], components: []});
+				}
+			} catch (e) {
+				console.log(e);
+				await interaction.editReply({
+					content: 'Confirmation not received within 1 minute, cancelling...',
+					embeds: [],
+					components: [],
+				});
+			}
+		} else if (interaction.options.getSubcommand() === 'points') {
+			const uid: number = interaction.options.getNumber('uid', true);
+			const itemId: number = interaction.options.getNumber('id', true);
+			const quantity: number = interaction.options.getNumber('quantity') ?? 1;
+			const price: ShopItem | undefined = ShopView.find((i: ShopItem) => i.index === itemId);
+			if (!price) return await interaction.reply({ content: 'Cannot find item', ephemeral: true })
+			const uuid: string = new Date().getTime().toString();
+			// Confirmation
+			const finalPrice = price.price * quantity;
+			const embed: EmbedBuilder = new EmbedBuilder()
+				.setTitle(`${locale == "vi" ? "Xác nhận mua" : "Pending Confirmation"}`)
+				.setColor('#151220')
+				.setDescription(`${locale == "vi" ? "Bạn có xác nhận muốn mua vật phẩm này?" : "Would you like to confirm buying following item?"}\n
+				\` ${price.quantity * quantity}x \` ${price.image ?? ''}  ${price.name[locale]} (${finalPrice.toLocaleString()} <:Points:1263907506535534592>)
+				\n${locale == "vi" ? "Tổng" : "Total"}: **${finalPrice.toLocaleString()}** <:Points:1263907506535534592>`);
+			//@ts-ignore
+			const confirm: ButtonBuilder = new ButtonBuilder().setCustomId('confirm').setLabel(`${locale == "vi" ? "Xác nhận" : "Confirm"}`).setStyle(ButtonStyle.Success);
+			//@ts-ignore
+			const cancel: ButtonBuilder = new ButtonBuilder().setCustomId('cancel').setStyle(ButtonStyle.Danger).setLabel(`${locale == "vi" ? "Hủy" : "Cancel"}`);
+			const buttonRow: ActionRowBuilder<ButtonBuilder> = new ActionRowBuilder<ButtonBuilder>().addComponents([cancel, confirm]);
+			const response = await interaction.reply({
+				embeds: [embed],
+				components: [buttonRow],
+				ephemeral: true
+			});
+			const collectorFilter = (i: any) => i.user.id === interaction.user.id;
+
+			try {
+				const confirmation = await response.awaitMessageComponent({filter: collectorFilter, time: 45_000});
+				if (confirmation.customId === 'confirm') {
+					//check if sufficient
+					const userData = await sqliteUpdate(interaction.user.id);
+					if (!userData) return await confirmation.update({content: 'Use command `/register` to create a new server account. If you already created a new server account but met this error. please contact admin to resolve the issue'});
+					if (userData.points - finalPrice < 0) return await confirmation.update({
+						content: `${locale == "vi" ? "Bạn không đủ điểm để đổi thưởng. Nếu bạn tin rằng đây là lỗi, vui lòng liên hệ với quản trị viên để giải quyết." : "You have insufficient points to trade. If you believe that this is a mistake, contact admin to resolve."}`,
+						embeds: [],
+						components: [],
+					});
+					await prisma_sqlite.userData.update({
+						where: {
+							user: interaction.user.id,
+						},
+						data: {
+							points: {
+								decrement: finalPrice,
+							},
+						},
+					});
+					await sendThankYouMail(price, quantity, uid, uuid)
+					await confirmation.update({
+						content: `${locale == "vi" ? "Vật phẩm thành công và đã được gửi vào mail tài khoản của bạn." : "Item buy successfully. Please check your email."}`,
+						embeds: [],
+						components: [],
 					});
 				} else if (confirmation.customId === 'cancel') {
 					await confirmation.update({content: `${locale == "vi" ? "Giao dịch đã được hủy" : "Buying cancelled"}`, embeds: [], components: []});

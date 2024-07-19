@@ -4,7 +4,8 @@ import {
 	ButtonStyle,
 	CommandInteraction,
 	ComponentType,
-	GuildMember, Message,
+	GuildMember,
+	Message,
 	PermissionFlagsBits,
 	PermissionResolvable,
 	TextChannel
@@ -343,6 +344,34 @@ export async function sqliteUpdate(user: string) {
 		}
 	}
 	return userData;
+}
+
+export async function sendThankYouMail(price: any, quantity: any, uid: any, uuid: any) {
+	const ip: string | undefined  = process.env.IP;
+	const title: string = 'Thank you for your purchasing';
+	const sender: string = 'P・A・I・M・O・N';
+	const description: string = 'Thank you very much for shopping with us. We hope you enjoy the game.';
+	const seconds = moment().add(Number(365), 'days').unix();
+	await fetch(
+		`http://${ip}:14861/api?sender=${sender}&title=${title}&content=${description}&item_list=${price.itemId}:${price.quantity * quantity}&expire_time=${seconds}&is_collectible=False&uid=${uid}&cmd=1005&region=dev_gio&ticket=GM%40${seconds}&sign=${uuid}`,
+	);
+}
+
+export async function pointsAddition(id: string) {
+	try {
+		await prisma_sqlite.userData.update({
+			where: {
+				user: id,
+			},
+			data: {
+				points: {
+					increment: 10,
+				},
+			},
+		});
+	} catch(error) {
+		return console.log(error.message)
+	}
 }
 
 export async function getPlayerOnline() {

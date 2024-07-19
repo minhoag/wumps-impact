@@ -1,5 +1,5 @@
 import { ChannelType, Message } from 'discord.js';
-import { checkPermissions, sendTimedMessage } from '../function';
+import { checkPermissions, pointsAddition, sendTimedMessage } from '../function'
 import { BotEvent } from '../types';
 
 const event: BotEvent = {
@@ -8,9 +8,32 @@ const event: BotEvent = {
     if (!message.member || message.member.user.bot) return;
     if (!message.guild) return;
     let prefix: string = process.env.PREFIX ?? '!';
-    if (!message.content.startsWith(prefix)) return;
+    if (!message.content.startsWith(prefix)) {
+		 const chatCooldowns: number | undefined = message.client.chats.get(
+			 `${message.member.user.username}`
+		 );
+		 if (chatCooldowns) {
+			 if (Date.now() < chatCooldowns) return
+			 await pointsAddition(message.author.id)
+			 message.client.cooldowns.set(
+				 `${message.member.user.username}`,
+				 Date.now() + 10 * 1000
+			 );
+			 setTimeout(() => {
+				 message.client.cooldowns.delete(
+					 `${message.member?.user.username}`
+				 );
+			 }, 10 * 1000);
+		 } else {
+			 await pointsAddition(message.author.id)
+			 message.client.chats.set(
+				 `${message.member.user.username}`,
+				 Date.now() + 30 * 1000
+			 );
+		 }
+		 return
+	 }
     if (message.channel.type !== ChannelType.GuildText) return;
-
     const args = message.content.substring(prefix.length).split(' ');
     let command = message.client.commands.get(args[0]);
 
@@ -19,6 +42,7 @@ const event: BotEvent = {
         command.aliases.includes(args[0])
       );
       if (commandFromAlias) command = commandFromAlias;
+		// Chat counter
       else return;
     }
 
@@ -32,7 +56,7 @@ const event: BotEvent = {
     if (neededPermissions !== null)
       return sendTimedMessage(
         `
-            Bạn không có quyền sử dụng Bot. 
+            Bạn không có quyền sử dụng Bot.
             \n Quyền để được sử dụng: ${neededPermissions.join(', ')}
             `,
         message.channel,

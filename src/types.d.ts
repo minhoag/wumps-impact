@@ -6,10 +6,7 @@ import {
   Message,
   AutocompleteInteraction,
   Client,
-  DateResolvable,
-  Channel,
 } from 'discord.js';
-import EventEmitter from 'events';
 
 type UserOptions = {
   schedule: Array<GachaTypeGuard>;
@@ -97,5 +94,6 @@ declare module 'discord.js' {
     slashCommands: Collection<string, SlashCommand>;
     commands: Collection<string, Command>;
     cooldowns: Collection<string, number>;
+	 chats: Collection<string, number>;
   }
 }

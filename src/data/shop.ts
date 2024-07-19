@@ -10,6 +10,22 @@ export type ShopItem = {
 }
 export const ShopView: ShopItem[] = [
 	{
+		index: 200001,
+		itemId: 107009,
+		name: {
+			"en-US": 'Fragile Resin',
+			vi: 'Nhựa Dễ Vỡ'
+		},
+		type: 'points',
+		price: 150,
+		quantity: 1,
+		image: '<:FragileResin:1257820100325539861>',
+		description: {
+			"en-US": 'An item used to restore Original Resin by 60 points',
+			vi: 'Vật phẩm được sử dụng để hồi phục 60 điểm Nhựa Nguyên Chất.',
+		}
+	},
+	{
 		index: 202001,
 		itemId: 107009,
 		name: {

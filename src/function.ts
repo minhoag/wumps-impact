@@ -359,7 +359,7 @@ export async function sendThankYouMail(price: any, quantity: any, uid: any, uuid
 
 export async function pointsAddition(id: string) {
 	try {
-		await prisma_sqlite.userData.update({
+		await prisma_sqlite.userData.updateMany({
 			where: {
 				user: id,
 			},

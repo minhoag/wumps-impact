@@ -28,7 +28,7 @@ const event: BotEvent = {
 			 await pointsAddition(message.author.id)
 			 message.client.chats.set(
 				 `${message.member.user.username}`,
-				 Date.now() + 30 * 1000
+				 Date.now() + 10 * 1000
 			 );
 		 }
 		 return

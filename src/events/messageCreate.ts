@@ -15,12 +15,12 @@ const event: BotEvent = {
 		 if (chatCooldowns) {
 			 if (Date.now() < chatCooldowns) return
 			 await pointsAddition(message.author.id)
-			 message.client.cooldowns.set(
+			 message.client.chats.set(
 				 `${message.member.user.username}`,
 				 Date.now() + 10 * 1000
 			 );
 			 setTimeout(() => {
-				 message.client.cooldowns.delete(
+				 message.client.chats.delete(
 					 `${message.member?.user.username}`
 				 );
 			 }, 10 * 1000);

@@ -1,13 +1,13 @@
 import {
 	ActionRowBuilder,
 	ButtonBuilder,
-	ButtonStyle,
+	ButtonStyle, ChannelType,
 	CommandInteraction,
 	ComponentType,
-	GuildMember,
+	GuildMember, Interaction,
 	Message,
 	PermissionFlagsBits,
-	PermissionResolvable,
+	PermissionResolvable, PermissionsBitField,
 	TextChannel
 } from 'discord.js'
 import {schedule} from './data/schedule';
@@ -16,6 +16,7 @@ import prisma_second from './prisma/prisma-second';
 import prisma_sqlite from './prisma/prisma-sqlite';
 import type {t_activity_schedule_config, t_gacha_schedule_config} from '@prisma/client';
 import moment from 'moment';
+import client from './index'
 
 export const checkPermissions = (member: GuildMember, permissions: Array<PermissionResolvable>) => {
 	const neededPermissions: PermissionResolvable[] = [];
@@ -371,6 +372,64 @@ export async function pointsAddition(id: string) {
 		});
 	} catch(error) {
 		return console.log(error.message)
+	}
+}
+
+export async function sendLog(interaction: Interaction, content: string) {
+	if (!interaction.guild) return;
+	let channel = interaction.guild.channels.cache.find(c => c.name.toLowerCase() === 'shop-log')
+	if (!channel) {
+		channel = await interaction.guild.channels.create({
+			name: 'shop-log',
+			type: ChannelType.GuildText,
+			permissionOverwrites: [
+				{
+					id: interaction.guild.id,
+					deny: [PermissionsBitField.Flags.ViewChannel]
+				}
+			]
+		})
+	}
+	if (!channel.id) return;
+	const message = client.channels.cache.get(channel.id) as TextChannel;
+	await message.send(content)
+
+}
+
+export async function antiSpam(message: Message, usersMap: any, DIFF: number, LIMIT: number) {
+	if(usersMap.has(message.author.id)) {
+		const userData = usersMap.get(message.author.id);
+		const { lastMessage, timer } = userData;
+		const difference: number = message.createdTimestamp - lastMessage.createdTimestamp;
+		let msgCount = userData.msgCount;
+		if(difference > DIFF) {
+			clearTimeout(timer);
+			userData.msgCount = 1;
+			userData.lastMessage = message;
+			userData.timer = setTimeout(() => {
+				usersMap.delete(message.author.id);
+			}, 30 * 1000);
+			usersMap.set(message.author.id, userData)
+		}
+		else {
+			++msgCount;
+			if (!message.guild) return
+			if(parseInt(msgCount) === LIMIT) {
+				message.guild.members.fetch(message.author.id).then(user => user.timeout(30000, "Timeout for spamming."))
+			}
+			userData.msgCount = msgCount;
+			usersMap.set(message.author.id, userData);
+		}
+	}
+	else {
+		let fn = setTimeout(() => {
+			usersMap.delete(message.author.id);
+		}, 30 * 1000);
+		usersMap.set(message.author.id, {
+			msgCount: 1,
+			lastMessage : message,
+			timer : fn
+		});
 	}
 }
 

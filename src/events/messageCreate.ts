@@ -1,5 +1,5 @@
 import { ChannelType, Message } from 'discord.js';
-import { checkPermissions, pointsAddition, sendTimedMessage } from '../function'
+import { antiSpam, checkPermissions, pointsAddition, sendTimedMessage } from '../function'
 import { BotEvent } from '../types';
 
 const event: BotEvent = {
@@ -9,29 +9,34 @@ const event: BotEvent = {
     if (!message.guild) return;
     let prefix: string = process.env.PREFIX ?? '!';
     if (!message.content.startsWith(prefix)) {
+		 const timeout: number = 60
+		 const usersMap = new Map();
+		 const LIMIT: number = 10;
+		 const DIFF: number = 3000;
+		 await antiSpam(message, usersMap, LIMIT, DIFF);
 		 const chatCooldowns: number | undefined = message.client.chats.get(
 			 `${message.member.user.username}`
 		 );
 		 if (chatCooldowns) {
-			 if (Date.now() < chatCooldowns) return
+			 if (Date.now() < chatCooldowns) return;
 			 await pointsAddition(message.author.id)
 			 message.client.chats.set(
 				 `${message.member.user.username}`,
-				 Date.now() + 10 * 1000
+				 Date.now() + timeout * 1000
 			 );
 			 setTimeout(() => {
 				 message.client.chats.delete(
 					 `${message.member?.user.username}`
 				 );
-			 }, 10 * 1000);
+			 }, timeout * 1000);
 		 } else {
 			 await pointsAddition(message.author.id)
 			 message.client.chats.set(
 				 `${message.member.user.username}`,
-				 Date.now() + 10 * 1000
+				 Date.now() + timeout * 1000
 			 );
 		 }
-		 return
+		 return;
 	 }
     if (message.channel.type !== ChannelType.GuildText) return;
     const args = message.content.substring(prefix.length).split(' ');

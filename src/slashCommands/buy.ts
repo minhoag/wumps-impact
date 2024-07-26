@@ -9,7 +9,7 @@ import {
 	SlashCommandBuilder
 } from 'discord.js'
 import { SlashCommand } from '../types'
-import { sendThankYouMail, shopPagination, sqliteUpdate } from '../function'
+import { sendLog, sendThankYouMail, shopPagination, sqliteUpdate } from '../function'
 import { ShopItem, ShopView } from '../data/shop'
 import prisma_sqlite from '../prisma/prisma-sqlite'
 
@@ -289,6 +289,7 @@ const command: SlashCommand = {
 								embeds: [],
 								components: [],
 							});
+							await sendLog(interaction, `${interaction.user.username} has bought **${quantity} x ${price.image} ${price.name}**`)
 						} else {
 							await confirmation.update({
 								content: `${locale == "vi" ? "Xác nhận" : "Confirm"}`,
@@ -364,6 +365,7 @@ const command: SlashCommand = {
 						embeds: [],
 						components: [],
 					});
+					await sendLog(interaction, `${interaction.user.username} has bought **${quantity} x ${price.image} ${price.name}**`)
 				} else if (confirmation.customId === 'cancel') {
 					await confirmation.update({content: `${locale == "vi" ? "Giao dịch đã được hủy" : "Buying cancelled"}`, embeds: [], components: []});
 				}

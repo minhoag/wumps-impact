@@ -415,7 +415,7 @@ export async function antiSpam(message: Message, usersMap: any, DIFF: number, LI
 			++msgCount;
 			if (!message.guild) return
 			if(parseInt(msgCount) === LIMIT) {
-				message.guild.members.fetch(message.author.id).then(user => user.timeout(30000, "Timeout for spamming."))
+				message.guild.members.fetch(message.author.id).then(user => user.timeout(1_800_000, "Timeout for spamming."))
 			}
 			userData.msgCount = msgCount;
 			usersMap.set(message.author.id, userData);

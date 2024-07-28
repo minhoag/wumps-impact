@@ -17,7 +17,7 @@ export const ShopView: ShopItem[] = [
 			vi: 'Nhựa Dễ Vỡ'
 		},
 		type: 'points',
-		price: 3000,
+		price: 1000,
 		quantity: 1,
 		image: '<:FragileResin:1257820100325539861>',
 		description: {

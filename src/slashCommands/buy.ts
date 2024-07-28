@@ -289,7 +289,7 @@ const command: SlashCommand = {
 								embeds: [],
 								components: [],
 							});
-							await sendLog(interaction, `${interaction.user.username} has bought **${quantity} x ${price.image} ${price.name}**`)
+							await sendLog(interaction, `<@${interaction.user.id}> has bought **${quantity} x ${price.image} ${price.name["en-GB"]}**`)
 						} else {
 							await confirmation.update({
 								content: `${locale == "vi" ? "Xác nhận" : "Confirm"}`,
@@ -365,7 +365,7 @@ const command: SlashCommand = {
 						embeds: [],
 						components: [],
 					});
-					await sendLog(interaction, `${interaction.user.username} has bought **${quantity} x ${price.image} ${price.name}**`)
+					await sendLog(interaction, `<@${interaction.user.id}> has bought **${quantity} x ${price.image} ${price.name["en-GB"]}**`)
 				} else if (confirmation.customId === 'cancel') {
 					await confirmation.update({content: `${locale == "vi" ? "Giao dịch đã được hủy" : "Buying cancelled"}`, embeds: [], components: []});
 				}

@@ -1,7 +1,7 @@
 import {
 	SlashCommandBuilder,
 	PermissionFlagsBits,
-	CommandInteraction
+	CommandInteraction, EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder
 } from 'discord.js'
 import { SlashCommand } from '../types';
 
@@ -29,12 +29,54 @@ const command: SlashCommand = {
 			return interaction.reply('Không thể thực hiện ở DM');
 		const type: string = interaction.options.getString('type', true);
 		if (type === 'restart') {
-			await fetch(
-				`http://wumpus.site:12000/restart`
-			).then(async res => {
-				const response = JSON.stringify(await res.json());
-				await interaction.reply ('Server restart Thành công. Server phản hồi: ' + response);
-			}).catch(async error => await interaction.reply('Đã có lỗi xảy ra. Mã lỗi: ' + error.message));
+			const embed: EmbedBuilder = new EmbedBuilder()
+				.setTitle('Xác nhận restart server')
+				.setColor('#151220')
+				.setDescription('Hãy xác nhận là bạn muốn thực hiện việc restart server. Chỉ được sử dụng khi server đã bị sập/DDoS/mất kết nối')
+			//@ts-ignore
+			const confirm: ButtonBuilder = new ButtonBuilder().setCustomId('confirm').setLabel('Xác nhận').setStyle(ButtonStyle.Success);
+			//@ts-ignore
+			const cancel: ButtonBuilder = new ButtonBuilder().setCustomId('cancel').setStyle(ButtonStyle.Danger).setLabel('Huỷ');
+			const buttonRow: ActionRowBuilder<ButtonBuilder> = new ActionRowBuilder<ButtonBuilder>().addComponents([cancel, confirm]);
+			const response = await interaction.reply({
+				embeds: [embed],
+				components: [buttonRow],
+				ephemeral: true
+			});
+			const collectorFilter = (i: any) => i.user.id === interaction.user.id;
+			try {
+				const confirmation = await response.awaitMessageComponent({filter: collectorFilter, time: 45_000});
+				const replyEmbed: EmbedBuilder = new EmbedBuilder()
+					.setColor('#151220')
+				if (confirmation.customId === 'cancel') {
+					replyEmbed.setTitle('Đã huỷ thành công').setDescription('Huỷ lệnh restart thành công!')
+				} else {
+					await fetch('https://backend.control.luxvps.net/v1/service/f1bfab30-b687-4f33-bd7e-10e6520cb79f/restart?token=11f66be3-e95b-4795-8434-abfdb181fa3f', {
+						method: 'POST',
+						headers: {
+							accept: 'application/json',
+							'Content-Type': 'application/json'
+						}
+					});
+					await fetch(
+						`http://wumpus.site:12000/restart`
+					).then(async res => {
+						const response = JSON.stringify(await res.json());
+						replyEmbed.setTitle('Đã restart erver thành công').setDescription(`Server đã restart thành công. Server phản hồi: ${response}. Server sẽ khả dụng trong vòng 8-10 phút.`)
+					}).catch(error => replyEmbed.setTitle('Lỗi' + error.code).setDescription(`Đã có lỗi xảy ra. Mã lỗi: ${error.message}`));
+				}
+				return interaction.reply({
+					embeds: [replyEmbed],
+					components: [],
+					ephemeral: true
+				})
+			} catch {
+				await interaction.editReply({
+					content: 'Huỷ nhận phản hồi vì đã quá thời gian phản hồi: 45 giây',
+					embeds: [],
+					components: [],
+				});
+			}
 		} else if (type === 'domain') {
 			await fetch(
 				`http://wumpus.site:12000/domain`

@@ -65,10 +65,9 @@ const command: SlashCommand = {
 						replyEmbed.setTitle('Đã restart erver thành công').setDescription(`Server đã restart thành công. Server phản hồi: ${response}. Server sẽ khả dụng trong vòng 8-10 phút.`)
 					}).catch(error => replyEmbed.setTitle('Lỗi' + error.code).setDescription(`Đã có lỗi xảy ra. Mã lỗi: ${error.message}`));
 				}
-				return interaction.reply({
+				return confirmation.update({
 					embeds: [replyEmbed],
 					components: [],
-					ephemeral: true
 				})
 			} catch {
 				await interaction.editReply({

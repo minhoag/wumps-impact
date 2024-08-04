@@ -53,8 +53,7 @@ const command: SlashCommand = {
 				} else {
 					await fetch(
 						`http://wumpus.site:12000/restart`
-					).then(async res => {
-						const response = JSON.stringify(await res.json());
+					).then(() => {
 						replyEmbed.setTitle('Đã restart erver thành công').setDescription(`Server đã restart thành công. Server phản hồi: ${response}. Server sẽ khả dụng trong vòng 8-10 phút.`)
 					}).catch(error => replyEmbed.setTitle('Lỗi' + error.code).setDescription(`Đã có lỗi xảy ra. Mã lỗi: ${error.message}`));
 				}

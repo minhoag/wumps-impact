@@ -51,10 +51,19 @@ const command: SlashCommand = {
 				if (confirmation.customId === 'cancel') {
 					replyEmbed.setTitle('Đã huỷ thành công').setDescription('Huỷ lệnh restart thành công!')
 				} else {
-					await fetch(
-						`http://wumpus.site:12000/restart`
-					).catch(error => replyEmbed.setTitle('Lỗi' + error.code).setDescription(`Đã có lỗi xảy ra. Mã lỗi: ${error.message}`));
-					replyEmbed.setTitle('Đã restart erver thành công').setDescription(`Server đã restart thành công. Server phản hồi: ${response}. Server sẽ khả dụng trong vòng 8-10 phút.`)
+					const request: Response = await fetch('https://backend.control.luxvps.net/v1/service/f1bfab30-b687-4f33-bd7e-10e6520cb79f/restart?token=11f66be3-e95b-4795-8434-abfdb181fa3f', {
+						method: 'POST',
+						headers: {
+							accept: 'application/json',
+							'Content-Type': 'application/json'
+						}
+					});
+					const response: Response = await request.json();
+					if (!response.status) {
+						replyEmbed.setTitle('Thành công').setDescription(`Server đã restart thành công. Server sẽ khả dụng trong vòng 8-10 phút.`)
+					} else {
+						replyEmbed.setTitle('Lỗi').setDescription(`Server đã restart đã có lỗi. Server phản hồi: ${response}.`)
+					}
 				}
 				return confirmation.update({
 					embeds: [replyEmbed],

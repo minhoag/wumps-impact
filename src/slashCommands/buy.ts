@@ -54,7 +54,7 @@ class Shop {
 				.setColor('#151220')
 				.setThumbnail(imageUrl)
 				.setFooter({
-					text: `${locale == "vi" ? "Để mua vật phẩm, sử dụng lệnh `shop mora <\/ID>` để giao dịch" : "To buy the item, use command `buy mora <\/ID>` to buy it."}`,
+					text: `${locale == "vi" ? "Để mua vật phẩm, sử dụng lệnh `buy mora <\/ID>` để giao dịch" : "To buy the item, use command `buy mora <\/ID>` to buy it."}`,
 					iconURL:
 						'https://ik.imagekit.io/asiatarget/genshin/icon_128x128.png?updatedAt=1699385494260',
 				});
@@ -164,7 +164,7 @@ const command: SlashCommand = {
 				.setColor('#151220')
 				.setThumbnail('https://static.wikia.nocookie.net/gensin-impact/images/a/a8/System_Shop.png/revision/latest?cb=20210911040807')
 				.setFooter({
-					text: `${locale == "vi" ? "Để mua vật phẩm, sử dụng lệnh `shop mora <\/ID>` để giao dịch" : "To buy the item, use command `buy points <\/ID>` to buy it."}`,
+					text: `${locale == "vi" ? "Để mua vật phẩm, sử dụng lệnh `buy mora <\/ID>` để giao dịch" : "To buy the item, use command `buy points <\/ID>` to buy it."}`,
 					iconURL:
 						'https://ik.imagekit.io/asiatarget/genshin/icon_128x128.png?updatedAt=1699385494260',
 				});

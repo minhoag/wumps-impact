@@ -26,6 +26,22 @@ export const ShopView: ShopItem[] = [
 		}
 	},
 	{
+		index: 200002,
+		itemId: 223,
+		name: {
+			"en-US": 'Intertwined Fate',
+			vi: 'Mối Duyên Vương Vấn'
+		},
+		type: 'points',
+		price: 5_000,
+		quantity: 1,
+		image: '<:IntertwinedFate:1184076475813597187>',
+		description: {
+			"en-US": 'Intertwined Fate can be used for Event Wishes.',
+			vi: 'Mối Duyên Tương Ngộ sử dụng trong Sự kiện Ước nguyện giới hạn.'
+		}
+	},
+	{
 		index: 202001,
 		itemId: 107009,
 		name: {

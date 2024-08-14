@@ -146,7 +146,7 @@ const command: SlashCommand = {
 			}
 		});
 
-		collector.on('end', async i => {
+		collector.on('end', async() => {
 			if(confirmation.length < 2) {
 				const failedEmbed: EmbedBuilder = new EmbedBuilder()
 					.setTitle(Locale['title:failed'][locale])

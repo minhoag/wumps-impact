@@ -19,7 +19,7 @@ import { item } from '../data/item'
 const command: SlashCommand = {
 	command: new SlashCommandBuilder()
 		.setName('trade')
-		.setDescription('.')
+		.setDescription('Trade item or mora with another player.')
 		.setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
 		.addUserOption((option: SlashCommandUserOption) =>
 			option.setName('user').setDescription('The user you wish to trade with.').setRequired(true)

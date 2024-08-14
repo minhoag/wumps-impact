@@ -31,7 +31,7 @@ const command: SlashCommand = {
 		if (type === 'restart') {
 			const embed: EmbedBuilder = new EmbedBuilder()
 				.setTitle('Xác nhận restart server')
-				.setColor('#151220')
+				.setColor('#36393F')
 				.setDescription('Hãy xác nhận là bạn muốn thực hiện việc restart server. Chỉ được sử dụng khi server đã bị sập/DDoS/mất kết nối')
 			//@ts-ignore
 			const confirm: ButtonBuilder = new ButtonBuilder().setCustomId('confirm').setLabel('Xác nhận').setStyle(ButtonStyle.Success);
@@ -47,7 +47,7 @@ const command: SlashCommand = {
 			try {
 				const confirmation = await response.awaitMessageComponent({filter: collectorFilter, time: 45_000});
 				const replyEmbed: EmbedBuilder = new EmbedBuilder()
-					.setColor('#151220')
+					.setColor('#36393F')
 				if (confirmation.customId === 'cancel') {
 					replyEmbed.setTitle('Đã huỷ thành công').setDescription('Huỷ lệnh restart thành công!')
 				} else {

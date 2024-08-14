@@ -433,6 +433,17 @@ export async function antiSpam(message: Message, usersMap: any, DIFF: number, LI
 	}
 }
 
+export async function getPlayerItems(uid: string | number) {
+	try {
+		const ip: string | undefined = process.env.IP;
+		const res: Response = await fetch(`http://${ip}:14861/api?cmd=1016&region=dev_gio&ticket=GM&uid=${uid}`);
+		const item = await res.json();
+		return item.data.item_bin_data.pack_store.item_list;
+	} catch(error) {
+		console.log(error.message)
+	}
+}
+
 export async function getPlayerOnline() {
 	try {
 		const ip = process.env.IP;

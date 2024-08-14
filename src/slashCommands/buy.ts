@@ -51,7 +51,7 @@ class Shop {
 		for (let i: number = 0; i < this.item.length / 3; i++) {
 			const embed: EmbedBuilder = new EmbedBuilder()
 				.setTitle(`${title[locale]}`)
-				.setColor('#151220')
+				.setColor('#36393F')
 				.setThumbnail(imageUrl)
 				.setFooter({
 					text: `${locale == "vi" ? "Để mua vật phẩm, sử dụng lệnh `buy mora <\/ID>` để giao dịch" : "To buy the item, use command `buy mora <\/ID>` to buy it."}`,
@@ -161,7 +161,7 @@ const command: SlashCommand = {
 			const points: number = userData.points;
 			const embed: EmbedBuilder = new EmbedBuilder()
 				.setTitle(`${locale == "vi" ? "Chọn cửa hàng bạn muốn xem" : "Choose the shop you want to view."}`)
-				.setColor('#151220')
+				.setColor('#36393F')
 				.setThumbnail('https://static.wikia.nocookie.net/gensin-impact/images/a/a8/System_Shop.png/revision/latest?cb=20210911040807')
 				.setFooter({
 					text: `${locale == "vi" ? "Để mua vật phẩm, sử dụng lệnh `buy mora <\/ID>` để giao dịch" : "To buy the item, use command `buy points <\/ID>` to buy it."}`,
@@ -211,7 +211,7 @@ const command: SlashCommand = {
 			//@interaction-reply
 			const collector: InteractionCollector<any> = response.createMessageComponentCollector({
 				componentType: ComponentType.Button,
-				time: 3_600_000,
+				time: 300_000,
 			});
 			collector.on('collect', async i => {
 				if (i.customId === 'shopCredit') {
@@ -241,7 +241,7 @@ const command: SlashCommand = {
 			const finalPrice = price.price * quantity;
 			const embed: EmbedBuilder = new EmbedBuilder()
 				.setTitle(`${locale == "vi" ? "Xác nhận mua" : "Pending Confirmation"}`)
-				.setColor('#151220')
+				.setColor('#36393F')
 				.setDescription(`${locale == "vi" ? "Bạn có xác nhận muốn mua vật phẩm này?" : "Would you like to confirm buying following item?"}\n
 				\` ${price.quantity * quantity}x \` ${price.image ?? ''}  ${price.name[locale]} (${finalPrice.toLocaleString()} <:Mora:1257820686269939824>)
 				\n${locale == "vi" ? "Tổng" : "Total"}: **${finalPrice.toLocaleString()}** <:Mora:1257820686269939824>`);
@@ -322,7 +322,7 @@ const command: SlashCommand = {
 			const finalPrice = price.price * quantity;
 			const embed: EmbedBuilder = new EmbedBuilder()
 				.setTitle(`${locale == "vi" ? "Xác nhận mua" : "Pending Confirmation"}`)
-				.setColor('#151220')
+				.setColor('#36393F')
 				.setDescription(`${locale == "vi" ? "Bạn có xác nhận muốn mua vật phẩm này?" : "Would you like to confirm buying following item?"}\n
 				\` ${price.quantity * quantity}x \` ${price.image ?? ''}  ${price.name[locale]} (${finalPrice.toLocaleString()} <:Points:1263907506535534592>)
 				\n${locale == "vi" ? "Tổng" : "Total"}: **${finalPrice.toLocaleString()}** <:Points:1263907506535534592>`);

@@ -70,7 +70,7 @@ const command: SlashCommand = {
 				if (!result || result.length === 0)
 					return interaction.reply('Không tìm thấy thông tin người chơi.');
 				const embed = new EmbedBuilder()
-					.setColor('#151220')
+					.setColor('#36393F')
 					.setTitle(
 						`Kết quả tìm kiếm: **${result['data']['data']['basic_brief']['nickname']}**`,
 					)

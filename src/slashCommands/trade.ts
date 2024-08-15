@@ -14,7 +14,6 @@ import { SlashCommand } from '../types'
 import { Locale } from '../data/dict'
 import { sqliteUpdate } from '../function'
 import prismaSqlite from '../prisma/prisma-sqlite'
-import { item } from '../data/item'
 
 const command: SlashCommand = {
 	command: new SlashCommandBuilder()
@@ -29,29 +28,18 @@ const command: SlashCommand = {
 		)
 		.addNumberOption((option) =>
 			option.setName('take-mora').setDescription('How much mora you wish to take.')
+		)
+		.addStringOption((option) =>
+			option.setName('give-item').setDescription('Item you wish to give. Separate with comma.')
 		),
 	cooldown: 5,
-	autocomplete: async (interaction) => {
-		try {
-			const focusedOption = interaction.options.getFocused(true);
-			const filtered: {
-				value: string;
-				name: string;
-			}[] = item.filter((choice) =>
-				choice.name.toLowerCase().includes(focusedOption.value.toLowerCase()),
-			);
-			const options = filtered.length > 25 ? filtered.slice(0, 25) : filtered;
-			await interaction.respond(options);
-		} catch (error) {
-			console.log(`Error in Autocomplete item: ${error.message}`);
-		}
-	},
 	execute: async (interaction: CommandInteraction) => {
 		if (!interaction.isChatInputCommand()) return;
+		const locale: string = interaction.locale;
 		const user: User = interaction.options.getUser('user', true);
 		const give_mora: number = interaction.options.getNumber('give-mora', true);
 		const take_mora: number = interaction.options.getNumber('take-mora') ?? 0;
-		const locale: string = interaction.locale;
+		const give_item: string = interaction.options.getString('give-item') ?? ""
 		const embed: EmbedBuilder = new EmbedBuilder()
 			.setTitle(Locale['title:pending'][locale])
 			.setColor('#36393F')

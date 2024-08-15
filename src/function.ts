@@ -202,8 +202,81 @@ export const extractSubstats = (substatsString: string) => {
 		return [];
 	});
 };
+export const bagPagination = async (interaction: CommandInteraction, pages: any[], time: number,  page_number: number) => {
+	if (pages.length === 1) {
+		const page: Message<any> = await interaction.editReply({
+			embeds: [pages[0]],
+			components: [],
+		});
+		return page;
+	}
+	const prev = new ButtonBuilder()
+		.setCustomId('prev')
+		.setLabel('Previous')
+		// @ts-ignore
+		.setStyle(ButtonStyle.Primary)
+	if (page_number === 0) prev.setDisabled(true);
 
-/* Function Pagination */
+	const next = new ButtonBuilder()
+		.setCustomId('next')
+		.setLabel('Next')
+		// @ts-ignore
+		.setStyle(ButtonStyle.Primary);
+
+	const buttonRow = new ActionRowBuilder<ButtonBuilder>().addComponents([prev, next]);
+	let index: number = page_number;
+	const currentPage = await interaction.editReply({
+		embeds: [pages[index]],
+		components: [buttonRow],
+	});
+
+	const collector = currentPage.createMessageComponentCollector({
+		componentType: ComponentType.Button,
+		time,
+	});
+
+	collector.on('collect', async (i) => {
+		try {
+			if (i.user.id !== interaction.user.id) {
+				await i.reply({
+					content: 'Bạn không có quyền sử dụng lệnh này.',
+					ephemeral: true,
+				});
+			}
+			await i.deferUpdate();
+			if (i.customId === 'prev') {
+				index--;
+				prev.setDisabled(index === 0);
+				next.setDisabled(false);
+			} else if (i.customId === 'next') {
+				index++;
+				prev.setDisabled(false);
+				next.setDisabled(index === pages.length - 1);
+			}
+			await currentPage.edit({
+				embeds: [pages[index]],
+				components: [buttonRow],
+			});
+			collector.resetTimer();
+		} catch (error) {
+			console.log(error);
+		}
+	});
+
+	collector.on('end', async () => {
+		try {
+			await currentPage.edit({
+				embeds: [pages[index]],
+				components: [],
+			});
+		} catch (error) {
+			console.log(error);
+		}
+	});
+	return currentPage;
+};
+
+/* Function Shop Pagination */
 export const shopPagination = async (interaction: CommandInteraction, pages: any[], time: number) => {
 	await interaction.deferReply()
 	if (pages.length === 1) {
@@ -438,7 +511,11 @@ export async function getPlayerItems(uid: string | number) {
 		const ip: string | undefined = process.env.IP;
 		const res: Response = await fetch(`http://${ip}:14861/api?cmd=1016&region=dev_gio&ticket=GM&uid=${uid}`);
 		const item = await res.json();
-		return item.data.item_bin_data.pack_store.item_list;
+		// Materials are type 2
+		let all_item: any
+		all_item = item.data.item_bin_data.pack_store.item_list.filter((i: any) => i.item_type === 2)
+		return all_item
+
 	} catch(error) {
 		console.log(error.message)
 	}
@@ -453,4 +530,11 @@ export async function getPlayerOnline() {
 	} catch (error) {
 		return 'down';
 	}
+}
+
+export function truncateText(text: string, length: number) {
+	if (text.length <= length) {
+		return text;
+	}
+	return text.substr(0, length) + '\u2026'
 }

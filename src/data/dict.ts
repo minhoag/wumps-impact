@@ -5,6 +5,14 @@ type Translate = {
 export const Locale: {
 	[key: string]: Translate;
 } = {
+	'item' : {
+		vi: 'Vật phẩm',
+		'en-US': 'Item',
+	},
+	'wishingItem' : {
+		vi: 'Vật phẩm Ước nguyện',
+		'en-US': 'Wishing Items',
+	},
 	'title:pending' : {
 		vi: 'Cả hai bên phải đồng ý thì giao dịch sau đây mới có thể diễn ra!',
 		'en-US': 'Both end must agree for the following trade to take place!',

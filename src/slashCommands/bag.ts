@@ -1,8 +1,11 @@
 import {
+	CommandInteraction,
+	EmbedBuilder,
 	SlashCommandBuilder,
-	CommandInteraction, SlashCommandUserOption, SlashCommandNumberOption, EmbedBuilder
+	SlashCommandNumberOption,
+	SlashCommandUserOption
 } from 'discord.js'
-import { SlashCommand } from '../types';
+import { SlashCommand } from '../types'
 import { bagPagination, getPlayerItems, truncateText } from '../function'
 import prismaSqlite from '../prisma/prisma-sqlite'
 import { item_vi } from '../data/item_vi'
@@ -19,7 +22,7 @@ const command: SlashCommand = {
 		.addNumberOption((option: SlashCommandNumberOption) =>
 			option.setName('number').setDescription('Type a number to view a specific bag page.'),
 		),
-	cooldown: 5,
+	cooldown: 3,
 	execute: async (interaction: CommandInteraction) => {
 		if (!interaction.isChatInputCommand()) return;
 		if (!interaction.guild)

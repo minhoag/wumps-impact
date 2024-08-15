@@ -15,7 +15,7 @@ import { Locale } from '../data/dict'
 const command: SlashCommand = {
 	command: new SlashCommandBuilder()
 		.setName('bag')
-		.setDescription('Check what item you have ingame')
+		.setDescription('Check what item you have in-game')
 		.addUserOption((option: SlashCommandUserOption) =>
 			option.setName('user').setDescription('View another user bags.')
 		)
@@ -68,9 +68,10 @@ const command: SlashCommand = {
 			for (let i: number = 0; i < item_in_bag.length / 10; i++) {
 				let items_1 = item_in_bag.slice(i * 5, i * 5 + 5);
 				let items_2 = item_in_bag.slice(i * 5 + 5, i * 5 + 10);
+				const number: number = 10000 + Number(player_data.uid)
 				const embed: EmbedBuilder = new EmbedBuilder()
 					.setAuthor({
-						name: user.username + '#' + 10000 + Number(player_data.uid),
+						name: user.username + '#' + number.toString()
 					})
 					.addFields(
 						{

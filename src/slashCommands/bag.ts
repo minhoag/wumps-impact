@@ -139,7 +139,7 @@ const command: SlashCommand = {
 				const get_item_in_bag = await getPlayerItems(player_data.uid)
 				const item_in_bag = get_item_in_bag.sort((a: any, b: any) => a.item_id - b.item_id).map((i: any) => {
 					const find_item = item.find((j: any) => j.value == i.item_id)
-					const banned_item: string[] = ['Stella Fortuna', 'Sigil', 'Gnostic Hymn']
+					const banned_item: string[] = ['Stella Fortuna', 'Sigil', 'Gnostic Hymn', 'Blessing of the Welkin Moon', 'Chòm Sao', 'Ấn', 'Nhật Ký Hành Trình', 'Không Nguyệt Chúc Phúc']
 					const special_item: string[] = ['221', '222', '223', '224']
 					if (!find_item) return undefined
 					else if (banned_item.some((words: string) => find_item.name.includes(words))) return undefined

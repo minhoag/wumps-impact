@@ -84,6 +84,7 @@ const command: SlashCommand = {
 					let items_2 = item_in_bag.slice(i * 6 + 3, i * 6 + 6)
 					const number: number = 10000 + Number(player_data.uid)
 					const embed: EmbedBuilder = new EmbedBuilder()
+						.setColor('#36393F')
 						.setAuthor({
 							name: user.username + '#' + number.toString()
 						})
@@ -152,6 +153,7 @@ const command: SlashCommand = {
 				const page = Math.ceil(index_item_in_bag / 6)
 				const number: number = 10000 + Number(player_data.uid)
 				const embed: EmbedBuilder = new EmbedBuilder()
+					.setColor('#36393F')
 					.setAuthor({
 						name: interaction.user.username + '#' + number.toString()
 					})

@@ -61,6 +61,10 @@ export const Locale: {
 		vi: 'Không tìm thấy thông tin người chơi!',
 		'en-US': 'Player data not found!'
 	},
+	'bag:notfounditem': {
+		vi: 'Đã có lỗi xảy ra. Không thể lấy thông tin túi. Vui lòng thử lại hoặc liên hệ admin để hỗ trợ!',
+		'en-US': 'Error occured. Cannot fetch your item information. Please contact admin for assistance!'
+	},
 	'bag:notenoughbag': {
 		vi: 'Túi của bạn không có trang',
 		'en-US': 'Your bag does not have page'

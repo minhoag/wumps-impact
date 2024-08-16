@@ -75,6 +75,7 @@ const command: SlashCommand = {
 				}).filter((i: any) => i !== undefined)
 				if (number > Math.ceil(item_in_bag.length / 6)) return await interaction.editReply(Locale['bag:notenoughbag'][locale])
 				const embeds: EmbedBuilder[] = []
+				if (!item_in_bag) return interaction.editReply(Locale['bag:notfounditem'][locale])
 				for (let i: number = 0; i < item_in_bag.length / 6; i++) {
 					let items_1 = item_in_bag.slice(i * 6, i * 6 + 3)
 					let items_2 = item_in_bag.slice(i * 6 + 3, i * 6 + 6)
@@ -95,7 +96,7 @@ const command: SlashCommand = {
 						.setFooter({
 							text: `Page ${i + 1}/${Math.ceil(item_in_bag.length / 6)}  |  Total Item: ${item_in_bag.length}`
 						})
-					if (item_in_bag.length > 5) {
+					if (item_in_bag.length > 3) {
 						embed.addFields(
 							{
 								name: '\u200B',
@@ -107,7 +108,7 @@ const command: SlashCommand = {
 					embed.addFields(
 						{
 							name: Locale['wishingItem'][locale],
-							value: special_item_list.join('\n'),
+							value: special_item_list.join('\n') + '\u200B',
 							inline: false
 						}
 					)

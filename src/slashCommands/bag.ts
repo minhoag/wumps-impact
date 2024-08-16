@@ -115,7 +115,7 @@ const command: SlashCommand = {
 				}
 				await bagPagination(interaction, embeds, 45000, number - 1)
 			} catch (error) {
-				console.log(`Error in bag: ${error}`)
+				console.log(error)
 			}
 		} else if (interaction.options.getSubcommand() === 'search') {
 			const item_name = interaction.options.getString('item-name', true)

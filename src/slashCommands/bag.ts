@@ -3,7 +3,8 @@ import {
 	SlashCommandBuilder,
 	SlashCommandNumberOption,
 	SlashCommandStringOption,
-	SlashCommandUserOption
+	SlashCommandUserOption,
+	User
 } from 'discord.js'
 import { SlashCommand } from '../types'
 import { bagPagination, getPlayerItems, removeAccents, truncateText } from '../function'
@@ -43,9 +44,8 @@ const command: SlashCommand = {
 		let locale: string = interaction.locale
 		if (locale !== 'vi' && locale !== 'en-US' || !locale) locale = 'en-US'
 		if (interaction.options.getSubcommand() === 'view') {
-			const ip = process.env.IP
-			const user = interaction.options.getUser('user') ?? interaction.user
-			const number = interaction.options.getNumber('number') ?? 1
+			const user: User = interaction.options.getUser('user') ?? interaction.user
+			const number: number = interaction.options.getNumber('number') ?? 1
 			try {
 				const player_data = await prismaSqlite.userData.findFirst({
 					where: {
@@ -78,6 +78,7 @@ const command: SlashCommand = {
 						return undefined
 					} else return `<:Primogem:1257820689096773782> ${truncateText(find_item.name, 18)} (${i.material.count})\n⠀⠀ ID: ${find_item.value}`
 				}).filter((i: any) => i !== undefined)
+				if (number > Math.ceil(item_in_bag.length / 6)) return await interaction.editReply(Locale['bag:notenoughbag'][locale])
 				const embeds: EmbedBuilder[] = []
 				for (let i: number = 0; i < item_in_bag.length / 6; i++) {
 					let items_1 = item_in_bag.slice(i * 6, i * 6 + 3)

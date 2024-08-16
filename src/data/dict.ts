@@ -60,5 +60,9 @@ export const Locale: {
 	'player:notfound': {
 		vi: 'Không tìm thấy thông tin người chơi!',
 		'en-US': 'Player data not found!'
+	},
+	'bag:notenoughbag': {
+		vi: 'Túi của bạn không có trang',
+		'en-US': 'Your bag does not have page'
 	}
 }

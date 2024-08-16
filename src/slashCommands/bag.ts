@@ -63,7 +63,7 @@ const command: SlashCommand = {
 				const special_item_list: string[] = []
 				const item_in_bag = get_item_in_bag.sort((a: any, b: any) => a.item_id - b.item_id).map((i: any) => {
 					const find_item = item.find((j: any) => j.value == i.item_id)
-					const banned_item: string[] = ['Stella Fortuna', 'Sigil', 'Gnostic Hymn', 'Welkin Moon', 'Ấn', 'Nhật Ký', 'Không Nguyệt']
+					const banned_item: string[] = ['Stella Fortuna', 'Sigil', 'Gnostic Hymn', 'Welkin Moon', 'Ấn', 'Nhật Ký', 'Không Nguyệt', 'Chòm Sao']
 					const special_item: string[] = ['221', '222', '223', '224']
 					if (!find_item) return
 					else if (banned_item.some((words: string) => removeAccents(find_item.name).includes(removeAccents(words)))) return undefined

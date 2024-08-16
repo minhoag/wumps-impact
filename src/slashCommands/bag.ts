@@ -6,7 +6,7 @@ import {
 	SlashCommandUserOption
 } from 'discord.js'
 import { SlashCommand } from '../types'
-import { bagPagination, getPlayerItems, truncateText } from '../function'
+import { bagPagination, getPlayerItems, removeAccents, truncateText } from '../function'
 import prismaSqlite from '../prisma/prisma-sqlite'
 import { item_vi } from '../data/item_vi'
 import { item_en } from '../data/item_en'
@@ -46,8 +46,8 @@ const command: SlashCommand = {
 			const ip = process.env.IP
 			const user = interaction.options.getUser('user') ?? interaction.user
 			const number = interaction.options.getNumber('number') ?? 1
-			await interaction.deferReply()
 			try {
+				await interaction.deferReply()
 				const player_data = await prismaSqlite.userData.findFirst({
 					where: {
 						user: { in: [user.id] }
@@ -63,10 +63,10 @@ const command: SlashCommand = {
 				const special_item_list: string[] = []
 				const item_in_bag = get_item_in_bag.sort((a: any, b: any) => a.item_id - b.item_id).map((i: any) => {
 					const find_item = item.find((j: any) => j.value == i.item_id)
-					const banned_item: string[] = ['Stella Fortuna', 'Sigil', 'Gnostic Hymn', 'Blessing of the Welkin Moon', 'Chòm Sao', 'Ấn', 'Nhật Ký Hành Trình', 'Không Nguyệt Chúc Phúc']
+					const banned_item: string[] = ['Stella Fortuna', 'Sigil', 'Gnostic Hymn', 'Welkin Moon', 'Ấn', 'Nhật Ký', 'Không Nguyệt']
 					const special_item: string[] = ['221', '222', '223', '224']
 					if (!find_item) return
-					else if (banned_item.some((words: string) => find_item.name.includes(words))) return undefined
+					else if (banned_item.some((words: string) => removeAccents(find_item.name).includes(removeAccents(words)))) return undefined
 					else if (special_item.includes(find_item.value)) {
 						const special = {
 							'221': '<:Masterless_Starglitter:1273779822585315441>',

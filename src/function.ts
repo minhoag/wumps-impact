@@ -1,21 +1,24 @@
 import {
 	ActionRowBuilder,
 	ButtonBuilder,
-	ButtonStyle, ChannelType,
+	ButtonStyle,
+	ChannelType,
 	CommandInteraction,
 	ComponentType,
-	GuildMember, Interaction,
+	GuildMember,
+	Interaction,
 	Message,
 	PermissionFlagsBits,
-	PermissionResolvable, PermissionsBitField,
+	PermissionResolvable,
+	PermissionsBitField,
 	TextChannel
 } from 'discord.js'
-import {schedule} from './data/schedule';
-import prisma from './prisma/prisma';
-import prisma_second from './prisma/prisma-second';
-import prisma_sqlite from './prisma/prisma-sqlite';
-import type {t_activity_schedule_config, t_gacha_schedule_config} from '@prisma/client';
-import moment from 'moment';
+import { schedule } from './data/schedule'
+import prisma from './prisma/prisma'
+import prisma_second from './prisma/prisma-second'
+import prisma_sqlite from './prisma/prisma-sqlite'
+import type { t_activity_schedule_config, t_gacha_schedule_config } from '@prisma/client'
+import moment from 'moment'
 import client from './index'
 
 export const checkPermissions = (member: GuildMember, permissions: Array<PermissionResolvable>) => {
@@ -538,3 +541,10 @@ export function truncateText(text: string, length: number) {
 	}
 	return text.substr(0, length) + '\u2026'
 }
+
+export function removeAccents(str: string) {
+	return str.normalize('NFD')
+		.replace(/[\u0300-\u036f]/g, '')
+		.replace(/đ/g, 'd').replace(/Đ/g, 'D')
+}
+

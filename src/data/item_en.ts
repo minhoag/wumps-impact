@@ -244,11 +244,11 @@ export const item_en = [
 		value: '211',
 	},
 	{
-		name: 'Masterless Starglitter',
+		name: 'Starglitter',
 		value: '221',
 	},
 	{
-		name: 'Masterless Stardust',
+		name: 'Stardust',
 		value: '222',
 	},
 	{

@@ -99,7 +99,7 @@ const command: SlashCommand = {
 						embed.addFields(
 							{
 								name: '\u200B',
-								value: items_2.join('\n'),
+								value: items_2.join('\n') + '\u200B',
 								inline: true
 							}
 						)

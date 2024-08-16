@@ -47,7 +47,6 @@ const command: SlashCommand = {
 			const user = interaction.options.getUser('user') ?? interaction.user
 			const number = interaction.options.getNumber('number') ?? 1
 			try {
-				await interaction.deferReply()
 				const player_data = await prismaSqlite.userData.findFirst({
 					where: {
 						user: { in: [user.id] }
@@ -57,8 +56,9 @@ const command: SlashCommand = {
 						uid: true
 					}
 				})
-				if (!player_data) return interaction.reply('')
+				if (!player_data) return interaction.reply(Locale['player:notfound'][locale])
 				const item = locale == 'vi' ? item_vi : item_en
+				await interaction.deferReply()
 				const get_item_in_bag = await getPlayerItems(player_data.uid)
 				const special_item_list: string[] = []
 				const item_in_bag = get_item_in_bag.sort((a: any, b: any) => a.item_id - b.item_id).map((i: any) => {
@@ -119,7 +119,7 @@ const command: SlashCommand = {
 				}
 				await bagPagination(interaction, embeds, 45000, number - 1)
 			} catch (error) {
-				console.log(`Error in bag: ${error}\nIP: ${ip}`)
+				console.log(`Error in bag: ${error}`)
 			}
 		} else if (interaction.options.getSubcommand() === 'search') {
 			const item_name = interaction.options.getString('item-name', true)

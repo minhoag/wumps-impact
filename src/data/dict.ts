@@ -57,4 +57,8 @@ export const Locale: {
 		vi: 'Huỷ',
 		'en-US': 'Cancel'
 	},
+	'player:notfound': {
+		vi: 'Không tìm thấy thông tin người chơi!',
+		'en-US': 'Player data not found!'
+	}
 }

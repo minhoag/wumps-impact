@@ -518,7 +518,6 @@ export async function getPlayerItems(uid: string | number) {
 		let all_item: any
 		all_item = item.data.item_bin_data.pack_store.item_list.filter((i: any) => i.item_type === 2)
 		return all_item
-
 	} catch(error) {
 		console.log(error.message)
 	}

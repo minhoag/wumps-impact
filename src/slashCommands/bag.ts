@@ -48,13 +48,8 @@ const command: SlashCommand = {
 			const number: number = interaction.options.getNumber('number') ?? 1
 			try {
 				const player_data = await prismaSqlite.userData.findFirst({
-					where: {
-						user: { in: [user.id] }
-					},
-					select: {
-						user: true,
-						uid: true
-					}
+					where: { user: user.id },
+					select: { user: true, uid: true }
 				})
 				if (!player_data) return interaction.reply(Locale['player:notfound'][locale])
 				const item = locale == 'vi' ? item_vi : item_en

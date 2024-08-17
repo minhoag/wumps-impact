@@ -146,7 +146,7 @@ const command: SlashCommand = {
 						}
 				}).filter((i: any) => i !== undefined)
 				const index_item_in_bag = item_in_bag.findIndex((i: any) => i.name.toLowerCase().includes(item_name))
-				const itemName: any = item_in_bag.find((i: any) => i.name.toLowerCase().includes(removeAccents(item_name)))
+				const itemName: any = item_in_bag.find((i: any) => removeAccents(i.name).toLowerCase().includes(removeAccents(item_name)))
 				const page: number = Math.ceil(index_item_in_bag / 6)
 				const number: number = 10000 + Number(player_data.uid)
 				const embed: EmbedBuilder = new EmbedBuilder()
@@ -154,9 +154,8 @@ const command: SlashCommand = {
 					.setAuthor({
 						name: interaction.user.username + '#' + number.toString()
 					})
-				console.log(itemName)
-				if (itemName) embed.setDescription(`${itemName} ${Locale['bag:searchfound'][locale]} ${page}.`)
-				else embed.setDescription(`${Locale['bag:searchnotfound'][locale]} ${removeAccents(item_name)}.`)
+				if (itemName) embed.setDescription(`${itemName.name} ${Locale['bag:searchfound'][locale]} ${page}.`)
+				else embed.setDescription(`${Locale['bag:searchnotfound'][locale]}: \`${removeAccents(item_name)}\`.`)
 				await interaction.editReply({
 					embeds: [embed],
 					components: []

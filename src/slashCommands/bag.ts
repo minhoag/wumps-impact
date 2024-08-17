@@ -146,16 +146,16 @@ const command: SlashCommand = {
 						}
 				}).filter((i: any) => i !== undefined)
 				let index_item_in_bag = item_in_bag.findIndex((i: any) => i.name.toLowerCase().includes(item_name))
-				if (index_item_in_bag.length == 0) index_item_in_bag = 1
 				const itemName: any = item_in_bag.find((i: any) => removeAccents(i.name).toLowerCase().includes(removeAccents(item_name)))
-				const page: number = Math.ceil(index_item_in_bag / 6)
+				let page: number = Math.ceil(index_item_in_bag / 6)
+				if (page == 0) page = 1
 				const number: number = 10000 + Number(player_data.uid)
 				const embed: EmbedBuilder = new EmbedBuilder()
 					.setColor('#36393F')
 					.setAuthor({
 						name: interaction.user.username + '#' + number.toString()
 					})
-				if (itemName) embed.setDescription(`${itemName.name} ${Locale['bag:searchfound'][locale]} ${index_item_in_bag / 6}.`)
+				if (itemName) embed.setDescription(`${itemName.name} ${Locale['bag:searchfound'][locale]} ${page}.`)
 				else embed.setDescription(`${Locale['bag:searchnotfound'][locale]}: \`${removeAccents(item_name)}\`.`)
 				await interaction.editReply({
 					embeds: [embed],

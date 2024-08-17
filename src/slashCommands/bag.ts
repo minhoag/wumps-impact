@@ -139,7 +139,7 @@ const command: SlashCommand = {
 					const banned_item: string[] = ['Stella Fortuna', 'Sigil', 'Gnostic Hymn', 'Blessing of the Welkin Moon', 'Chòm Sao', 'Ấn', 'Nhật Ký Hành Trình', 'Không Nguyệt Chúc Phúc']
 					const special_item: string[] = ['221', '222', '223', '224']
 					if (!find_item) return undefined
-					else if (banned_item.some((words: string) => removeAccents(find_item.name).name.includes(removeAccents(words)))) return undefined
+					else if (banned_item.some((words: string) => removeAccents(find_item.name).includes(removeAccents(words)))) return undefined
 					else if (special_item.includes(find_item.value)) return undefined
 					else return {
 							name: find_item.name, value: find_item.value

@@ -68,5 +68,13 @@ export const Locale: {
 	'bag:notenoughbag': {
 		vi: 'Túi của bạn không có trang',
 		'en-US': 'Your bag does not have page'
+	},
+	'bag:searchfound': {
+		vi: 'tìm thấy ở trang',
+		'en-US': 'is located in page'
+	},
+	'bag:searchnotfound': {
+		vi: 'Không tìm thấy vật phẩm',
+		'en-US': 'Cannot find item'
 	}
 }

@@ -139,22 +139,24 @@ const command: SlashCommand = {
 					const banned_item: string[] = ['Stella Fortuna', 'Sigil', 'Gnostic Hymn', 'Blessing of the Welkin Moon', 'Chòm Sao', 'Ấn', 'Nhật Ký Hành Trình', 'Không Nguyệt Chúc Phúc']
 					const special_item: string[] = ['221', '222', '223', '224']
 					if (!find_item) return undefined
-					else if (banned_item.some((words: string) => find_item.name.includes(words))) return undefined
+					else if (banned_item.some((words: string) => removeAccents(find_item.name).name.includes(removeAccents(words)))) return undefined
 					else if (special_item.includes(find_item.value)) return undefined
 					else return {
 							name: find_item.name, value: find_item.value
 						}
 				}).filter((i: any) => i !== undefined)
 				const index_item_in_bag = item_in_bag.findIndex((i: any) => i.name.toLowerCase().includes(item_name))
-				let itemName: any = item_in_bag.find((i: any) => i.name.toLowerCase().includes(item_name))
-				const page = Math.ceil(index_item_in_bag / 6)
+				const itemName: any = item_in_bag.find((i: any) => i.name.toLowerCase().includes(removeAccents(item_name)))
+				const page: number = Math.ceil(index_item_in_bag / 6)
 				const number: number = 10000 + Number(player_data.uid)
 				const embed: EmbedBuilder = new EmbedBuilder()
 					.setColor('#36393F')
 					.setAuthor({
 						name: interaction.user.username + '#' + number.toString()
 					})
-					.setDescription(`${itemName.name} is located in page ${page}.`)
+				console.log(itemName)
+				if (itemName) embed.setDescription(`${itemName} ${Locale['bag:searchfound'][locale]} ${page}.`)
+				else embed.setDescription(`${Locale['bag:searchnotfound'][locale]} ${removeAccents(item_name)}.`)
 				await interaction.editReply({
 					embeds: [embed],
 					components: []

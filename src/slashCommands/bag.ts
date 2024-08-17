@@ -155,7 +155,7 @@ const command: SlashCommand = {
 					.setAuthor({
 						name: interaction.user.username + '#' + number.toString()
 					})
-				if (itemName) embed.setDescription(`${itemName.name} ${Locale['bag:searchfound'][locale]} ${page}.`)
+				if (itemName) embed.setDescription(`${itemName.name} ${Locale['bag:searchfound'][locale]} ${index_item_in_bag / 6}.`)
 				else embed.setDescription(`${Locale['bag:searchnotfound'][locale]}: \`${removeAccents(item_name)}\`.`)
 				await interaction.editReply({
 					embeds: [embed],

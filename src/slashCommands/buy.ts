@@ -234,7 +234,7 @@ const command: SlashCommand = {
 			const uid: number = interaction.options.getNumber('uid', true);
 			const itemId: number = interaction.options.getNumber('id', true);
 			const quantity: number = interaction.options.getNumber('quantity') ?? 1;
-			const price: ShopItem | undefined = ShopView.find((i: ShopItem) => i.index === itemId);
+			const price: ShopItem | undefined = ShopView.find((i: ShopItem) => i.index === itemId && i.type === 'mora')
 			if (!price) return await interaction.reply({ content: 'Cannot find item', ephemeral: true })
 			const uuid: string = new Date().getTime().toString();
 			// Confirmation
@@ -315,7 +315,7 @@ const command: SlashCommand = {
 			const uid: number = interaction.options.getNumber('uid', true);
 			const itemId: number = interaction.options.getNumber('id', true);
 			const quantity: number = interaction.options.getNumber('quantity') ?? 1;
-			const price: ShopItem | undefined = ShopView.find((i: ShopItem) => i.index === itemId);
+			const price: ShopItem | undefined = ShopView.find((i: ShopItem) => i.index === itemId && i.type === 'points')
 			if (!price) return await interaction.reply({ content: 'Cannot find item', ephemeral: true })
 			const uuid: string = new Date().getTime().toString();
 			// Confirmation

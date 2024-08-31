@@ -1,9 +1,13 @@
 import {
-	SlashCommandBuilder,
+	ActionRowBuilder,
+	ButtonBuilder,
+	ButtonStyle,
+	CommandInteraction,
+	EmbedBuilder,
 	PermissionFlagsBits,
-	CommandInteraction, EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder
+	SlashCommandBuilder
 } from 'discord.js'
-import { SlashCommand } from '../types';
+import { SlashCommand } from '../types'
 
 const command: SlashCommand = {
 	command: new SlashCommandBuilder()
@@ -81,21 +85,21 @@ const command: SlashCommand = {
 				`http://wumpus.site:12000/domain`
 			).then(async res => {
 				const response = JSON.stringify(await res.json());
-				await interaction.reply ('Khởi chạy sự kiện Thánh Dị Vật Thành công. Server phản hồi: ' + response);
+				await interaction.reply(response.replace(/(\r\n|\n|\r)/gm, ''))
 			}).catch(async error => await interaction.reply('Đã có lỗi xảy ra. Mã lỗi: ' + error.message));
 		} else if (type === 'layline') {
 			await fetch(
 				`http://wumpus.site:12000/layline`
 			).then(async res => {
 				const response = JSON.stringify(await res.json());
-				await interaction.reply ('Khởi chạy sự kiện Địa Mạch Thành công. Server phản hồi: ' + response);
+				await interaction.reply(response.replace(/(\r\n|\n|\r)/gm, ''))
 			}).catch(async error => await interaction.reply('Đã có lỗi xảy ra. Mã lỗi: ' + error.message));
 		} else if (type === 'check') {
 			await fetch(
 				`http://wumpus.site:12000/check`
 			).then(async res => {
 				const response = JSON.stringify(await res.json());
-				await interaction.reply ('Server phản hồi: ' + response);
+				await interaction.reply(response.replace(/(\r\n|\n|\r)/gm, ''))
 			}).catch(async error => await interaction.reply('Đã có lỗi xảy ra. Mã lỗi: ' + error.message));
 		}
 	},

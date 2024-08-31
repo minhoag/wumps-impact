@@ -85,21 +85,21 @@ const command: SlashCommand = {
 				`http://wumpus.site:12000/domain`
 			).then(async res => {
 				const response = JSON.stringify(await res.json());
-				await interaction.reply(response.replace('\n"', '').replace('"', ''))
+				await interaction.reply(response.replace('\\n"', '').replace('"', ''))
 			}).catch(async error => await interaction.reply('Đã có lỗi xảy ra. Mã lỗi: ' + error.message));
 		} else if (type === 'layline') {
 			await fetch(
 				`http://wumpus.site:12000/layline`
 			).then(async res => {
 				const response = JSON.stringify(await res.json());
-				await interaction.reply(response.replace('\n"', '').replace('"', ''))
+				await interaction.reply(response.replace('\\n"', '').replace('"', ''))
 			}).catch(async error => await interaction.reply('Đã có lỗi xảy ra. Mã lỗi: ' + error.message));
 		} else if (type === 'check') {
 			await fetch(
 				`http://wumpus.site:12000/check`
 			).then(async res => {
 				const response = JSON.stringify(await res.json());
-				await interaction.reply(response.replace('\n"', '').replace('"', ''))
+				await interaction.reply(response.replace('\\n"', '').replace('"', ''))
 			}).catch(async error => await interaction.reply('Đã có lỗi xảy ra. Mã lỗi: ' + error.message));
 		}
 	},

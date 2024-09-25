@@ -53,6 +53,10 @@ export const Locale: {
 		vi: 'bạn vừa được nhắc đến ở giao dịch duới đây',
 		'en-US': 'you have been mentioned in the trade below'
 	},
+	'trade:noitemlist': {
+		vi: '*không có vật phẩm kèm*',
+		'en-US': '*no item attached*'
+	},
 	'error:cancel': {
 		vi: 'Huỷ',
 		'en-US': 'Cancel'
@@ -76,5 +80,5 @@ export const Locale: {
 	'bag:searchnotfound': {
 		vi: 'Không tìm thấy vật phẩm',
 		'en-US': 'Cannot find item'
-	}
+	},
 }

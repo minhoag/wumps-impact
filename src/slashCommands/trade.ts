@@ -13,6 +13,8 @@ import {
 import { SlashCommand } from '../types'
 import { Locale } from '../data/dict'
 import { sqliteUpdate } from '../function'
+import { item_en } from '../data/item_en'
+import { item_vi } from '../data/item_vi'
 import prismaSqlite from '../prisma/prisma-sqlite'
 
 const command: SlashCommand = {
@@ -30,7 +32,10 @@ const command: SlashCommand = {
 			option.setName('take-mora').setDescription('How much mora you wish to take.')
 		)
 		.addStringOption((option) =>
-			option.setName('give-item').setDescription('Item you wish to give. Separate with comma.')
+			option.setName('give-item').setDescription('Item you wish to give.')
+		)
+		.addStringOption((option) =>
+			option.setName('give-item-amount').setDescription('Amount item you wish to give.')
 		),
 	cooldown: 5,
 	execute: async (interaction: CommandInteraction) => {
@@ -39,7 +44,15 @@ const command: SlashCommand = {
 		const user: User = interaction.options.getUser('user', true);
 		const give_mora: number = interaction.options.getNumber('give-mora', true);
 		const take_mora: number = interaction.options.getNumber('take-mora') ?? 0;
-		const give_item: string = interaction.options.getString('give-item') ?? ""
+		const give_item: string = interaction.options.getString('give-item') ?? ''
+		const give_item_amount: string = interaction.options.getString('give-item-amount') ?? ''
+
+		const item: any = locale == 'vi' ? item_vi : item_en
+		console.log(give_item)
+		const give_item_split: string[] = give_item ? give_item.split(',').filter(i => i.length > 0) : []
+		const collect_item: any[] = give_item_split.length ? give_item_split.map((e: any) => item.find((i: any) => i.value === e)) : []
+		const give_item_amount_split: string[] = give_item_amount ? give_item_amount.split(',').filter(i => i.length > 0) : []
+
 		const embed: EmbedBuilder = new EmbedBuilder()
 			.setTitle(Locale['title:pending'][locale])
 			.setColor('#36393F')
@@ -52,7 +65,7 @@ const command: SlashCommand = {
 			.addFields(
 			{
 				name: `${interaction.user.username} ${locale == "vi" ? "đề nghị vật phẩm" : "offer items"}`,
-				value: "*this function will be available in the nearest future*",
+				value: `${collect_item.length ? collect_item.map((e: any, i: number) => give_item_amount_split[i] + ' x ' + e).join(', ') : Locale['trade:noitemlist'][locale]}`,
 				inline: true
 			},
 			{
@@ -96,6 +109,7 @@ const command: SlashCommand = {
 				if (![interaction.user.id, user.id].includes(i.user.id)) return
 				if (i.customId === 'confirm_trade') {
 					confirmation.push(i.user.username + ' confirmed')
+					confirmation = [...new Set(confirmation)]
 					embed.setFooter({
 						text: confirmation.join(', '),
 						iconURL:
@@ -201,6 +215,7 @@ const command: SlashCommand = {
 				}
 				// whether substract or add
 				const total_mora = give_mora - take_mora
+				const item_string: string = collect_item.map((e: any, i: number) => e.value + ':' + give_item_amount_split[i]).join(',')
 				if (total_mora > 0) {
 					await fetch(
 						`http://${ip}:14861/api?region=dev_gio&ticket=GM&cmd=1116&uid=${receiver_uid.uid}&msg=scoin%20${total_mora}`,
@@ -214,6 +229,11 @@ const command: SlashCommand = {
 						`http://${ip}:14861/api?region=dev_gio&ticket=GM&cmd=1116&uid=${sender_uid.uid}&msg=scoin%20${total_mora}`,
 					))
 				}
+				await fetch(
+					`http://${ip}:14861/api?region=dev_gio&ticket=GM&cmd=1116&uid=${receiver_uid.uid}&msg=${item_string}`
+				).then(async () => await fetch(
+					`http://${ip}:14861/api?region=dev_gio&ticket=GM&cmd=1116&uid=${sender_uid.uid}&msg=scoin%20${total_mora}`
+				))
 				// success embed send
 				const successEmbed: EmbedBuilder = new EmbedBuilder()
 					.setTitle(Locale['title:success'][locale])

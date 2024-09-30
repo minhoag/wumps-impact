@@ -6,3 +6,4 @@ user.db
 cmd.bat
 build
 .idea
+package-lock.json

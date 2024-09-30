@@ -384,7 +384,7 @@ const command: SlashCommand = {
 						embeds: [],
 						components: []
 					})
-					await sendLog(interaction, `<@${interaction.user.id}> has bought **${quantity} x ${price.image} ${price.name['en-GB']}**`)
+					await sendLog(interaction, `<@${interaction.user.id}> has bought **${quantity} x ${price.image}}**`)
 				} else if (confirmation.customId === 'cancel') {
 					await confirmation.update({
 						content: Locale['buy:cancel'][locale],

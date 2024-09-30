@@ -271,7 +271,7 @@ const command: SlashCommand = {
 					//check if sufficient
 					const userData = await sqliteUpdate(interaction.user.id)
 					if (!userData) return await confirmation.update({ content: Locale['buy:notregisterd'][locale] })
-					if (userData.weeklyMora > client.currentLimit) return await confirmation.update({
+					if (userData.weeklyMora >= client.currentLimit) return await confirmation.update({
 						content: Locale['buy:moralimited'][locale],
 						embeds: [],
 						components: []

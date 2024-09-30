@@ -1,18 +1,27 @@
 generator client {
-  provider = "prisma-client-js"
-  output   = "../node_modules/@prisma-sqlite-db"
+   provider = "prisma-client-js"
+   output   = "../node_modules/@prisma-sqlite-db"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./user.db"
+   provider = "sqlite"
+   url      = "file:./user.db"
+}
+
+model serverData {
+   id             String   @id
+   currentLimit   Int      @default(500000000)
+   lastResetLimit DateTime @default(now())
 }
 
 model userData {
-  user       String @id
-  uid        String
-  mora       BigInt
-  credit     Int    @default(0)
-  points     Int    @default(0)
-  lastUpdate Int    @default(0)
+   user         String @id
+   uid          String
+   mora         BigInt
+   credit       Int    @default(0)
+   points       Int    @default(0)
+   lastUpdate   Int    @default(0)
+   weeklyMora   Int    @default(0)
+   weeklyPoints Int    @default(0)
+   weeklyCredit Int    @default(0)
 }

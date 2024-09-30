@@ -151,6 +151,7 @@ const command: SlashCommand = {
 		let locale: string = interaction.locale
 		if (locale !== 'vi' && locale !== 'en-US' || !locale) locale = 'en-US'
 		// Button
+		//@ts-ignore
 		const confirm: ButtonBuilder = new ButtonBuilder().setCustomId('confirm').setLabel(`${locale == 'vi' ? 'Xác nhận' : 'Confirm'}`).setStyle(ButtonStyle.Success)
 		//@ts-ignore
 		const cancel: ButtonBuilder = new ButtonBuilder().setCustomId('cancel').setStyle(ButtonStyle.Danger).setLabel(`${locale == 'vi' ? 'Hủy' : 'Cancel'}`)

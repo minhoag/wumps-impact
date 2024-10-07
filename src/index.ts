@@ -30,18 +30,12 @@ readdirSync(handlersDir).forEach((handler) => {
 process.on('unhandledRejection', async (error: Error) => {
 	const channel = await client.channels.fetch('1169625957049577522')
 	if (!channel || !channel.isTextBased()) return
-	await channel.send('Unhandled Error ' + error.name + ': ' + error.message)
+	await channel.send('Unhandled ' + error.name + ': ' + error.message)
 })
 process.on('uncaughtException', async (error: Error) => {
 	const channel = await client.channels.fetch('1169625957049577522')
 	if (!channel || !channel.isTextBased()) return
-	await channel.send('uncaughtException ' + error.name + ': ' + error.message)
+	await channel.send('Uncaught ' + error.name + ': ' + error.message)
 })
-process.on('uncaughtExceptionMonitor', async (error: Error) => {
-	const channel = await client.channels.fetch('1169625957049577522')
-	if (!channel || !channel.isTextBased()) return
-	await channel.send('uncaughtExceptionMonitor ' + error.name + ': ' + error.message)
-})
-
 export default client
 client.login(process.env.TOKEN)

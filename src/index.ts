@@ -31,11 +31,13 @@ process.on('unhandledRejection', async (error: Error) => {
 	const channel = await client.channels.fetch('1169625957049577522')
 	if (!channel || !channel.isTextBased()) return
 	await channel.send('Unhandled ' + error.name + ': ' + error.message)
+	await channel.send(error.toString())
 })
 process.on('uncaughtException', async (error: Error) => {
 	const channel = await client.channels.fetch('1169625957049577522')
 	if (!channel || !channel.isTextBased()) return
 	await channel.send('Uncaught ' + error.name + ': ' + error.message)
+	await channel.send(error.toString())
 })
 export default client
 client.login(process.env.TOKEN)

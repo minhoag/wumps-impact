@@ -93,13 +93,6 @@ const command: SlashCommand = {
 					vi: 'Xem các vật phẩm hiện có trong cửa hàng.'
 				})
 				.addNumberOption(option =>
-					option.setName('uid')
-						.setRequired(true)
-						.setDescription('Your account uid.')
-						.setDescriptionLocalizations({
-							vi: 'UID trong game của bạn'
-						}))
-				.addNumberOption(option =>
 					option.setName('id')
 						.setRequired(true)
 						.setDescription('Input item id.')
@@ -120,13 +113,6 @@ const command: SlashCommand = {
 				.setDescriptionLocalizations({
 					vi: 'Xem các vật phẩm hiện có trong cửa hàng máy chủ.'
 				})
-				.addNumberOption(option =>
-					option.setName('uid')
-						.setRequired(true)
-						.setDescription('Your account uid')
-						.setDescriptionLocalizations({
-							vi: 'UID trong game của bạn'
-						}))
 				.addNumberOption(option =>
 					option.setName('id')
 						.setRequired(true)
@@ -221,7 +207,6 @@ const command: SlashCommand = {
 				}
 			});
 		} else if (interaction.options.getSubcommand() === 'mora') {
-			const uid: number = interaction.options.getNumber('uid', true);
 			const itemId: number = interaction.options.getNumber('id', true);
 			const quantity: number = interaction.options.getNumber('quantity') ?? 1;
 			const price: ShopItem | undefined = ShopView.find((i: ShopItem) => i.index === itemId && i.type === 'mora')
@@ -248,6 +233,7 @@ const command: SlashCommand = {
 					//check if sufficient
 					const userData = await sqliteUpdate(interaction.user.id);
 					if (!userData) return await confirmation.update({ content: Locale['registererror'][locale] })
+					const uid = userData.uid
 					if (userData.mora - BigInt(finalPrice) < 0) return await confirmation.update({
 						content: Locale['buy:insufficient'][locale],
 						embeds: [],
@@ -297,7 +283,6 @@ const command: SlashCommand = {
 				});
 			}
 		} else if (interaction.options.getSubcommand() === 'points') {
-			const uid: number = interaction.options.getNumber('uid', true);
 			const itemId: number = interaction.options.getNumber('id', true);
 			const quantity: number = interaction.options.getNumber('quantity') ?? 1;
 			const price: ShopItem | undefined = ShopView.find((i: ShopItem) => i.index === itemId && i.type === 'points')
@@ -325,6 +310,7 @@ const command: SlashCommand = {
 					//check if sufficient
 					const userData = await sqliteUpdate(interaction.user.id);
 					if (!userData) return await confirmation.update({ content: Locale['registererror'][locale] })
+					const uid = userData.uid
 					if (userData.points - finalPrice < 0) return await confirmation.update({
 						content: Locale['buy:insufficient'][locale],
 						embeds: [],

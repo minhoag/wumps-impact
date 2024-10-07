@@ -469,7 +469,6 @@ export async function sendLog(interaction: Interaction, content: string) {
 	if (!channel.id) return;
 	const message = client.channels.cache.get(channel.id) as TextChannel;
 	await message.send(content)
-
 }
 
 export async function antiSpam(message: Message, usersMap: any, DIFF: number, LIMIT: number) {

@@ -27,14 +27,20 @@ readdirSync(handlersDir).forEach((handler) => {
 })
 
 // Prevent Rejection
-process.on('unhandledRejection', error => {
-	console.log('Unhandled promise rejection:', error)
+process.on('unhandledRejection', async (error: Error) => {
+	const channel = await client.channels.fetch('1169625957049577522')
+	if (!channel || !channel.isTextBased()) return
+	await channel.send('unhandledRejection: ' + error.message)
 })
-process.on('uncaughtException', error => {
-	console.log('Uncaught Exception:', error)
+process.on('uncaughtException', async (error: Error) => {
+	const channel = await client.channels.fetch('1169625957049577522')
+	if (!channel || !channel.isTextBased()) return
+	await channel.send('uncaughtException: ' + error.message)
 })
-process.on('uncaughtExceptionMonitor', error => {
-	console.log('Uncaught Exception Monitor:', error)
+process.on('uncaughtExceptionMonitor', async (error: Error) => {
+	const channel = await client.channels.fetch('1169625957049577522')
+	if (!channel || !channel.isTextBased()) return
+	await channel.send('uncaughtExceptionMonitor: ' + error.message)
 })
 
 export default client

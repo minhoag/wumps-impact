@@ -95,20 +95,20 @@ const command: SlashCommand = {
 				.addNumberOption(option =>
 					option.setName('uid')
 						.setRequired(true)
-						.setDescription('Your account uid')
+						.setDescription('Your account uid.')
 						.setDescriptionLocalizations({
 							vi: 'UID trong game của bạn'
 						}))
 				.addNumberOption(option =>
 					option.setName('id')
 						.setRequired(true)
-						.setDescription('Input item id')
+						.setDescription('Input item id.')
 						.setDescriptionLocalizations({
 							vi: 'Nhập ID vật phẩm bạn cần mua'
 						}))
 				.addNumberOption(option =>
 					option.setName('quantity')
-						.setDescription('Item Quantity')
+						.setDescription('Item Quantity.')
 						.setMaxValue(30)
 						.setDescriptionLocalizations({
 							vi: 'Nhập số lượng vật phẩm bạn cần mua'

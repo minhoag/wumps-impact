@@ -7,6 +7,7 @@ import {
 	PermissionFlagsBits,
 	SlashCommandBuilder
 } from 'discord.js'
+import util from 'util'
 import { SlashCommand } from '../types'
 
 const command: SlashCommand = {
@@ -55,19 +56,7 @@ const command: SlashCommand = {
 				if (confirmation.customId === 'cancel') {
 					replyEmbed.setTitle('Đã huỷ thành công').setDescription('Huỷ lệnh restart thành công!')
 				} else {
-					const request: Response = await fetch('https://backend.control.luxvps.net/v1/service/f1bfab30-b687-4f33-bd7e-10e6520cb79f/restart?token=11f66be3-e95b-4795-8434-abfdb181fa3f', {
-						method: 'POST',
-						headers: {
-							accept: 'application/json',
-							'Content-Type': 'application/json'
-						}
-					});
-					const response: Response = await request.json();
-					if (!response.status) {
-						replyEmbed.setTitle('Thành công').setDescription(`Server đã restart thành công. Server sẽ khả dụng trong vòng 8-10 phút.`)
-					} else {
-						replyEmbed.setTitle('Lỗi').setDescription(`Server đã restart đã có lỗi. Server phản hồi: ${response}.`)
-					}
+
 				}
 				return confirmation.update({
 					embeds: [replyEmbed],
@@ -81,28 +70,24 @@ const command: SlashCommand = {
 				});
 			}
 		} else if (type === 'domain') {
-			await fetch(
-				`http://wumpus.site:12000/domain`
-			).then(async res => {
-				const response = JSON.stringify(await res.json());
-				await interaction.reply(response.replace('\\n"', '').replace('"', ''))
-			}).catch(async error => await interaction.reply('Đã có lỗi xảy ra. Mã lỗi: ' + error.message));
+			await run(type, interaction)
 		} else if (type === 'layline') {
-			await fetch(
-				`http://wumpus.site:12000/layline`
-			).then(async res => {
-				const response = JSON.stringify(await res.json());
-				await interaction.reply(response.replace('\\n"', '').replace('"', ''))
-			}).catch(async error => await interaction.reply('Đã có lỗi xảy ra. Mã lỗi: ' + error.message));
+			await run(type, interaction)
 		} else if (type === 'check') {
-			await fetch(
-				`http://wumpus.site:12000/check`
-			).then(async res => {
-				const response = JSON.stringify(await res.json());
-				await interaction.reply(response.replace('\\n"', '').replace('"', ''))
-			}).catch(async error => await interaction.reply('Đã có lỗi xảy ra. Mã lỗi: ' + error.message));
+			await run(type, interaction)
 		}
 	},
 };
+
+async function run(type: string, interaction: CommandInteraction) {
+	const exec = util.promisify(require('child_process').execFile)
+	await exec(`./${type}.sh`, { cwd: './tool' }, async (error: any, stdout: any, stderr: any) => {
+		if (error) {
+			await interaction.reply(`exec error: ${error}`)
+			return
+		}
+		await interaction.reply(stdout)
+	})
+}
 
 export default command;

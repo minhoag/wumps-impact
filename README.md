@@ -12,4 +12,5 @@ Whether you want to explore new content, test builds without restrictions, or ex
 
 # DISCLAIMER
 
-Wumps Impact is a fan project, not affiliated with miHoYo or HoYoverse. Use of this private server is intended for personal and private use only. Be aware that using private servers may violate the game's terms of service.
+Wumps Impact is a fan project, not affiliated with miHoMo.
+This private server is intended for personal and private use only.

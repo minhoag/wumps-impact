@@ -1,43 +1,43 @@
-import { Client, Collection, GatewayIntentBits } from 'discord.js'
-import { Command, SlashCommand } from './types'
-import { readdirSync } from 'fs'
-import { join } from 'path'
-import { config } from 'dotenv'
+import { Client, Collection, GatewayIntentBits } from 'discord.js';
+import { readdirSync } from 'fs';
+import { join } from 'path';
+
+import { Command, SlashCommand } from './types';
+
+process.on('uncaughtException', (error: any) => {
+  const stackLines = error.stack.split('\n');
+  if (error.message.includes("undefined (reading 'vi')")) {
+    const relevantLine = stackLines.find((line: string) =>
+      line.includes('E:\\Downloads\\Project\\wumps\\src\\slash'),
+    );
+    console.log('Uncaught Exception: Translation not found');
+    console.log(relevantLine);
+  } else if (error.code === 'ENOTFOUND') {
+    console.log('No internet connection');
+  } else if (error.code === 'ECONNREFUSED') {
+    console.log('Connection refused');
+  } else {
+    console.error('Unhandled Rejection:', error);
+  }
+});
 
 const client = new Client({
-	intents: [
-		GatewayIntentBits.Guilds,
-		GatewayIntentBits.GuildMessages,
-		GatewayIntentBits.MessageContent,
-		GatewayIntentBits.GuildMembers
-	]
-})
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildMembers,
+  ],
+});
 
-config()
+client.slashCommands = new Collection<string, SlashCommand>();
+client.commands = new Collection<string, Command>();
+client.cooldowns = new Collection<string, number>();
+client.chats = new Collection<string, number>();
 
-client.slashCommands = new Collection<string, SlashCommand>()
-client.commands = new Collection<string, Command>()
-client.cooldowns = new Collection<string, number>()
-client.chats = new Collection<string, number>()
-client.currentLimit = 0
-
-const handlersDir = join(__dirname, './handlers')
+const handlersDir = join(__dirname, './handlers');
 readdirSync(handlersDir).forEach((handler) => {
-	require(`${handlersDir}/${handler}`)(client)
-})
+  require(`${handlersDir}/${handler}`)(client);
+});
 
-// Prevent Rejection
-process.on('unhandledRejection', async (error: Error) => {
-	const channel = await client.channels.fetch('1169625957049577522')
-	if (!channel || !channel.isTextBased()) return
-	await channel.send('Unhandled ' + error.name + ': ' + error.message)
-	await channel.send(error.toString())
-})
-process.on('uncaughtException', async (error: Error) => {
-	const channel = await client.channels.fetch('1169625957049577522')
-	if (!channel || !channel.isTextBased()) return
-	await channel.send('Uncaught ' + error.name + ': ' + error.message)
-	await channel.send(error.toString())
-})
-export default client
-client.login(process.env.TOKEN)
+client.login(process.env.DiSCORD_TOKEN).then(async () => {});

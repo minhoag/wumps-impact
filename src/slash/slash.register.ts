@@ -50,6 +50,7 @@ const command: SlashCommand = {
   execute: async (interaction: CommandInteraction) => {
     if (!interaction.isChatInputCommand()) return;
     if (!interaction.guild) return;
+    /** Client Redis **/
     const client = createClient({
       url: process.env.REDIS_URL,
     });

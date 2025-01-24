@@ -1,18 +1,14 @@
-import {
-  ButtonStyle,
-  ChannelType,
-  ComponentType,
-  EmbedBuilder,
-  GuildMember,
-  Message,
-  PermissionFlagsBits,
-  PermissionResolvable,
-  TextChannel,
-} from 'discord.js';
+import { ButtonStyle, ChannelType, ComponentType, EmbedBuilder, GuildMember, Message, PermissionFlagsBits, PermissionResolvable, TextChannel } from 'discord.js';
 import { promisify } from 'node:util';
 import { createClient } from 'redis';
 
+
+
 import { Localizaion } from './i18n';
+
+
+
+
 
 /** Translate message to local language **/
 export const translate = ({
@@ -136,3 +132,21 @@ export const cacheGet = async (key: string) => {
 
   return JSON.parse(data);
 };
+
+export const fetchPlayerItems = async (uid: number) => {
+  const res = await fetch(
+    `http://localhost:14861/api?cmd=1016&region=dev_gio&ticket=GM&uid=${uid}`,
+  );
+  const item = await res.json();
+  return item.data.item_bin_data.pack_store.item_list.filter(
+    (i: any) => i.item_type === 2,
+  );
+};
+
+export function removeAccents(str: string) {
+  return str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D');
+}

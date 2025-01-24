@@ -1,4 +1,4 @@
-export const refItem = [
+export const Item = [
   {
     name: 'Character EXP: 101',
     value: '101',

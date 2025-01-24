@@ -8,7 +8,7 @@ const event: Event = {
   execute: async (message: Message) => {
     if (!message.member || message.member.user.bot) return;
     if (!message.guild) return;
-    let prefix: string = process.env.PREFIX ?? '!';
+    let prefix: string = process.env.DISCORD_PREFIX ?? '.';
     if (!message.content.startsWith(prefix)) {
       const timeout: number = 60;
       const usersMap = new Map();

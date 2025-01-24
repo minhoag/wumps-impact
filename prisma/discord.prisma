@@ -25,3 +25,11 @@ model User {
   weeklyPoints Int    @default(0)
   weeklyCredit Int    @default(0)
 }
+
+model ShopItem {
+  id          String @id
+  name        String
+  description String
+  listed      String
+  for_sale    String
+}

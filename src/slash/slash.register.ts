@@ -8,7 +8,7 @@ import { createClient } from 'redis';
 
 import { prisma_discord } from '../prisma/prisma';
 import { SlashCommand } from '../types';
-import { translate } from '../utils';
+import { embeds, translate } from '../utils';
 
 const command: SlashCommand = {
   command: new SlashCommandBuilder()
@@ -18,7 +18,7 @@ const command: SlashCommand = {
     .setDefaultMemberPermissions(PermissionFlagsBits.ViewChannel)
     .addSubcommand((subcommand) =>
       subcommand
-        .setName('code')
+        .setName('send')
         .setDescription('Send verification code.')
         .setDescriptionLocalization('vi', 'Gửi mã xác minh.')
         .addStringOption((option) =>
@@ -34,7 +34,7 @@ const command: SlashCommand = {
     )
     .addSubcommand((subcommand) =>
       subcommand
-        .setName('verify')
+        .setName('input')
         .setDescription('Input your verification code.')
         .setDescriptionLocalization('vi', 'Nhập mã xác minh.')
         .addStringOption((option) =>
@@ -53,12 +53,8 @@ const command: SlashCommand = {
     const client = createClient({
       url: process.env.REDIS_URL,
     });
-    client.on('error', (err) =>
-      console.log('Redis Client Error', err),
-    );
-    client.on('ready', () => console.log('Redis Client Ready'));
     await client.connect();
-
+    /** Send Verification Code **/
     if (interaction.options.getSubcommand() === 'send') {
       const uid: string = interaction.options.getString('uid', true);
       await interaction.deferReply({ ephemeral: true });
@@ -74,16 +70,16 @@ const command: SlashCommand = {
             locale: interaction.locale,
           }),
         );
-      // send
+      // send otp
       const otpCode = Array.from({ length: 4 }, () =>
         Math.floor(Math.random() * 10),
       ).join('');
-
+      // set otp code to redis
       await client.del(interaction.user.id);
       await client.set(interaction.user.id, otpCode, {
         EX: 15 * 60,
       });
-
+      // prepare mail
       const sign = new Date().getTime().toString();
       const title = translate({
         message: 'verify-send:title',
@@ -95,43 +91,66 @@ const command: SlashCommand = {
           ? `Mã OTP của bạn cho tài khoản là ${otpCode}. Sử dụng mã này để nhập vào Form mở trên Discord để xác minh.`
           : `Your OTP for the account is ${otpCode}. Use this code to enter in the Form opened on Discord for verification.`;
       const expire_time = dayjs().add(15, 'minute').unix();
-
       const message = `http://localhost:14861/api?sender=${sender}&title=${title}&content=${content}&item_list=202:1&expire_time=${expire_time}&is_collectible=False&uid=${uid}&cmd=1005&region=dev_gio&ticket=GM%40${expire_time}&sign=${sign}`;
-
+      // send mail
       try {
         await fetch(message);
       } catch (error: any) {
         console.error(error);
       }
       await client.disconnect();
+      // complete
       await interaction.editReply({
         content: translate({
           message: 'verify-send:send',
           locale: interaction.locale,
         }),
       });
-    } else if (interaction.options.getSubcommand() === 'verify') {
+    } else if (interaction.options.getSubcommand() === 'input') {
+      /** Verify send code **/
+      // params
       const code: string = interaction.options.getString(
         'code',
         true,
       );
       await interaction.deferReply({ ephemeral: true });
+      // get otp code from redis
       const otp = await client.get(interaction.user.id);
-      if (!otp)
-        return await interaction.reply(
+
+      if (!otp) {
+        embeds.setTitle(
           translate({
-            message: 'error:unknown',
+            message: 'error:known',
             locale: interaction.locale,
           }),
         );
+        embeds.setDescription(
+          translate({
+            message: 'verify-send:expired',
+            locale: interaction.locale,
+          }),
+        );
+        return await interaction.editReply({
+          embeds: [embeds],
+        });
+      }
+      // check otp code
       if (otp !== code) {
-        return await interaction.reply(
+        return await interaction.editReply(
           translate({
             message: 'verify-send:wrong-code',
             locale: interaction.locale,
           }),
         );
       }
+      // remove otp code from redis
+      await client.del(interaction.user.id);
+      return await interaction.editReply(
+        translate({
+          message: 'verify-send:right-code',
+          locale: interaction.locale,
+        }),
+      );
     }
   },
 };

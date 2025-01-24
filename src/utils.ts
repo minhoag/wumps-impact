@@ -1,15 +1,18 @@
-import { ButtonStyle, ChannelType, ComponentType, EmbedBuilder, GuildMember, Message, PermissionFlagsBits, PermissionResolvable, TextChannel } from 'discord.js';
-import process from 'node:process';
+import {
+  ButtonStyle,
+  ChannelType,
+  ComponentType,
+  EmbedBuilder,
+  GuildMember,
+  Message,
+  PermissionFlagsBits,
+  PermissionResolvable,
+  TextChannel,
+} from 'discord.js';
 import { promisify } from 'node:util';
 import { createClient } from 'redis';
 
-
-
 import { Localizaion } from './i18n';
-
-
-
-
 
 /** Translate message to local language **/
 export const translate = ({
@@ -17,11 +20,8 @@ export const translate = ({
   locale,
 }: {
   message: string;
-  locale?: string;
-}) =>
-  Localizaion[message][
-    locale ? locale : (process.env.DISCORD_DEFAULT_LOCALE as string)
-  ];
+  locale: string;
+}) => Localizaion[message][locale];
 
 /** Predefined embed **/
 export const embeds: EmbedBuilder = new EmbedBuilder().setColor(

@@ -5,10 +5,18 @@ export type Translate = {
 export const Localizaion: {
   [key: string]: Translate;
 } = {
-  /** Error **/
+  /**
+   *
+   * Error
+   *
+   * **/
   'error:unknown': {
     vi: '🚨 Lỗi không xác định',
     'en-US': '🚨 Unknown Error',
+  },
+  'error:known': {
+    vi: '🚨 Đã có lỗi xảy ra',
+    'en-US': '🚨 An error has occurred',
   },
   'error:detail': {
     vi: '**Thông tin lỗi:**',
@@ -21,6 +29,15 @@ export const Localizaion: {
   'error:contact': {
     vi: 'Liên hệ với quản trị viên để được hỗ trợ',
     'en-US': 'Contact admin for support',
+  },
+  /**
+   *
+   * Slash Command: Verify-Send
+   *
+   * **/
+  'bag:view:notfound': {
+    vi: 'Không tìm thấy người chơi mà bạn chọn.',
+    'en-US': 'User not found.',
   },
   /**
    *
@@ -61,8 +78,17 @@ export const Localizaion: {
     vi: 'Mã xác minh',
     'en-US': 'Verification Code',
   },
+  'verify-send:right-code': {
+    vi: 'Xác minh thành công. Bạn đã được cấp quyền truy cập mọi tính năng của server.',
+    'en-US':
+      'Verification completed. You have been granted access to all server features.',
+  },
   'verify-send:wrong-code': {
     vi: 'Mã xác minh không chính xác.',
     'en-US': 'Verification Code is incorrect.',
+  },
+  'verify-send:expired': {
+    vi: 'Mã xác minh hết hạn.',
+    'en-US': 'Your verification code has expired.',
   },
 };

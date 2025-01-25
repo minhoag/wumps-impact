@@ -59,20 +59,68 @@ const command: SlashCommand = {
         .addNumberOption((option) =>
           option.setName('amount').setDescription('Số lượng'),
         ),
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName('transfer')
+        .setDescription('Give money to player.')
+        .setDescriptionLocalization('vi', 'Gửi tiền cho người chơi.')
+        .addStringOption((option) =>
+          option
+            .setName('uid')
+            .setDescription('UID của người chơi')
+            .setRequired(true),
+        )
+        .addStringOption((option) =>
+          option
+            .setName('type')
+            .setDescription('Chọn loại tiền tệ')
+            .setRequired(true)
+            .addChoices(
+              { name: 'Đá sáng thế', value: 'mcoin' },
+              { name: 'Mora', value: 'scoin' },
+              { name: 'Nguyên thạch', value: 'hcoin' },
+              { name: 'Tiền Động Tiên', value: 'home_coin' },
+            ),
+        )
+        .addNumberOption((option) =>
+          option.setName('amount').setDescription('Số lượng'),
+        ),
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName('takeaway')
+        .setDescription('Take away money from player.')
+        .setDescriptionLocalization('vi', 'Xóa tiền của người chơi.')
+        .addStringOption((option) =>
+          option
+            .setName('uid')
+            .setDescription('UID của người chơi')
+            .setRequired(true),
+        )
+        .addStringOption((option) =>
+          option
+            .setName('type')
+            .setDescription('Chọn loại tiền tệ')
+            .setRequired(true)
+            .addChoices(
+              { name: 'Đá sáng thế', value: 'submcoin' },
+              { name: 'Mora', value: 'subscoin' },
+              { name: 'Nguyên thạch', value: 'subhcoin' },
+              { name: 'Tiền Động Tiên', value: 'subhome_coin' },
+            ),
+        )
+        .addNumberOption((option) =>
+          option.setName('amount').setDescription('Số lượng'),
+        ),
     ),
   autocomplete: async (interaction: AutocompleteInteraction) => {
     /** Give item to player **/
     const focusedOption = interaction.options.getFocused(true);
-    if (interaction.options.getSubcommand() === 'give') {
-      const filtered: {
-        value: string;
-        name: string;
-      }[] = Item.filter((choice: ItemProps) =>
-        choice.name.toLowerCase().includes(focusedOption.value.toLowerCase()),
-      );
-      const options = filtered.length > 25 ? filtered.slice(0, 25) : filtered;
-      await interaction.respond(options);
-    } else if (interaction.options.getSubcommand() === 'delete') {
+    if (
+      interaction.options.getSubcommand() === 'give' ||
+      interaction.options.getSubcommand() === 'delete'
+    ) {
       const filtered: {
         value: string;
         name: string;
@@ -150,6 +198,40 @@ const command: SlashCommand = {
           });
         }
       }
+    } else if (interaction.options.getSubcommand() === 'transfer') {
+      const uid = interaction.options.getString('uid', true);
+      const type = interaction.options.getString('type', true);
+      const amount = interaction.options.getNumber('amount') ?? 1;
+      const name: { [key: string]: string } = {
+        mcoin: 'Đá sáng thế',
+        scoin: 'Mora',
+        hcoin: 'Nguyên thạch',
+        home_coin: 'Tiền Động Tiên',
+      };
+      await fetch(
+        `http://localhost:14861/api?region=dev_gio&ticket=GM&cmd=1116&uid=${uid}&msg=${type}%20${amount}`,
+      );
+      await interaction.reply({
+        content: `Đã thêm ${name[type]} cho người chơi UID ${uid}`,
+        flags: 'Ephemeral',
+      });
+    } else if (interaction.options.getSubcommand() === 'takeaway') {
+      const uid = interaction.options.getString('uid', true);
+      const type = interaction.options.getString('type', true);
+      const amount = interaction.options.getNumber('amount') ?? 1;
+      const name: { [key: string]: string } = {
+        submcoin: 'Đá sáng thế',
+        subscoin: 'Mora',
+        subhcoin: 'Nguyên thạch',
+        subhome_coin: 'Tiền Động Tiên',
+      };
+      await fetch(
+        `http://localhost:14861/api?region=dev_gio&ticket=GM&cmd=1116&uid=${uid}&msg=${type}%20${amount}`,
+      );
+      await interaction.reply({
+        content: `Đã xóa ${name[type]} của người chơi UID ${uid}`,
+        flags: 'Ephemeral',
+      });
     }
   },
 };

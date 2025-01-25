@@ -32,7 +32,8 @@ export const Localizaion: {
   },
   'error:user:notfound': {
     vi: '🚨 Người chơi không tồn tại trong hệ thống. Vui lòng đăng ký bằng lệnh `/register`.',
-    'en-US': '🚨 User not found in the system. Please register with `/register` command.',
+    'en-US':
+      '🚨 User not found in the system. Please register with `/register` command.',
   },
   /**
    *

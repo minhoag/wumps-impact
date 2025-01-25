@@ -1,20 +1,22 @@
 import Canvas, { GlobalFonts } from '@napi-rs/canvas';
+import dayjs from 'dayjs';
 import {
   ActionRowBuilder,
   AttachmentBuilder,
   ButtonBuilder,
   ButtonStyle,
   CommandInteraction,
-  type Locale,
   ComponentType,
+  type Locale,
   PermissionFlagsBits,
-  SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder,
+  SlashCommandBuilder,
+  StringSelectMenuBuilder,
+  StringSelectMenuOptionBuilder,
 } from 'discord.js';
 
 import { prisma_discord } from '../prisma/prisma.ts';
-import { type ShopItem, ShopView } from './store/store.ts';
 import { embeds, translate } from '../utils.ts';
-import dayjs from 'dayjs';
+import { type ShopItem, ShopView } from './store/store.ts';
 
 // Register custom font
 GlobalFonts.registerFromPath('./src/assets/font/zhcn.ttf', 'Genshin');
@@ -37,7 +39,10 @@ const command = {
           option
             .setName('quantity')
             .setDescription('How many items do you want to buy?')
-            .setDescriptionLocalization('vi', 'Số lượng vật phẩm bạn muốn mua?'),
+            .setDescriptionLocalization(
+              'vi',
+              'Số lượng vật phẩm bạn muốn mua?',
+            ),
         )
         .addNumberOption((option) =>
           option
@@ -87,37 +92,50 @@ const command = {
       // Check quantity
       if (quantity < 1) {
         return interaction.reply({
-          content: translate({message: 'shop:view:quantity:lt0', locale: locale}),
+          content: translate({
+            message: 'shop:view:quantity:lt0',
+            locale: locale,
+          }),
           flags: 'Ephemeral',
         });
       } else if (quantity > 15) {
         return interaction.reply({
-          content: translate({message: 'shop:view:quantity:gt15', locale: locale}),
+          content: translate({
+            message: 'shop:view:quantity:gt15',
+            locale: locale,
+          }),
           flags: 'Ephemeral',
         });
       }
       // Defer the reply to allow time for data fetching
       await interaction.deferReply();
       // Fetch user currency data from the database
-      const currency = await prisma_discord.user.findUnique({
-        where: { id: interaction.user.id },
-        select: {
-          uid: true,
-          masterless: true,
-          points: true,
-        },
-      }).then(async (data) => {
-        if(!data) return
-        const response = await fetch(`http://localhost:14861/api?cmd=5003&region=dev_gio&ticket=GM&uid=${data.uid}`);
-        const res = await response.json();
-        if (!res) return
-        return {
-          ...data,
-          primogems: res.data.hcoin,
-          mora: res.data.scoin
-        };
-      });
-      if (!currency) return interaction.reply(translate({message: 'error:user:notfound', locale: locale}));
+      const currency = await prisma_discord.user
+        .findUnique({
+          where: { id: interaction.user.id },
+          select: {
+            uid: true,
+            masterless: true,
+            points: true,
+          },
+        })
+        .then(async (data) => {
+          if (!data) return;
+          const response = await fetch(
+            `http://localhost:14861/api?cmd=5003&region=dev_gio&ticket=GM&uid=${data.uid}`,
+          );
+          const res = await response.json();
+          if (!res) return;
+          return {
+            ...data,
+            primogems: res.data.hcoin,
+            mora: res.data.scoin,
+          };
+        });
+      if (!currency)
+        return interaction.reply(
+          translate({ message: 'error:user:notfound', locale: locale }),
+        );
 
       // Determine the shop type
       const shopType = interaction.options.getSubcommand();
@@ -141,7 +159,7 @@ const command = {
       // Send the response with the canvas image and pagination buttons
       await interaction.editReply({
         files: [attachment],
-        components: [ ...selectMenus, row],
+        components: [...selectMenus, row],
       });
 
       // Fetch the reply to set up a collector for button interactions
@@ -196,7 +214,9 @@ const command = {
         }
 
         const selectedItemId = i.values[0];
-        const selectedItem = sortedItems.find(item => item.itemId.toString() === selectedItemId);
+        const selectedItem = sortedItems.find(
+          (item) => item.itemId.toString() === selectedItemId,
+        );
 
         if (!selectedItem) {
           await i.reply({
@@ -214,8 +234,13 @@ const command = {
           });
           return;
         }
-        const totalPrice: number = selectedItem.price * quantity
-        const confirmationEmbed = createConfirmationEmbed(selectedItem, quantity, totalPrice, locale);
+        const totalPrice: number = selectedItem.price * quantity;
+        const confirmationEmbed = createConfirmationEmbed(
+          selectedItem,
+          quantity,
+          totalPrice,
+          locale,
+        );
         const confirmationButtons = createConfirmationButtons();
         const fetchButton = await interaction.followUp({
           embeds: [confirmationEmbed],
@@ -224,21 +249,26 @@ const command = {
           withResponse: true,
         });
         const filter = (i: any) => i.user.id === interaction.user.id;
-        const buttonCollector = fetchButton.createMessageComponentCollector({ filter, componentType: ComponentType.Button, time: 15000 });
+        const buttonCollector = fetchButton.createMessageComponentCollector({
+          filter,
+          componentType: ComponentType.Button,
+          time: 15000,
+        });
 
         buttonCollector.on('collect', async (i) => {
           if (i.customId === 'confirm') {
             // Handle the purchase logic
             if (selectedItem.price > currency.mora) {
               await i.reply({
-                content: 'You do not have enough currency to purchase this item.'
+                content:
+                  'You do not have enough currency to purchase this item.',
               });
               return;
             } else {
               await prisma_discord.user.update({
                 where: { id: interaction.user.id },
                 data: {
-                  mora: { decrement: selectedItem.price }
+                  mora: { decrement: selectedItem.price },
                 },
               });
             }
@@ -246,7 +276,12 @@ const command = {
             await i.reply({
               content: `You have purchased ${selectedItem.name[locale]} for ${formatter.format(selectedItem.price)} ${shopType}.`,
             });
-            await sendThankYouMail(selectedItem, totalPrice, quantity, currency.uid);
+            await sendThankYouMail(
+              selectedItem,
+              totalPrice,
+              quantity,
+              currency.uid,
+            );
           } else if (i.customId === 'cancel') {
             await i.reply({
               content: 'Purchase cancelled.',
@@ -254,7 +289,7 @@ const command = {
             });
           }
         });
-        const price: number = selectedItem.price * quantity
+        const price: number = selectedItem.price * quantity;
         await sendThankYouMail(selectedItem, price, quantity, currency.uid);
       });
 
@@ -372,11 +407,7 @@ const generateCanvas = async (
     context.fillStyle = '#ffffff';
     amount = formatter.format(Number(amount)) ?? '0';
     const textWidth = context.measureText(amount).width;
-    context.fillText(
-      amount,
-      xOffset + (239.05 - textWidth) / 2,
-      yOffset + 220,
-    );
+    context.fillText(amount, xOffset + (239.05 - textWidth) / 2, yOffset + 220);
   });
 
   // Draw the username on the canvas
@@ -404,56 +435,83 @@ const generateCanvas = async (
 };
 
 // Create select menu options
-const createSelectMenuOptions = (items: ShopItem[], start: number, end: number, locale: Locale, quantity:number) => {
+const createSelectMenuOptions = (
+  items: ShopItem[],
+  start: number,
+  end: number,
+  locale: Locale,
+  quantity: number,
+) => {
   const itemsToDisplay = items.slice(start, end);
   return itemsToDisplay.map((item) =>
     new StringSelectMenuOptionBuilder()
-      .setLabel(`${item.name[locale]} - ${formatter.format(item.price * quantity)}/${item.quantity * quantity} ${translate({ message: 'shop:view:unit', locale: locale })}`)
-      .setValue(item.itemId.toString())
+      .setLabel(
+        `${item.name[locale]} - ${formatter.format(item.price * quantity)}/${item.quantity * quantity} ${translate({ message: 'shop:view:unit', locale: locale })}`,
+      )
+      .setValue(item.itemId.toString()),
   );
 };
 
-const createSelectMenus = (items: ShopItem[], locale: Locale, quantity: number) => {
+const createSelectMenus = (
+  items: ShopItem[],
+  locale: Locale,
+  quantity: number,
+) => {
   const menus = [];
   for (let i = 0; i < items.length; i += 25) {
     const options = createSelectMenuOptions(items, i, i + 25, locale, quantity);
-    const selectMenu = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
-      new StringSelectMenuBuilder()
-        .setCustomId(`select-item-${i / 25}`)
-        .setPlaceholder('Select an item to buy')
-        .addOptions(options)
-    );
+    const selectMenu =
+      new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
+        new StringSelectMenuBuilder()
+          .setCustomId(`select-item-${i / 25}`)
+          .setPlaceholder('Select an item to buy')
+          .addOptions(options),
+      );
     menus.push(selectMenu);
   }
   return menus;
 };
 
 // Send thank you mail
-export async function sendThankYouMail(item: ShopItem, price: number, quantity: number, uid: string) {
+export async function sendThankYouMail(
+  item: ShopItem,
+  price: number,
+  quantity: number,
+  uid: string,
+) {
   const uuid: number = Date.now();
   const title: string = 'Thank you for your purchasing';
   const sender: string = 'P・A・I・M・O・N';
-  const description: string = 'Thank you very much for shopping with PAIMON SHOP. We hope you enjoy the game.';
+  const description: string =
+    'Thank you very much for shopping with PAIMON SHOP. We hope you enjoy the game.';
   const seconds = dayjs().add(Number(365), 'days').unix();
   try {
     await fetch(
       `http://localhost:14861/api?region=dev_gio&ticket=GM@${uuid}&cmd=1135&uid=${uid}&scoin=${price}`,
     ).then(async (res: Response) => {
-      if(res.ok) return fetch(
-        `http://localhost:14861/api?sender=${sender}&title=${title}&content=${description}&item_list=${item.itemId}:${item.quantity * quantity}&expire_time=${seconds}&is_collectible=False&uid=${uid}&cmd=1005&region=dev_gio&ticket=GM%40${seconds}&sign=${uuid}`,
-      );
+      if (res.ok)
+        return fetch(
+          `http://localhost:14861/api?sender=${sender}&title=${title}&content=${description}&item_list=${item.itemId}:${item.quantity * quantity}&expire_time=${seconds}&is_collectible=False&uid=${uid}&cmd=1005&region=dev_gio&ticket=GM%40${seconds}&sign=${uuid}`,
+        );
       return console.log('Error: ', res.statusText);
     });
-  } catch(error) {
-    console.log(error)
+  } catch (error) {
+    console.log(error);
   }
 }
 
 // Function to create a confirmation embed
-const createConfirmationEmbed = (item: ShopItem, quantity: number, price: number, locale: Locale) => {
+const createConfirmationEmbed = (
+  item: ShopItem,
+  quantity: number,
+  price: number,
+  locale: Locale,
+) => {
   return embeds
     .setTitle('Confirm Purchase')
-    .setDescription(`Are you sure you want to buy ${quantity} x ${item.name[locale]} for ${formatter.format(price)}?`)
+    .setDescription(
+      `Are you sure you want to buy ${quantity} x ${item.name[locale]} for ${formatter.format(price)}?`,
+    )
     .setColor('#00FF00');
 };
 

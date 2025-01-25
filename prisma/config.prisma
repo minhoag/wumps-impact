@@ -30,10 +30,12 @@ model t_activity_data {
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model t_activity_schedule_config {
-  schedule_id Int       @id @default(autoincrement())
+  schedule_id Int?
   begin_time  DateTime? @db.DateTime(0)
   end_time    DateTime? @db.DateTime(0)
   desc        String?   @db.VarChar(255)
+
+  @@ignore
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments

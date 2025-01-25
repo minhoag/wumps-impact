@@ -7,3 +7,6 @@ cmd.bat
 build
 .idea
 package-lock.json
+bun.lock
+.early.coverage
+README.md

@@ -7,7 +7,7 @@ import {
 import { createClient } from 'redis';
 
 import { prisma_discord } from '../prisma/prisma';
-import { SlashCommand } from '../types';
+import type { SlashCommand } from '../types';
 import { embeds, translate } from '../utils';
 
 const command: SlashCommand = {
@@ -49,13 +49,13 @@ const command: SlashCommand = {
     if (!interaction.guild) return;
     /** Client Redis **/
     const client = createClient({
-      url: process.env.REDIS_URL,
+      url: process.env['REDIS_URL'],
     });
     await client.connect();
     /** Send Verification Code **/
     if (interaction.options.getSubcommand() === 'send') {
       const uid: string = interaction.options.getString('uid', true);
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: 'Ephemeral' });
       const user = await prisma_discord.user.findUnique({
         where: {
           id: interaction.user.id,
@@ -72,9 +72,14 @@ const command: SlashCommand = {
       const otpCode = Array.from({ length: 4 }, () =>
         Math.floor(Math.random() * 10),
       ).join('');
+      console.log(otpCode);
+      const cacheData: { otp: string; uid: string } = {
+        otp: otpCode,
+        uid: uid,
+      };
       // set otp code to redis
       await client.del(interaction.user.id);
-      await client.set(interaction.user.id, otpCode, {
+      await client.set(interaction.user.id, JSON.stringify(cacheData), {
         EX: 15 * 60,
       });
       // prepare mail
@@ -108,10 +113,13 @@ const command: SlashCommand = {
       /** Verify send code **/
       // params
       const code: string = interaction.options.getString('code', true);
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: 'Ephemeral' });
       // get otp code from redis
-      const otp = await client.get(interaction.user.id);
-
+      const cacheData = await client
+        .get(interaction.user.id)
+        .then((data) => (data ? JSON.parse(data) : null));
+      const { otp, uid } = cacheData;
+      console.log(otp);
       if (!otp) {
         embeds.setTitle(
           translate({
@@ -139,6 +147,18 @@ const command: SlashCommand = {
         );
       }
       // remove otp code from redis
+      await prisma_discord.user
+        .create({
+          data: {
+            id: interaction.user.id,
+            uid: uid,
+            mora: 10000,
+            primogems: 1600,
+            masterless: 100,
+            points: 0,
+          },
+        })
+        .catch(console.error);
       await client.del(interaction.user.id);
       return await interaction.editReply(
         translate({

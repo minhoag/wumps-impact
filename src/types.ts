@@ -4,7 +4,7 @@ import {
   Collection,
   CommandInteraction,
   Message,
-  PermissionResolvable,
+  type PermissionResolvable,
   SlashCommandBuilder,
 } from 'discord.js';
 

@@ -30,6 +30,10 @@ export const Localizaion: {
     vi: 'Liên hệ với quản trị viên để được hỗ trợ',
     'en-US': 'Contact admin for support',
   },
+  'error:user:notfound': {
+    vi: '🚨 Người chơi không tồn tại trong hệ thống. Vui lòng đăng ký bằng lệnh `/register`.',
+    'en-US': '🚨 User not found in the system. Please register with `/register` command.',
+  },
   /**
    *
    * Slash Command: Verify-Send
@@ -90,5 +94,33 @@ export const Localizaion: {
   'verify-send:expired': {
     vi: 'Mã xác minh hết hạn.',
     'en-US': 'Your verification code has expired.',
+  },
+  'admin:give:success': {
+    vi: 'Gửi item cho người chơi thành công uid: ',
+    'en-US': 'Successfully send item to player with uid: ',
+  },
+  'admin:delete:success': {
+    vi: 'Xóa item của người chơi thành công uid: ',
+    'en-US': 'Delete item from user with with uid: ',
+  },
+  'admin:give:error': {
+    vi: 'Có lỗi khi thêm item của người chơi uid: ',
+    'en-US': 'There is an error when add item to user with with uid: ',
+  },
+  'admin:delete:error': {
+    vi: 'Có lỗi khi xóa item của người chơi uid: ',
+    'en-US': 'There is an error when delete item from user with with uid: ',
+  },
+  'shop:view:unit': {
+    vi: 'cái',
+    'en-US': 'unit',
+  },
+  'shop:view:quantity:lt0': {
+    vi: 'Vui lòng nhập số lượng lớn hơn 0.',
+    'en-US': 'Please enter a quantity greater than 0.',
+  },
+  'shop:view:quantity:gt5': {
+    vi: 'Số lượng mua không được vượt quá 15.',
+    'en-US': 'The quantity of purchase must not exceed 15.',
   },
 };

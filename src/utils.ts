@@ -1,16 +1,17 @@
-import { ButtonStyle, ChannelType, ComponentType, EmbedBuilder, GuildMember, Message, PermissionFlagsBits, PermissionResolvable, TextChannel } from 'discord.js';
+import {
+  EmbedBuilder,
+  GuildMember,
+  Message,
+  PermissionFlagsBits,
+  type PermissionResolvable,
+  TextChannel,
+} from 'discord.js';
 import { performance } from 'node:perf_hooks';
 import { promisify } from 'node:util';
 import { createClient } from 'redis';
 
-
-
 import { Localizaion } from './i18n';
-import { Item, ItemProps } from './refs/ref.item';
-
-
-
-
+import { Item, type ItemProps } from './refs/ref.item';
 
 /** Item data from server
  * @equip To see if the item is locked or not
@@ -33,8 +34,8 @@ interface ItemData {
 /** Bin Data get from MUIP
  * @itemBinData Get user inventory data
  * @packStore Get user inventory data
- * @mcoin Mora
- * @scoin Primogems
+ * @scoin Mora
+ * @hcoin Primogems
  * **/
 interface ItemBinData {
   data: {
@@ -227,7 +228,7 @@ export const getItemsInBag = async (
   const start = performance.now();
   /** Connect to redis **/
   const client = createClient({
-    url: process.env.REDIS_URL,
+    url: process.env['REDIS_URL'],
   });
   await client.connect();
   /** Define items to store query bin data **/

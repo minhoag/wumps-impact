@@ -1,13 +1,10 @@
 {
-  "name": "discordjs-v14-template-ts",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "twilightserverbot",
+  "module": "index.ts",
+  "type": "module",
   "scripts": {
-    "start": "cls && node build/index.js",
-    "dev": "npx nodemon src/index.ts",
-    "build": "tsc --build",
-    "clean": "tsc --build --clean",
+    "start": "bunx start",
+    "dev": "bun run --watch ./src/index.ts",
     "pull:config": "bunx prisma db pull --schema prisma/config.prisma",
     "pull:user": "bunx prisma db push --schema prisma/user.prisma",
     "push:discord": "bunx prisma db push --schema prisma/discord.prisma",
@@ -15,24 +12,25 @@
     "generate": "bunx prisma generate --schema prisma/discord.prisma && bunx prisma generate --schema prisma/user.prisma && bunx prisma generate --schema prisma/config.prisma"
   },
   "keywords": [],
-  "author": "Wurmpus",
+  "author": "minhoag",
   "license": "ISC",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.7.3"
+  },
   "dependencies": {
     "@discordjs/rest": "^1.1.0",
     "@napi-rs/canvas": "^0.1.65",
-    "@prisma/client": "5.6.0",
+    "@prisma/client": "^6.2.1",
     "@trivago/prettier-plugin-sort-imports": "^5.2.1",
+    "@types/node": "^22.10.10",
     "dayjs": "^1.11.13",
-    "discord.js": "14.10.2",
+    "discord.js": "^14.17.3",
     "express": "^4.21.1",
-    "jest": "^29.7.0",
-    "nodemon": "^3.1.0",
-    "pagination.djs": "^4.0.17",
-    "prisma": "^5.6.0",
-    "redis": "^4.7.0"
-  },
-  "devDependencies": {
-    "@types/node": "^20.11.30",
-    "typescript": "^4.9.5"
+    "prisma": "^6.2.1",
+    "redis": "^4.7.0",
+    "tsx": "^4.19.2"
   }
 }

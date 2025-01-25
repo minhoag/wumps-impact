@@ -18,7 +18,8 @@ model User {
   id           String @id
   uid          String
   mora         BigInt
-  credit       Int    @default(0)
+  primogems    Int    @default(0)
+  masterless   Int    @default(0)
   points       Int    @default(0)
   lastUpdate   Int    @default(0)
   weeklyMora   Int    @default(0)

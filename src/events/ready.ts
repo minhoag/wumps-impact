@@ -1,6 +1,4 @@
-import { ActivityType } from 'discord.js';
-
-import { Event } from '../types';
+import type { Event } from '../types';
 
 const event: Event = {
   name: 'ready',

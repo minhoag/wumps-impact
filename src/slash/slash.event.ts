@@ -1,5 +1,6 @@
 import dayjs from 'dayjs';
 import {
+  type AutocompleteInteraction,
   CommandInteraction,
   PermissionFlagsBits,
   SlashCommandBuilder,
@@ -7,7 +8,7 @@ import {
 
 import { prisma_config } from '../prisma/prisma';
 import { schedule } from '../refs/ref.schedule';
-import { GachaDatabase, SlashCommand } from '../types';
+import type { GachaDatabase, SlashCommand } from '../types';
 import { embeds, translate } from '../utils';
 
 const command: SlashCommand = {
@@ -64,7 +65,7 @@ const command: SlashCommand = {
         ),
     ),
   cooldown: 1,
-  autocomplete: async (interaction) => {
+  autocomplete: async (interaction: AutocompleteInteraction) => {
     const locale = interaction.locale;
     const focusedOption = interaction.options.getFocused(true);
     const choices = schedule.map((item: any) => {
@@ -130,7 +131,7 @@ const command: SlashCommand = {
       return interaction.reply({ embeds: [notfound] });
     }
     /** Defer reply first **/
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: 'Ephemeral' });
     /** Finalize data **/
     const finalized: GachaDatabase = {
       gacha_type: gachaType,

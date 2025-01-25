@@ -1,6 +1,6 @@
-import { Interaction } from 'discord.js';
+import type { Interaction } from 'discord.js';
 
-import { Event } from '../types';
+import type { Event } from '../types';
 
 const event: Event = {
   name: 'interactionCreate',
@@ -38,6 +38,7 @@ const event: Event = {
           Date.now() + command.cooldown * 1000,
         );
       }
+
       command.execute(interaction);
     } else if (interaction.isAutocomplete()) {
       const command = interaction.client.slashCommands.get(

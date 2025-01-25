@@ -8,7 +8,7 @@ import {
 import { readdirSync } from 'fs';
 import { join } from 'path';
 
-import { Command, SlashCommand } from './types';
+import type { Command, SlashCommand } from './types';
 
 process.on('uncaughtException', (error: unknown) => {
   if (
@@ -37,8 +37,10 @@ process.on('uncaughtException', (error: unknown) => {
         dayjs().format('YYYY-MM-DD HH:mm:ss'),
       );
     } else {
-      console.log('Uncaught Exception: Discord API Error');
-      console.log(error.message);
+      console.log(
+        'Uncaught Exception: Discord API Error. Error: ',
+        error.message,
+      );
     }
   } else {
     console.error('Uncaught Exception: Unknown error: ', error);
@@ -64,4 +66,4 @@ readdirSync(handlersDir).forEach((handler) => {
   require(`${handlersDir}/${handler}`)(client);
 });
 
-client.login(process.env.DiSCORD_TOKEN).then(async () => {});
+client.login(process.env['DiSCORD_TOKEN']).then(async () => {});

@@ -26,10 +26,7 @@ const command: SlashCommand = {
             .setName('uid')
             .setRequired(true)
             .setDescription('Your UID in-game.')
-            .setDescriptionLocalization(
-              'vi',
-              'UID của bạn trong game.',
-            ),
+            .setDescriptionLocalization('vi', 'UID của bạn trong game.'),
         ),
     )
     .addSubcommand((subcommand) =>
@@ -110,10 +107,7 @@ const command: SlashCommand = {
     } else if (interaction.options.getSubcommand() === 'input') {
       /** Verify send code **/
       // params
-      const code: string = interaction.options.getString(
-        'code',
-        true,
-      );
+      const code: string = interaction.options.getString('code', true);
       await interaction.deferReply({ ephemeral: true });
       // get otp code from redis
       const otp = await client.get(interaction.user.id);

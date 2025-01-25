@@ -8,8 +8,7 @@ const command: Command = {
   aliases: ['exec'],
   cooldown: 10,
   execute: async (message: Message, args: string[]) => {
-    if (args.length < 1)
-      return message.channel.send('Missing argruments');
+    if (args.length < 1) return message.channel.send('Missing argruments');
     const value: string = args[1];
     let res = await fetch(`http://wumpus.site:12000/${value}`).then(
       async (res) => await res.json(),

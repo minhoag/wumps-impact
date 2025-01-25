@@ -19,13 +19,8 @@ const command: SlashCommand = {
     .addNumberOption((option) =>
       option
         .setName('type')
-        .setDescription(
-          'Type of Gacha (must be unique and MUST BE accurate).',
-        )
-        .setDescriptionLocalization(
-          'vi',
-          'Phân loại (không được trùng lặp).',
-        )
+        .setDescription('Type of Gacha (must be unique and MUST BE accurate).')
+        .setDescriptionLocalization('vi', 'Phân loại (không được trùng lặp).')
         .setRequired(true)
         .addChoices(
           { name: 'Character 1', value: 301 },
@@ -37,13 +32,8 @@ const command: SlashCommand = {
     .addStringOption((option) =>
       option
         .setName('name')
-        .setDescription(
-          'Event name. Must be unique and MUST BE accurate.',
-        )
-        .setDescriptionLocalization(
-          'vi',
-          'Tên sự kiện. Không được trùng lặp.',
-        )
+        .setDescription('Event name. Must be unique and MUST BE accurate.')
+        .setDescriptionLocalization('vi', 'Tên sự kiện. Không được trùng lặp.')
         .setRequired(true)
         .setAutocomplete(true),
     )
@@ -53,10 +43,7 @@ const command: SlashCommand = {
         .setDescription('Start the event immediately?')
         .setDescriptionLocalization('vi', 'Bắt đầu ngay?')
         .setRequired(true)
-        .addChoices(
-          { name: 'Yes', value: 1 },
-          { name: 'No', value: 0 },
-        ),
+        .addChoices({ name: 'Yes', value: 1 }, { name: 'No', value: 0 }),
     )
     .addStringOption((option) =>
       option
@@ -107,8 +94,7 @@ const command: SlashCommand = {
     }[] = choices.filter((choice: any) =>
       choice.name.includes(focusedOption.value),
     );
-    const options =
-      filtered.length > 25 ? filtered.slice(0, 25) : filtered;
+    const options = filtered.length > 25 ? filtered.slice(0, 25) : filtered;
     await interaction.respond(options);
   },
   execute: async (interaction: CommandInteraction) => {
@@ -116,21 +102,14 @@ const command: SlashCommand = {
     if (!interaction.guild) return;
     /** Capture params input **/
     const name: string = interaction.options.getString('name', true);
-    const enable: number = interaction.options.getNumber(
-      'enable',
-      true,
-    );
+    const enable: number = interaction.options.getNumber('enable', true);
     const start: string = interaction.options.getString('start')
       ? dayjs(interaction.options.getString('start'))
           .startOf('day')
           .toISOString()
       : dayjs().startOf('day').toISOString();
-    const gachaType: number = interaction.options.getNumber(
-      'type',
-      true,
-    );
-    const duration: number =
-      interaction.options.getNumber('duration') ?? 2;
+    const gachaType: number = interaction.options.getNumber('type', true);
+    const duration: number = interaction.options.getNumber('duration') ?? 2;
     /** Calculate end time **/
     const end: string = interaction.options.getString('end')
       ? dayjs(interaction.options.getString('end')).toISOString()

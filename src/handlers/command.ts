@@ -22,9 +22,7 @@ module.exports = (client: Client) => {
 
   readdirSync(commandsDir).forEach((file) => {
     if (!file.endsWith('.ts')) return;
-    const command: Command = require(
-      `${commandsDir}/${file}`,
-    ).default;
+    const command: Command = require(`${commandsDir}/${file}`).default;
     client.commands.set(command.name, command);
   });
 
@@ -33,14 +31,9 @@ module.exports = (client: Client) => {
   );
 
   rest
-    .put(
-      Routes.applicationCommands(
-        process.env.DISCORD_CLIENT as string,
-      ),
-      {
-        body: slashCommands.map((command) => command.toJSON()),
-      },
-    )
+    .put(Routes.applicationCommands(process.env.DISCORD_CLIENT as string), {
+      body: slashCommands.map((command) => command.toJSON()),
+    })
     .catch((e) => {
       console.log(e);
     });

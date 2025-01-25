@@ -1,16 +1,23 @@
 import Canvas, { GlobalFonts } from '@napi-rs/canvas';
 import {
+  ActionRowBuilder,
   AttachmentBuilder,
+  ButtonBuilder,
+  ButtonStyle,
   CommandInteraction,
+  ComponentType,
   PermissionFlagsBits,
   SlashCommandBuilder,
   User,
 } from 'discord.js';
 
-import { SlashCommand } from '../types';
+import { ItemProps } from '../refs/ref.item';
+import { getItemsInBag } from '../utils';
 
 GlobalFonts.registerFromPath('./src/assets/font/zhcn.ttf', 'Genshin');
-const command: SlashCommand = {
+const ITEMS_PER_PAGE = 10;
+
+const command = {
   command: new SlashCommandBuilder()
     .setName('bag')
     .setDescription('View storage data.')
@@ -24,130 +31,160 @@ const command: SlashCommand = {
           option
             .setName('user')
             .setDescription('View another user bags.')
-            .setDescriptionLocalization(
-              'vi',
-              'Xem túi đồ của người khác.',
-            ),
+            .setDescriptionLocalization('vi', 'Xem túi đồ của người khác.'),
         )
         .addNumberOption((option) =>
           option
-            .setName('number')
-            .setDescription(
-              'Type a number to view a specific bag page.',
-            )
-            .setDescriptionLocalization(
-              'vi',
-              'Xem túi đồ ở trang cụ thể.',
-            ),
+            .setName('page')
+            .setDescription('Type a number to view a specific bag page.')
+            .setDescriptionLocalization('vi', 'Xem túi đồ ở trang cụ thể.'),
         ),
     ),
   cooldown: 1,
-  autocomplete: async (interaction) => {},
   execute: async (interaction: CommandInteraction) => {
-    if (!interaction.isChatInputCommand()) return;
-    if (!interaction.guild) return;
+    if (!interaction.isChatInputCommand() || !interaction.guild) return;
+
     if (interaction.options.getSubcommand() === 'view') {
+      /** Get params **/
       const user: User =
         interaction.options.getUser('user') ?? interaction.user;
-      const number: number =
-        interaction.options.getNumber('number') ?? 1;
-      // Use the helpful Attachment class structure to process the file for you
-      const canvas = Canvas.createCanvas(1800, 1220);
-      const context = canvas.getContext('2d');
-      const background = await Canvas.loadImage(
-        './src/assets/bag/bag.png',
+      let page: number = interaction.options.getNumber('page') ?? 1;
+      /** Get item **/
+      await interaction.deferReply();
+      let items = await getItemsInBag(interaction.user.id);
+      /** Filter item **/
+      if (!items) return interaction.editReply('No item found in your bag.');
+      const sortedItems = items.item.sort(
+        (a: any, b: any) => a.item_id - b.item_id,
       );
-      context.drawImage(
-        background,
-        0,
-        0,
-        canvas.width,
-        canvas.height,
-      );
-      /**
-       *
-       * Style Currency
-       *
-       * **/
-      context.font = applyText(canvas, '123123');
-      context.fillStyle = '#000000';
-      const height_currency = canvas.height / 4.91;
-      /**
-       *
-       * PRIMOGEMS TEXT
-       *
-       * **/
-      context.fillText('123123', canvas.width / 2.5, height_currency);
-      /**
-       *
-       * MORA TEXT
-       *
-       * **/
-      context.fillText(
-        '789789',
-        canvas.width / 8.75,
-        height_currency,
-      );
-      /**
-       *
-       * Masterless Stardust TEXT
-       *
-       * **/
-      context.fillText(
-        '789789',
-        canvas.width / 1.435,
-        height_currency,
-      );
+      /** Generate Canvas **/
+      const generateCanvas = async (page: number) => {
+        const start = (page - 1) * ITEMS_PER_PAGE;
+        const end = start + ITEMS_PER_PAGE;
+        const itemsToDisplay = sortedItems.slice(start, end);
 
-      const attachment = new AttachmentBuilder(
-        await canvas.encode('png'),
-        { name: 'inventory.png' },
-      );
-      await interaction.reply({ files: [attachment] });
-      /*try {
-        let Embeds: EmbedBuilder[] = [];
-
-        const player = await prisma_discord.user.findUnique({
-          where: {
-            id: interaction.user.id,
-          },
-        });
-        if (!player) {
-          await interaction.editReply({
-            content: translate({
-              message: 'bag:view:notfound',
-              locale: interaction.locale,
-            }),
-          });
-          return;
-        }
-        Pagination
-        const res: Response = await fetch(
-          `http://localhost:14861/api?cmd=1016&region=dev_gio&ticket=GM&uid=${1}`,
-        );
-        const item = await res.json();
-        // Materials are type 2
-        let all_item: any =
-          item.data.item_bin_data.pack_store.item_list.filter(
-            (i: any) => i.item_type === 2,
+        const canvas = Canvas.createCanvas(1800, 1000);
+        const context = canvas.getContext('2d');
+        const background = await Canvas.loadImage('./src/assets/bag/bag.png');
+        context.drawImage(background, 0, 0, canvas.width, canvas.height);
+        /** Draw currency on canvas **/
+        const drawCurrency = (canvas: any, context: any) => {
+          context.font = applyText(canvas, '123123');
+          context.fillStyle = '#000000';
+          const height_currency = canvas.height / 4.25;
+          context.fillText(
+            items?.s_coin.toString() ?? '0',
+            canvas.width / 2.5,
+            height_currency,
           );
-        console.log(all_item);
-        const pagination = new Pagination(interaction);
-        pagination.setEmbeds(Embeds, (embed, index, array) => {
-          return embed.setFooter({
-            text: `Page: ${index + 1}/${array.length}`,
-          });
-        });
-        await pagination.render();
-      } catch (error: any) {
-        embeds.setDescription('Error: ' + error.message);
-        await interaction.editReply({
-          content: translate({
-            message: 'error:unknown',
-            locale: interaction.locale,
+          context.fillText(
+            items?.m_coin.toString() ?? '0',
+            canvas.width / 8.75,
+            height_currency,
+          );
+          context.fillText(
+            items?.masterless.toString() ?? '0',
+            canvas.width / 1.435,
+            height_currency,
+          );
+        };
+
+        drawCurrency(canvas, context);
+
+        /** Draw items on Canvas **/
+        const itemBackgrounds = await Promise.all(
+          itemsToDisplay.map(async (item: ItemProps) => {
+            console.log(item);
+            const background = await Canvas.loadImage(
+              `./src/assets/container/bg_item_${5}.png`,
+            );
+            const itemImage = await Canvas.loadImage(
+              item.assets ?? './src/assets/item/Item_Amakumo_Fruit.png',
+            );
+            return {
+              background,
+              itemImage,
+              amount: item.count?.toString(),
+            };
           }),
+        );
+        /** Draw items on Canvas by new cols **/
+        itemBackgrounds.forEach(({ background, itemImage, amount }, index) => {
+          const row = Math.floor(index / 5);
+          const col = index % 5;
+          const xOffset = 155 + col * 275;
+          const yOffset = 320 + row * 325;
+          context.drawImage(background, xOffset, yOffset, 239.05, 239.05);
+          context.drawImage(itemImage, xOffset, yOffset, 239.05, 239.05);
+          context.fillStyle = '#ffffff';
+          amount = amount ?? '0';
+          context.fillText(
+            //amount.toString()
+            amount ?? '0',
+            xOffset + 75 + amount.length * 5,
+            yOffset + 220,
+          );
         });
-      }*/
+
+        context.fillStyle = '#444347';
+        context.fillText(
+          interaction.user.username,
+          canvas.width / 18.35,
+          canvas.height / 1.045,
+        );
+
+        return new AttachmentBuilder(await canvas.encode('png'), {
+          name: 'inventory.png',
+        });
+      };
+
+      const attachment = await generateCanvas(page);
+      /** Pagination Canvas **/
+      const row = createPaginationRow(
+        page,
+        Math.ceil(sortedItems.length / ITEMS_PER_PAGE),
+      );
+      /** Send Response Canvas **/
+      await interaction.editReply({
+        files: [attachment],
+        components: [row],
+      });
+
+      /** Fetch response **/
+      const fetchReply = await interaction.fetchReply();
+      const collector = fetchReply.createMessageComponentCollector({
+        componentType: ComponentType.Button,
+        time: 60000,
+      });
+
+      /** Collect interaction fetch response **/
+      collector.on('collect', async (i) => {
+        if (i.user.id !== interaction.user.id) {
+          await i.reply({
+            content: 'This button is not for you!',
+            ephemeral: true,
+          });
+        }
+
+        if (i.customId === 'previous') page--;
+        else if (i.customId === 'next') page++;
+
+        const newAttachment = await generateCanvas(page);
+
+        await i.update({
+          files: [newAttachment],
+          components: [
+            createPaginationRow(
+              page,
+              Math.ceil(sortedItems.length / ITEMS_PER_PAGE),
+            ),
+          ],
+        });
+      });
+
+      collector.on('end', async () => {
+        await interaction.editReply({ components: [] });
+      });
     }
   },
 };
@@ -161,4 +198,19 @@ const applyText = (canvas: any, text: string) => {
     context.font = `${(fontSize -= 10)}px Genshin`;
   } while (context.measureText(text).width > canvas.width - 300);
   return context.font;
+};
+
+const createPaginationRow = (page: number, totalPages: number) => {
+  return new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId('previous')
+      .setLabel('Previous')
+      .setStyle(ButtonStyle.Primary)
+      .setDisabled(page === 1),
+    new ButtonBuilder()
+      .setCustomId('next')
+      .setLabel('Next')
+      .setStyle(ButtonStyle.Primary)
+      .setDisabled(page === totalPages),
+  );
 };

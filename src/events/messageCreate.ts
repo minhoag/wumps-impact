@@ -15,8 +15,9 @@ const event: Event = {
       const LIMIT: number = 10;
       const DIFF: number = 3000;
       await limit(message, usersMap, LIMIT, DIFF);
-      const chatCooldowns: number | undefined =
-        message.client.chats.get(`${message.member.user.username}`);
+      const chatCooldowns: number | undefined = message.client.chats.get(
+        `${message.member.user.username}`,
+      );
       if (chatCooldowns) {
         if (Date.now() < chatCooldowns) return;
         message.client.chats.set(
@@ -24,9 +25,7 @@ const event: Event = {
           Date.now() + timeout * 1000,
         );
         setTimeout(() => {
-          message.client.chats.delete(
-            `${message.member?.user.username}`,
-          );
+          message.client.chats.delete(`${message.member?.user.username}`);
         }, timeout * 1000);
       } else {
         message.client.chats.set(
@@ -41,8 +40,8 @@ const event: Event = {
     let command = message.client.commands.get(args[0]);
 
     if (!command) {
-      const commandFromAlias = message.client.commands.find(
-        (command) => command.aliases.includes(args[0]),
+      const commandFromAlias = message.client.commands.find((command) =>
+        command.aliases.includes(args[0]),
       );
       if (commandFromAlias) command = commandFromAlias;
       // Chat counter

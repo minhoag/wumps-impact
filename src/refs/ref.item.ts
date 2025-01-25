@@ -1,4 +1,10 @@
-export const Item = [
+export type ItemProps = {
+  name: string;
+  value: string;
+  assets?: string;
+  count?: number;
+};
+export const Item: ItemProps[] = [
   {
     name: 'Character EXP: 101',
     value: '101',

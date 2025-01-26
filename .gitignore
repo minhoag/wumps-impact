@@ -2,8 +2,7 @@ node_modules
 bun.lockb
 pnpm-lock.yaml
 .env
-prisma/user.db
-
+prisma/data.sqlite
 cmd.bat
 build
 .idea
@@ -11,3 +10,5 @@ package-lock.json
 bun.lock
 .early.coverage
 README.md
+
+*.sqlite

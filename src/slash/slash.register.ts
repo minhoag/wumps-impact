@@ -50,6 +50,7 @@ const command: SlashCommand = {
     /** Client Redis **/
     const client = createClient({
       url: process.env['REDIS_URL'],
+      password: process.env['REDIS_PASSWORD']
     });
     await client.connect();
     /** Send Verification Code **/

@@ -128,7 +128,10 @@ export async function limit(
  * Redis functions
  *
  * **/
-export const client = createClient();
+export const client = createClient({
+  url: process.env['REDIS_URL'],
+  password: process.env['REDIS_PASSWORD'],
+});
 export const getAsync = promisify(client.get).bind(client);
 export const setAsync = promisify(client.set).bind(client);
 export const delAsync = promisify(client.del).bind(client);

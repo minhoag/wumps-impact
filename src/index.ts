@@ -66,4 +66,4 @@ readdirSync(handlersDir).forEach((handler) => {
   require(`${handlersDir}/${handler}`)(client);
 });
 
-client.login(process.env['DiSCORD_TOKEN']).then(async () => {});
+client.login(process.env['DiSCORD_TOKEN']).catch(() => console.error("Invalid Token: ", process.env['DiSCORD_TOKEN']));

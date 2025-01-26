@@ -464,7 +464,7 @@ const createSelectMenus = (
       new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
         new StringSelectMenuBuilder()
           .setCustomId(`select-item-${i / 25}`)
-          .setPlaceholder('Select an item to buy')
+          .setPlaceholder(translate({ message: 'shop:view:select', locale: locale }))
           .addOptions(options),
       );
     menus.push(selectMenu);

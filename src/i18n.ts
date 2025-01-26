@@ -124,4 +124,8 @@ export const Localizaion: {
     vi: 'Số lượng mua không được vượt quá 15.',
     'en-US': 'The quantity of purchase must not exceed 15.',
   },
+  'shop:view:select': {
+    vi: 'Chọn một item để mua',
+    'en-US': 'Select an item to buy',
+  }
 };

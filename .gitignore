@@ -3,6 +3,7 @@ bun.lockb
 pnpm-lock.yaml
 .env
 prisma/user.db
+
 cmd.bat
 build
 .idea

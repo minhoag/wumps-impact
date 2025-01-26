@@ -7,6 +7,7 @@ import {
   TextInputBuilder,
   TextInputStyle,
 } from 'discord.js';
+
 import type { SlashCommand } from '../types';
 
 // Define the slash command for sending mail
@@ -29,14 +30,16 @@ export default command;
 
 // Function to create the modal for mail input
 const createModal = () => {
-  const modal = new ModalBuilder().setCustomId('mailForm').setTitle('Soạn thư gửi');
+  const modal = new ModalBuilder()
+    .setCustomId('mailForm')
+    .setTitle('Soạn thư gửi');
 
   // Define the input fields for the modal
   const expiry = new TextInputBuilder()
     .setCustomId('expiryInput')
     .setLabel('Thời hạn thư')
     .setPlaceholder('Tính theo ngày, mặc định là 7 ngày')
-    .setValue("14")
+    .setValue('14')
     .setStyle(TextInputStyle.Short);
 
   const receiver = new TextInputBuilder()
@@ -49,7 +52,7 @@ const createModal = () => {
     .setCustomId('senderInput')
     .setLabel('Người gửi')
     .setPlaceholder('Tiêu đề thư')
-    .setValue("You got a mail!")
+    .setValue('You got a mail!')
     .setStyle(TextInputStyle.Short);
 
   const content = new TextInputBuilder()
@@ -62,7 +65,9 @@ const createModal = () => {
   const item = new TextInputBuilder()
     .setCustomId('itemInput')
     .setLabel('Đính kèm vật phẩm')
-    .setPlaceholder('Thêm nhiều vật phẩm bằng dấu phẩm chia bằng dấu 2 chấm. Ví dụ: 201:10,202:10000')
+    .setPlaceholder(
+      'Thêm nhiều vật phẩm bằng dấu phẩm chia bằng dấu 2 chấm. Ví dụ: 201:10,202:10000',
+    )
     .setStyle(TextInputStyle.Paragraph);
 
   // Add the input fields to the modal
@@ -71,7 +76,7 @@ const createModal = () => {
     new ActionRowBuilder<TextInputBuilder>().addComponents(sender),
     new ActionRowBuilder<TextInputBuilder>().addComponents(expiry),
     new ActionRowBuilder<TextInputBuilder>().addComponents(content),
-    new ActionRowBuilder<TextInputBuilder>().addComponents(item)
+    new ActionRowBuilder<TextInputBuilder>().addComponents(item),
   );
 
   return modal;

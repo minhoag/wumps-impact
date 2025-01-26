@@ -5,6 +5,7 @@
   "scripts": {
     "start": "bunx start",
     "dev": "bun run --watch ./src/index.ts",
+    "build": "bun build ./src/index.ts --outdir ./build  --target bun",
     "pull:config": "bunx prisma db pull --schema prisma/config.prisma",
     "pull:user": "bunx prisma db push --schema prisma/user.prisma",
     "push:discord": "bunx prisma db push --schema prisma/discord.prisma",

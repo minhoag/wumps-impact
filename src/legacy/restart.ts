@@ -1,6 +1,4 @@
-import { PermissionFlagsBits } from 'discord.js';
-
-import { Command } from '../types';
+import type { Command } from '../types';
 
 const command: Command = {
   name: 'restart',

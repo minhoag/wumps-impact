@@ -274,7 +274,7 @@ const command = {
             }
 
             await i.reply({
-              content: `You have purchased ${selectedItem.name[locale]} for ${formatter.format(selectedItem.price)} ${shopType}.`,
+              content: locale === 'vi' ? `Bạn đã mua ${quantity} x ${selectedItem.name[locale]} với giá ${formatter.format(selectedItem.price)} ${shopType}.` : `You have purchased ${quantity} x ${selectedItem.name[locale]} for ${formatter.format(selectedItem.price)} ${shopType}.`,
             });
             await sendThankYouMail(
               selectedItem,

@@ -3,7 +3,7 @@
   "module": "index.ts",
   "type": "module",
   "scripts": {
-    "start": "pm2 start build/server.js --watch -i max",
+    "start": "pm2 start build/index.js --watch -i max",
     "dev": "bun run --watch ./src/index.ts",
     "build": "bun build ./src/index.ts --outdir ./build  --target bun",
     "pull:config": "bunx prisma db pull --schema prisma/config.prisma",

@@ -1,4 +1,4 @@
-import * as dayjs from 'dayjs';
+import dayjs from 'dayjs';
 import { CommandInteraction } from 'discord.js';
 
 import { prisma_user } from '../prisma/prisma.ts';

@@ -1,5 +1,5 @@
 import Canvas, { GlobalFonts } from '@napi-rs/canvas';
-import * as dayjs from 'dayjs';
+import dayjs from 'dayjs';
 import {
   ActionRowBuilder,
   AttachmentBuilder,

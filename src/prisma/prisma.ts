@@ -1,4 +1,7 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient as PrismaConfig } from '@prisma-config';
+import { PrismaClient as PrismaDiscord } from '@prisma-discord';
+import { PrismaClient as PrismaUser } from '@prisma-user';
 
-const prisma = new PrismaClient();
-export default prisma;
+export const prisma_discord = new PrismaDiscord();
+export const prisma_user = new PrismaUser();
+export const prisma_config = new PrismaConfig();

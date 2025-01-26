@@ -1,0 +1,36 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/@prisma-discord"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./data.sqlite"
+}
+
+model Server {
+  id             String   @id
+  currentLimit   Int      @default(500000000)
+  lastResetLimit DateTime @default(now())
+}
+
+model User {
+  id           String @id
+  uid          String
+  mora         BigInt
+  primogems    Int    @default(0)
+  masterless   Int    @default(0)
+  points       Int    @default(0)
+  lastUpdate   Int    @default(0)
+  weeklyMora   Int    @default(0)
+  weeklyPoints Int    @default(0)
+  weeklyCredit Int    @default(0)
+}
+
+model ShopItem {
+  id          String @id
+  name        String
+  description String
+  listed      String
+  for_sale    String
+}

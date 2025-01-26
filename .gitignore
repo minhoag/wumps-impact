@@ -2,8 +2,11 @@ node_modules
 bun.lockb
 pnpm-lock.yaml
 .env
-user.db
+prisma/user.db
 cmd.bat
 build
 .idea
 package-lock.json
+bun.lock
+.early.coverage
+README.md

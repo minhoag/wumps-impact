@@ -136,4 +136,8 @@ export const Localizaion: {
     vi: 'Cảm ơn bạn đã mua một món hàng từ cửa hàng của Paimon!',
     'en-US': 'Thank you so much for purchasing an item from Paimon\'s shop!',
   },
+  'shop:view:thankyou:footer': {
+    vi: 'Paimon hy vọng bạn sẽ tìm thấy nó hữu ích trong cuộc phiêu lưu của mình!',
+    'en-US': 'Your item is now delivered to your ingame mail system. Paimon hopes you find it super useful on your adventures!',
+  },
 };

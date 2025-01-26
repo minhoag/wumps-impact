@@ -276,19 +276,15 @@ const command = {
             const description: string = translate({ message: 'shop:view:thankyou:content', locale: locale });
             embeds.setTitle(translate({ message: 'shop:view:thankyou:title', locale: locale }));
             embeds.setDescription(description);
+            embeds.setImage('attachment://paimon_card.png')
+            embeds.setThumbnail('attachment://paimon.png');
             embeds.addFields({
               name: locale === 'vi' ? 'Bạn đã mua' : 'Your purchase',
               value: `${quantity} x ${selectedItem.name[locale]}`,
             })
-            embeds.addFields({
-              name: '\u200B',
-              value: 'Your item is now delivered to your ingame mail system. Paimon hopes you find it super useful on your adventures!\nPaimon hope to see you again soon!',
-            })
-            embeds.setImage('../assets/image/paimon_card.png')
-            embeds.setThumbnail('../assets/image/paimon_card.png')
             embeds.setFooter({
               text: 'PAIMON SHOP',
-              iconURL: '../assets/image/footer.png',
+              iconURL: 'https://raw.githubusercontent.com/minhoag/wumps-impact/refs/heads/main/src/assets/image/footer.png',
             });
 
             await i.reply({
@@ -528,7 +524,7 @@ const createConfirmationEmbed = (
   return embeds
     .setTitle('Confirm Purchase')
     .setDescription(
-      `Are you sure you want to buy ${quantity} x ${item.name[locale]} for ${formatter.format(price)}?`,
+      locale === 'vi' ? `Bạn cá xác nhận muốn mua ${quantity} x ${item.name[locale]} giá tổng ${formatter.format(price)}?` : `Are you sure you want to buy ${quantity} x ${item.name[locale]} for ${formatter.format(price)}?`
     )
     .setColor('#00FF00');
 };

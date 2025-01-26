@@ -280,7 +280,7 @@ const command = {
             embeds.setThumbnail('attachment://paimon.png');
             embeds.addFields({
               name: locale === 'vi' ? 'Bạn đã mua' : 'Your purchase',
-              value: `${quantity} x ${selectedItem.name[locale]}`,
+              value: `${quantity} x ${selectedItem.name[locale]} = ${formatter.format(totalPrice)} <:Mora:1184076471841599528>`,
             })
             embeds.setFooter({
               text: 'PAIMON SHOP',

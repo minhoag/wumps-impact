@@ -127,5 +127,13 @@ export const Localizaion: {
   'shop:view:select': {
     vi: 'Chọn một item để mua',
     'en-US': 'Select an item to buy',
-  }
+  },
+  'shop:view:thankyou:title': {
+    vi: 'Cảm ơn bạn đã mua hàng!',
+    'en-US': 'Thank you for purchasing!',
+  },
+  'shop:view:thankyou:content': {
+    vi: 'Cảm ơn bạn đã mua một món hàng từ cửa hàng của Paimon!',
+    'en-US': 'Thank you so much for purchasing an item from Paimon\'s shop!',
+  },
 };

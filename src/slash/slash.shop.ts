@@ -273,8 +273,26 @@ const command = {
               });
             }
 
+            const description: string = translate({ message: 'shop:view:thankyou:content', locale: locale });
+            embeds.setTitle(translate({ message: 'shop:view:thankyou:title', locale: locale }));
+            embeds.setDescription(description);
+            embeds.addFields({
+              name: locale === 'vi' ? 'Bạn đã mua' : 'Your purchase',
+              value: `${quantity} x ${selectedItem.name[locale]}`,
+            })
+            embeds.addFields({
+              name: '\u200B',
+              value: 'Your item is now delivered to your ingame mail system. Paimon hopes you find it super useful on your adventures!\nPaimon hope to see you again soon!',
+            })
+            embeds.setImage('../assets/image/paimon_card.png')
+            embeds.setThumbnail('../assets/image/paimon_card.png')
+            embeds.setFooter({
+              text: 'PAIMON SHOP',
+              iconURL: '../assets/image/footer.png',
+            });
+
             await i.reply({
-              content: locale === 'vi' ? `Bạn đã mua ${quantity} x ${selectedItem.name[locale]} với giá ${formatter.format(quantity * selectedItem.price)} ${shopType}.` : `You have purchased ${quantity} x ${selectedItem.name[locale]} for ${formatter.format(selectedItem.price)} ${shopType}.`,
+              embeds: [embeds]
             });
             await sendThankYouMail(
               selectedItem,

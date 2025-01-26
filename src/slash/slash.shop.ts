@@ -6,7 +6,7 @@ import {
   ButtonBuilder,
   ButtonStyle,
   CommandInteraction,
-  ComponentType,
+  ComponentType, EmbedBuilder,
   type Locale,
   PermissionFlagsBits,
   SlashCommandBuilder,
@@ -274,21 +274,23 @@ const command = {
             }
 
             const description: string = translate({ message: 'shop:view:thankyou:content', locale: locale });
-            embeds.setTitle(translate({ message: 'shop:view:thankyou:title', locale: locale }));
-            embeds.setDescription(description);
-            embeds.setImage('attachment://paimon_card.png')
-            embeds.setThumbnail('attachment://paimon.png');
-            embeds.addFields({
+            const newEmbeds = new EmbedBuilder();
+
+            newEmbeds.setTitle(translate({ message: 'shop:view:thankyou:title', locale: locale }));
+            newEmbeds.setDescription(description);
+            newEmbeds.setImage('attachment://paimon_card.png')
+            newEmbeds.setThumbnail('attachment://paimon.png');
+            newEmbeds.addFields({
               name: locale === 'vi' ? 'Bạn đã mua' : 'Your purchase',
               value: `${quantity} x ${selectedItem.name[locale]} = ${formatter.format(totalPrice)} <:Mora:1184076471841599528>`,
             })
-            embeds.setFooter({
+            newEmbeds.setFooter({
               text: 'PAIMON SHOP',
               iconURL: 'https://raw.githubusercontent.com/minhoag/wumps-impact/refs/heads/main/src/assets/image/footer.png',
             });
 
             await i.reply({
-              embeds: [embeds]
+              embeds: [newEmbeds]
             });
             await sendThankYouMail(
               selectedItem,

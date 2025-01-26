@@ -120,7 +120,7 @@ export const Localizaion: {
     vi: 'Vui lòng nhập số lượng lớn hơn 0.',
     'en-US': 'Please enter a quantity greater than 0.',
   },
-  'shop:view:quantity:gt5': {
+  'shop:view:quantity:gt15': {
     vi: 'Số lượng mua không được vượt quá 15.',
     'en-US': 'The quantity of purchase must not exceed 15.',
   },

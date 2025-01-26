@@ -274,8 +274,9 @@ const command = {
             }
 
             const description: string = translate({ message: 'shop:view:thankyou:content', locale: locale });
+            const paimon_card = new AttachmentBuilder('./src/assets/image/paimon_card.png').setName('paimon_card.png');
+            const paimon = new AttachmentBuilder('./src/assets/image/paimon.png').setName('paimon.png');
             const newEmbeds = new EmbedBuilder();
-
             newEmbeds.setTitle(translate({ message: 'shop:view:thankyou:title', locale: locale }));
             newEmbeds.setDescription(description);
             newEmbeds.setImage('attachment://paimon_card.png')
@@ -290,7 +291,8 @@ const command = {
             });
 
             await i.reply({
-              embeds: [newEmbeds]
+              embeds: [newEmbeds],
+              files: [paimon_card, paimon]
             });
             await sendThankYouMail(
               selectedItem,

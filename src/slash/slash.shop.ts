@@ -131,7 +131,7 @@ const command = {
             primogems: res.data.hcoin,
             mora: res.data.scoin,
           };
-        });
+        })
       if (!currency)
         return interaction.reply(
           translate({ message: 'error:user:notfound', locale: locale }),

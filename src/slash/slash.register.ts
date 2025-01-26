@@ -146,7 +146,7 @@ const command: SlashCommand = {
           }),
         );
       }
-      // remove otp code from redis
+      // get user data
       await prisma_discord.user
         .create({
           data: {
@@ -159,6 +159,7 @@ const command: SlashCommand = {
           },
         })
         .catch(console.error);
+      // remove otp code from redis
       await client.del(interaction.user.id);
       return await interaction.editReply(
         translate({

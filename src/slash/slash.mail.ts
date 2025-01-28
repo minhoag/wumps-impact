@@ -48,9 +48,9 @@ const createModal = () => {
     .setPlaceholder('Ghi all để gửi tất cả mọi người.')
     .setStyle(TextInputStyle.Short);
 
-  const sender = new TextInputBuilder()
-    .setCustomId('senderInput')
-    .setLabel('Người gửi')
+  const title = new TextInputBuilder()
+    .setCustomId('titleInput')
+    .setLabel('Tiêu đề')
     .setPlaceholder('Tiêu đề thư')
     .setValue('You got a mail!')
     .setStyle(TextInputStyle.Short);
@@ -73,7 +73,7 @@ const createModal = () => {
   // Add the input fields to the modal
   modal.addComponents(
     new ActionRowBuilder<TextInputBuilder>().addComponents(receiver),
-    new ActionRowBuilder<TextInputBuilder>().addComponents(sender),
+    new ActionRowBuilder<TextInputBuilder>().addComponents(title),
     new ActionRowBuilder<TextInputBuilder>().addComponents(expiry),
     new ActionRowBuilder<TextInputBuilder>().addComponents(content),
     new ActionRowBuilder<TextInputBuilder>().addComponents(item),

@@ -10,7 +10,7 @@ const event: Event = {
     if (!interaction.isModalSubmit() && interaction.customId !== 'mailForm')
       return;
     const receiver = interaction.fields.getTextInputValue('receiverInput');
-    const sender = interaction.fields.getTextInputValue('senderInput');
+    const title = interaction.fields.getTextInputValue('titleInput');
     const expiry = interaction.fields.getTextInputValue('expiryInput');
     const content = interaction.fields.getTextInputValue('contentInput');
     const item = interaction.fields
@@ -27,7 +27,7 @@ const event: Event = {
         const success = await sendMail(
           interaction as any,
           user.uid,
-          sender,
+          title,
           content,
           item,
           seconds,
@@ -51,7 +51,7 @@ const event: Event = {
       const success = await sendMail(
         interaction as any,
         receiver,
-        sender,
+        title,
         content,
         item,
         seconds,
@@ -86,7 +86,10 @@ const sendMail = async (
       content: 'Gửi thư không thành công. Lỗi: `' + json.msg + '`',
       flags: 'Ephemeral',
     });
-    return false;
+    return;
   }
-  return true;
+  return await interaction.reply({
+    content: 'Gửi thư thành công.',
+    flags: 'Ephemeral',
+  });
 };

@@ -11,9 +11,9 @@ import type { Command, SlashCommand } from './types';
 
 process.on('uncaughtException', (error: unknown) => {
   if (error instanceof Error) {
-    console.log('Error', error);
+    console.log('Error', error.message);
   } else if (error instanceof DiscordAPIError) {
-    console.error('API', error);
+    console.error('Error at api code: ', error.code);
   }
 });
 

@@ -1,6 +1,6 @@
 import {
   Client,
-  Collection,
+  Collection, DiscordAPIError,
   GatewayIntentBits,
 } from 'discord.js';
 import { readdirSync } from 'fs';
@@ -9,7 +9,11 @@ import { join } from 'path';
 import type { Command, SlashCommand } from './types';
 
 process.on('uncaughtException', (error: unknown) => {
-  console.log(error);
+  if (error instanceof Error) {
+    console.log('Error', error);
+  } else if (error instanceof DiscordAPIError) {
+    console.error('API', error);
+  }
 });
 
 const client = new Client({

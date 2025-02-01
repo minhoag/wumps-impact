@@ -88,6 +88,7 @@ const command: SlashCommand = {
         .setDescriptionLocalization('vi', 'Xóa sự kiện giới hạn đã tạo.'),
     ),
   cooldown: 1,
+  // Autocomplete handler for the command
   autocomplete: async (interaction: AutocompleteInteraction) => {
     const locale = interaction.locale;
     const focusedOption = interaction.options.getFocused(true);
@@ -121,30 +122,31 @@ const command: SlashCommand = {
     const options = filtered.length > 25 ? filtered.slice(0, 25) : filtered;
     await interaction.respond(options);
   },
+  // Execute handler for the command
   execute: async (interaction: CommandInteraction) => {
     if (!interaction.isChatInputCommand()) return;
     if (!interaction.guild) return;
     if (interaction.options.getSubcommand() === 'add') {
-      /** Capture params input **/
+      // Capture params input
       const name: string = interaction.options.getString('name', true);
       const enable: number = interaction.options.getNumber('enable', true);
       const start: string = interaction.options.getString('start')
         ? dayjs(interaction.options.getString('start'))
-            .startOf('day')
-            .toISOString()
+          .startOf('day')
+          .toISOString()
         : dayjs().startOf('day').toISOString();
       const gachaType: number = interaction.options.getNumber('type', true);
       const duration: number = interaction.options.getNumber('duration') ?? 2;
-      /** Calculate end time **/
+      // Calculate end time
       const end: string = interaction.options.getString('end')
         ? dayjs(interaction.options.getString('end')).toISOString()
         : dayjs(start).add(duration, 'w').toISOString();
-      /** Locale **/
+      // Locale
       const locale = interaction.locale;
-      /** Process data **/
+      // Process data
       const data = schedule.find((item) => item.value === name);
       if (!data) return;
-      /** Send response**/
+      // Send response
       if (!data) {
         const notfound = embeds.setDescription(
           translate({
@@ -154,9 +156,9 @@ const command: SlashCommand = {
         );
         return interaction.reply({ embeds: [notfound] });
       }
-      /** Defer reply first **/
+      // Defer reply first
       await interaction.deferReply({ flags: 'Ephemeral' });
-      /** Finalize data **/
+      // Finalize data
       const finalized: GachaDatabase = {
         gacha_type: gachaType,
         begin_time: start,
@@ -183,7 +185,7 @@ const command: SlashCommand = {
             : data.titlePath,
         display_up4_item_list: data.rateUpItems4,
       };
-      /** Validate data **/
+      // Validate data
       try {
         await prisma_config.t_gacha_schedule_config.create({
           data: finalized,

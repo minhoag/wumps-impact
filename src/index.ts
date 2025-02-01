@@ -1,6 +1,7 @@
 import {
   Client,
-  Collection, DiscordAPIError,
+  Collection,
+  DiscordAPIError,
   GatewayIntentBits,
 } from 'discord.js';
 import { readdirSync } from 'fs';
@@ -11,6 +12,14 @@ import type { Command, SlashCommand } from './types';
 process.on('uncaughtException', (error: unknown) => {
   if (error instanceof Error) {
     console.log('Error', error);
+  } else if (error instanceof DiscordAPIError) {
+    console.error('API', error);
+  }
+});
+
+process.on('unhandledRejection', (error: unknown) => {
+  if (error instanceof Error) {
+    console.log('Error', error.message);
   } else if (error instanceof DiscordAPIError) {
     console.error('API', error);
   }
@@ -35,4 +44,6 @@ readdirSync(handlersDir).forEach((handler) => {
   require(`${handlersDir}/${handler}`)(client);
 });
 
-client.login(process.env['DiSCORD_TOKEN']).catch(() => console.error("Invalid Token: ", process.env['DiSCORD_TOKEN']));
+client
+  .login(process.env['DiSCORD_TOKEN'])
+  .catch(() => console.error('Invalid Token: ', process.env['DiSCORD_TOKEN']));

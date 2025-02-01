@@ -149,18 +149,21 @@ const command: SlashCommand = {
           `http://localhost:14861/api?region=dev_gio&ticket=GM@${uuid}&cmd=1116&uid=${uid}&msg=item%20add%20${id}%20${amount}`,
         );
         await interaction.reply({
-          content: translate({ message: 'admin:give:success', locale: locale }) +uid,
+          content:
+            translate({ message: 'admin:give:success', locale: locale }) + uid,
           flags: 'Ephemeral',
         });
       } catch (error: unknown) {
         if (error instanceof Error) {
           await interaction.reply({
-            content: translate({ message: 'admin:give:error', locale: locale }) +uid,
+            content:
+              translate({ message: 'admin:give:error', locale: locale }) + uid,
             flags: 'Ephemeral',
           });
         } else {
           await interaction.reply({
-            content: translate({ message: 'error:unknown', locale: locale }) +uid,
+            content:
+              translate({ message: 'error:unknown', locale: locale }) + uid,
             flags: 'Ephemeral',
           });
         }
@@ -182,10 +185,11 @@ const command: SlashCommand = {
       } catch (error: unknown) {
         if (error instanceof Error) {
           await interaction.reply({
-            content: translate({
-              message: 'admin:delete:error',
-              locale: locale,
-            }) +uid,
+            content:
+              translate({
+                message: 'admin:delete:error',
+                locale: locale,
+              }) + uid,
             flags: 'Ephemeral',
           });
         } else {

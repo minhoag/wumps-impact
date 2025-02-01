@@ -6,7 +6,8 @@ import {
   ButtonBuilder,
   ButtonStyle,
   CommandInteraction,
-  ComponentType, EmbedBuilder,
+  ComponentType,
+  EmbedBuilder,
   type Locale,
   PermissionFlagsBits,
   SlashCommandBuilder,
@@ -108,7 +109,9 @@ const command = {
         });
       }
       // Defer the reply to allow time for data fetching
-      await interaction.deferReply().catch((e: Error) => console.error('Here: ' +e));
+      await interaction
+        .deferReply()
+        .catch((e: Error) => console.error('Here: ' + e));
       // Fetch user currency data from the database
       const currency = await prisma_discord.user
         .findUnique({
@@ -131,7 +134,7 @@ const command = {
             primogems: res.data.hcoin,
             mora: res.data.scoin,
           };
-        })
+        });
       if (!currency)
         return interaction.editReply(
           translate({ message: 'error:user:notfound', locale: locale }),
@@ -272,26 +275,39 @@ const command = {
               });
             }
 
-            const description: string = translate({ message: 'shop:view:thankyou:content', locale: locale });
-            const paimon_card = new AttachmentBuilder('./src/assets/image/paimon_card.png').setName('paimon_card.png');
-            const paimon = new AttachmentBuilder('./src/assets/image/paimon.png').setName('paimon.png');
+            const description: string = translate({
+              message: 'shop:view:thankyou:content',
+              locale: locale,
+            });
+            const paimon_card = new AttachmentBuilder(
+              './src/assets/image/paimon_card.png',
+            ).setName('paimon_card.png');
+            const paimon = new AttachmentBuilder(
+              './src/assets/image/paimon.png',
+            ).setName('paimon.png');
             const newEmbeds = new EmbedBuilder();
-            newEmbeds.setTitle(translate({ message: 'shop:view:thankyou:title', locale: locale }));
+            newEmbeds.setTitle(
+              translate({
+                message: 'shop:view:thankyou:title',
+                locale: locale,
+              }),
+            );
             newEmbeds.setDescription(description);
-            newEmbeds.setImage('attachment://paimon_card.png')
+            newEmbeds.setImage('attachment://paimon_card.png');
             newEmbeds.setThumbnail('attachment://paimon.png');
             newEmbeds.addFields({
               name: locale === 'vi' ? 'Bạn đã mua' : 'Your purchase',
               value: `${quantity} x ${selectedItem.name[locale]} = ${formatter.format(totalPrice)} <:Mora:1184076471841599528>`,
-            })
+            });
             newEmbeds.setFooter({
               text: 'PAIMON SHOP',
-              iconURL: 'https://raw.githubusercontent.com/minhoag/wumps-impact/refs/heads/main/src/assets/image/footer.png',
+              iconURL:
+                'https://raw.githubusercontent.com/minhoag/wumps-impact/refs/heads/main/src/assets/image/footer.png',
             });
 
             await i.reply({
               embeds: [newEmbeds],
-              files: [paimon_card, paimon]
+              files: [paimon_card, paimon],
             });
             await sendThankYouMail(
               selectedItem,
@@ -481,7 +497,9 @@ const createSelectMenus = (
       new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
         new StringSelectMenuBuilder()
           .setCustomId(`select-item-${i / 25}`)
-          .setPlaceholder(translate({ message: 'shop:view:select', locale: locale }))
+          .setPlaceholder(
+            translate({ message: 'shop:view:select', locale: locale }),
+          )
           .addOptions(options),
       );
     menus.push(selectMenu);
@@ -521,7 +539,9 @@ const createConfirmationEmbed = (
   return embeds
     .setTitle('Confirm Purchase')
     .setDescription(
-      locale === 'vi' ? `Bạn cá xác nhận muốn mua ${quantity} x ${item.name[locale]} giá tổng ${formatter.format(price)}?` : `Are you sure you want to buy ${quantity} x ${item.name[locale]} for ${formatter.format(price)}?`
+      locale === 'vi'
+        ? `Bạn cá xác nhận muốn mua ${quantity} x ${item.name[locale]} giá tổng ${formatter.format(price)}?`
+        : `Are you sure you want to buy ${quantity} x ${item.name[locale]} for ${formatter.format(price)}?`,
     )
     .setColor('#00FF00');
 };

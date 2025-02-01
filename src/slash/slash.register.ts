@@ -50,7 +50,7 @@ const command: SlashCommand = {
     /** Client Redis **/
     const client = createClient({
       url: process.env['REDIS_URL'],
-      password: process.env['REDIS_PASSWORD']
+      password: process.env['REDIS_PASSWORD'],
     });
     await client.connect();
     /** Send Verification Code **/
@@ -142,17 +142,16 @@ const command: SlashCommand = {
         );
       }
       // get user data
-      await prisma_discord.user
-        .create({
-          data: {
-            id: interaction.user.id,
-            uid: uid,
-            mora: 10000,
-            primogems: 1600,
-            masterless: 100,
-            points: 0,
-          },
-        })
+      await prisma_discord.user.create({
+        data: {
+          id: interaction.user.id,
+          uid: uid,
+          mora: 10000,
+          primogems: 1600,
+          masterless: 100,
+          points: 0,
+        },
+      });
       // remove otp code from redis
       await client.del(interaction.user.id);
       return await interaction.editReply(

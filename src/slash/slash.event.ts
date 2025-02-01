@@ -245,13 +245,16 @@ const command: SlashCommand = {
       collector.on('collect', async (i: any) => {
         console.log(i.values[0]);
         await Promise.all([
-          prisma_config.t_gacha_schedule_config.findUnique({
+          prisma_config.t_gacha_schedule_config.delete({
             where: {
               schedule_id: Number(i.values[0]),
             },
           }),
         ]);
-        i.reply('Event ended.');
+        i.reply({
+          content: 'Event ended.',
+          flags: 'Ephemeral',
+        });
       });
     }
   },

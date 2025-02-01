@@ -1,8 +1,8 @@
 import dayjs from 'dayjs';
 import {
   ActionRowBuilder,
-  type AutocompleteInteraction,
-  CommandInteraction,
+  type AutocompleteInteraction, ButtonBuilder, ButtonStyle,
+  CommandInteraction, EmbedBuilder, type Interaction,
   PermissionFlagsBits,
   SlashCommandBuilder,
   StringSelectMenuBuilder,
@@ -209,7 +209,7 @@ const command: SlashCommand = {
       const events = await prisma_config.t_gacha_schedule_config.findMany();
       if (!events) return interaction.editReply('No events found.');
       const select = new StringSelectMenuBuilder()
-        .setCustomId('starter')
+        .setCustomId('end')
         .setPlaceholder('Make a selection!');
       events.map((event: any): StringSelectMenuBuilder => {
         const label = schedule.find(
@@ -238,23 +238,50 @@ const command: SlashCommand = {
 
       const filter = (i: any) => i.user.id === interaction.user.id;
       const fetchReply = await interaction.fetchReply();
-      const collector = fetchReply.createMessageComponentCollector({
-        filter,
-        time: 60000,
-      });
-      collector.on('collect', async (i: any) => {
-        await Promise.all([
-          prisma_config.t_gacha_schedule_config.delete({
-            where: {
-              schedule_id: Number(i.values[0]),
-            },
-          }),
-        ]);
-        i.reply({
-          content: 'Event ended.',
-          flags: 'Ephemeral',
+      try {
+        const collector = fetchReply.createMessageComponentCollector({
+          filter,
+          time: 60000,
         });
-      });
+        collector.on('collect', async (i: any) => {
+          const newEmbed = new EmbedBuilder()
+            .setTitle('Event ended')
+            .setDescription('Are you sure you want to end this event?');
+          const confirm = new ButtonBuilder()
+            .setCustomId('confirm_remove')
+            .setLabel('Confirm Remove')
+            .setStyle(ButtonStyle.Success);
+
+          const cancel = new ButtonBuilder()
+            .setCustomId('cancel_remove')
+            .setLabel('Cancel')
+            .setStyle(ButtonStyle.Secondary);
+          const row = new ActionRowBuilder()
+            .addComponents(cancel, confirm);
+          const buttonResponse = await i.reply({
+            embeds: [newEmbed],
+            components: [row],
+            flags: 'Ephemeral',
+            withResponse: true
+          });
+          const collectorFilter = (i: Interaction) => i.user.id === interaction.user.id;
+          const confirmation = await buttonResponse.resource.message.awaitMessageComponent({ filter: collectorFilter, time: 60_000 });
+          if (confirmation.customId === 'confirm_remove') {
+            await Promise.all([
+              prisma_config.t_gacha_schedule_config.findUnique({
+                where: {
+                  schedule_id: Number(i.values[0]),
+                },
+              }),
+            ]);
+            await confirmation.editReply({ content: 'Event ended', components: [], embeds: [] });
+          } else if (confirmation.customId === 'cancel_remove') {
+            await confirmation.editReply({ content: 'Action cancelled', components: [], embeds: [] });
+          }
+        });
+      } catch (error) {
+        await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling', components: [], embeds: [] });
+      }
     }
   },
 };

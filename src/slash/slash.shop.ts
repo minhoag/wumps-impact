@@ -108,7 +108,7 @@ const command = {
         });
       }
       // Defer the reply to allow time for data fetching
-      await interaction.deferReply();
+      await interaction.deferReply().catch((e: Error) => console.error('Here: ' +e));
       // Fetch user currency data from the database
       const currency = await prisma_discord.user
         .findUnique({

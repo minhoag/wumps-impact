@@ -133,7 +133,7 @@ const command = {
           };
         })
       if (!currency)
-        return interaction.reply(
+        return interaction.editReply(
           translate({ message: 'error:user:notfound', locale: locale }),
         );
 
@@ -155,7 +155,6 @@ const command = {
       );
 
       const selectMenus = createSelectMenus(sortedItems, locale, quantity);
-
       // Send the response with the canvas image and pagination buttons
       await interaction.editReply({
         files: [attachment],
@@ -503,19 +502,13 @@ export async function sendThankYouMail(
   const description: string =
     'Thank you very much for shopping with PAIMON SHOP. We hope you enjoy the game.';
   const seconds = dayjs().add(Number(365), 'days').unix();
-  try {
-    await fetch(
-      `http://localhost:14861/api?region=dev_gio&ticket=GM@${uuid}&cmd=1135&uid=${uid}&scoin=${price}`,
-    ).then(async (res: Response) => {
-      if (res.ok)
-        return fetch(
-          `http://localhost:14861/api?sender=${sender}&title=${title}&content=${description}&item_list=${item.itemId}:${item.quantity * quantity}&expire_time=${seconds}&is_collectible=False&uid=${uid}&cmd=1005&region=dev_gio&ticket=GM%40${seconds}&sign=${uuid}`,
-        );
-      return console.log('Error: ', res.statusText);
-    });
-  } catch (error) {
-    console.log(error);
-  }
+  await fetch(
+    `http://localhost:14861/api?region=dev_gio&ticket=GM@${uuid}&cmd=1135&uid=${uid}&scoin=${price}`,
+  ).then(async () => {
+    return fetch(
+      `http://localhost:14861/api?sender=${sender}&title=${title}&content=${description}&item_list=${item.itemId}:${item.quantity * quantity}&expire_time=${seconds}&is_collectible=False&uid=${uid}&cmd=1005&region=dev_gio&ticket=GM%40${seconds}&sign=${uuid}`,
+    );
+  });
 }
 
 // Function to create a confirmation embed

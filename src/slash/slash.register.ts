@@ -96,12 +96,7 @@ const command: SlashCommand = {
           : `Your OTP for the account is ${otpCode}. Use this code to enter in the Form opened on Discord for verification.`;
       const expire_time = dayjs().add(15, 'minute').unix();
       const message = `http://localhost:14861/api?sender=${sender}&title=${title}&content=${content}&item_list=202:1&expire_time=${expire_time}&is_collectible=False&uid=${uid}&cmd=1005&region=dev_gio&ticket=GM%40${expire_time}&sign=${sign}`;
-      // send mail
-      try {
-        await fetch(message);
-      } catch (error: any) {
-        console.error(error);
-      }
+      await fetch(message);
       await client.disconnect();
       // complete
       await interaction.editReply({
@@ -120,7 +115,6 @@ const command: SlashCommand = {
         .get(interaction.user.id)
         .then((data) => (data ? JSON.parse(data) : null));
       const { otp, uid } = cacheData;
-      console.log(otp);
       if (!otp) {
         embeds.setTitle(
           translate({
@@ -159,7 +153,6 @@ const command: SlashCommand = {
             points: 0,
           },
         })
-        .catch(console.error);
       // remove otp code from redis
       await client.del(interaction.user.id);
       return await interaction.editReply(

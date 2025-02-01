@@ -50,12 +50,8 @@ const event: Event = {
         );
         return;
       }
-      try {
-        if (!command.autocomplete) return;
-        command.autocomplete(interaction);
-      } catch (error) {
-        console.error(error);
-      }
+      if (!command.autocomplete) return;
+      command.autocomplete(interaction);
     }
   },
 };

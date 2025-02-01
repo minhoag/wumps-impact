@@ -91,24 +91,19 @@ const command = {
       // Locale for the user
       const locale: Locale = interaction.locale;
       // Check quantity
-      if (quantity < 1) {
+      if (quantity < 1 || quantity > 15) {
         return interaction.reply({
           content: translate({
-            message: 'shop:view:quantity:lt0',
-            locale: locale,
-          }),
-          flags: 'Ephemeral',
-        });
-      } else if (quantity > 15) {
-        return interaction.reply({
-          content: translate({
-            message: 'shop:view:quantity:gt15',
+            message:
+              quantity < 1
+                ? 'shop:view:quantity:lt0'
+                : 'shop:view:quantity:gt15',
             locale: locale,
           }),
           flags: 'Ephemeral',
         });
       }
-      // Defer the reply to allow time for data fetching
+      // Defer the reply to allow time for data fetching and canvas generation
       await interaction
         .deferReply()
         .catch((e: Error) => console.error('Here: ' + e));
@@ -285,25 +280,25 @@ const command = {
             const paimon = new AttachmentBuilder(
               './src/assets/image/paimon.png',
             ).setName('paimon.png');
-            const newEmbeds = new EmbedBuilder();
-            newEmbeds.setTitle(
-              translate({
-                message: 'shop:view:thankyou:title',
-                locale: locale,
-              }),
-            );
-            newEmbeds.setDescription(description);
-            newEmbeds.setImage('attachment://paimon_card.png');
-            newEmbeds.setThumbnail('attachment://paimon.png');
-            newEmbeds.addFields({
-              name: locale === 'vi' ? 'Bạn đã mua' : 'Your purchase',
-              value: `${quantity} x ${selectedItem.name[locale]} = ${formatter.format(totalPrice)} <:Mora:1184076471841599528>`,
-            });
-            newEmbeds.setFooter({
-              text: 'PAIMON SHOP',
-              iconURL:
-                'https://raw.githubusercontent.com/minhoag/wumps-impact/refs/heads/main/src/assets/image/footer.png',
-            });
+            const newEmbeds = new EmbedBuilder()
+              .setTitle(
+                translate({
+                  message: 'shop:view:thankyou:title',
+                  locale: locale,
+                }),
+              )
+              .setDescription(description)
+              .setImage('attachment://paimon_card.png')
+              .setThumbnail('attachment://paimon.png')
+              .addFields({
+                name: locale === 'vi' ? 'Bạn đã mua' : 'Your purchase',
+                value: `${quantity} x ${selectedItem.name[locale]} = ${formatter.format(totalPrice)} <:Mora:1184076471841599528>`,
+              })
+              .setFooter({
+                text: 'PAIMON SHOP',
+                iconURL:
+                  'https://raw.githubusercontent.com/minhoag/wumps-impact/refs/heads/main/src/assets/image/footer.png',
+              });
 
             await i.reply({
               embeds: [newEmbeds],
@@ -479,7 +474,12 @@ const createSelectMenuOptions = (
   return itemsToDisplay.map((item) =>
     new StringSelectMenuOptionBuilder()
       .setLabel(
-        `${item.name[locale]} - ${formatter.format(item.price * quantity)}/${item.quantity * quantity} ${translate({ message: 'shop:view:unit', locale: locale })}`,
+        `${item.name[locale]} - ${formatter.format(item.price * quantity)}/${item.quantity * quantity} ${translate(
+          {
+            message: 'shop:view:unit',
+            locale: locale,
+          },
+        )}`,
       )
       .setValue(item.itemId.toString()),
   );

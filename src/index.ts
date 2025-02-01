@@ -18,7 +18,15 @@ process.on('uncaughtException', (error: unknown) => {
 });
 
 process.on('unhandledRejection', (error: unknown) => {
-  if (error instanceof Error) {
+  if (
+    error instanceof Error &&
+    error.message.includes('database server is running')
+  ) {
+    console.log('Database server is not running.');
+  } else if (
+    error instanceof Error &&
+    error.message.includes('database server is running')
+  ) {
     console.log('Error', error.message);
   } else if (error instanceof DiscordAPIError) {
     console.error('API', error);

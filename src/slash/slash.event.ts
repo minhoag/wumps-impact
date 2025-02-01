@@ -1,8 +1,13 @@
 import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
 import {
   ActionRowBuilder,
-  type AutocompleteInteraction, ButtonBuilder, ButtonStyle,
-  CommandInteraction, EmbedBuilder, type Interaction,
+  type AutocompleteInteraction,
+  ButtonBuilder,
+  ButtonStyle,
+  CommandInteraction,
+  EmbedBuilder,
+  type Interaction,
   PermissionFlagsBits,
   SlashCommandBuilder,
   StringSelectMenuBuilder,
@@ -126,14 +131,17 @@ const command: SlashCommand = {
   execute: async (interaction: CommandInteraction) => {
     if (!interaction.isChatInputCommand()) return;
     if (!interaction.guild) return;
+    /**
+     * Start event
+     * **/
     if (interaction.options.getSubcommand() === 'add') {
       // Capture params input
       const name: string = interaction.options.getString('name', true);
       const enable: number = interaction.options.getNumber('enable', true);
       const start: string = interaction.options.getString('start')
         ? dayjs(interaction.options.getString('start'))
-          .startOf('day')
-          .toISOString()
+            .startOf('day')
+            .toISOString()
         : dayjs().startOf('day').toISOString();
       const gachaType: number = interaction.options.getNumber('type', true);
       const duration: number = interaction.options.getNumber('duration') ?? 2;
@@ -207,9 +215,15 @@ const command: SlashCommand = {
       );
       return interaction.editReply({ embeds: [success] });
     } else if (interaction.options.getSubcommand() === 'remove') {
+      /**
+       * Remove active event
+       * **/
+      // Defer reply first
       await interaction.deferReply({ flags: 'Ephemeral' });
+      // Fetch all events
       const events = await prisma_config.t_gacha_schedule_config.findMany();
       if (!events) return interaction.editReply('No events found.');
+      // Create select menu
       const select = new StringSelectMenuBuilder()
         .setCustomId('end')
         .setPlaceholder('Make a selection!');
@@ -218,56 +232,71 @@ const command: SlashCommand = {
           (item: any) => item.prefabPath === event.gacha_prefab_path,
         );
         if (!label) return select;
+        // Add options, dayjs is used to calculate time from now
+        dayjs.extend(relativeTime);
         return select.addOptions(
           new StringSelectMenuOptionBuilder()
             .setLabel(label.globalName)
-            .setDescription(label.bannerType)
+            .setDescription('Ends in ' + dayjs(event.end_time).fromNow())
             .setValue(event.schedule_id.toString()),
         );
       });
+      // Create row
       const row: ActionRowBuilder<any> = new ActionRowBuilder().addComponents(
         select,
       );
-
+      // Create embeds
       embeds.setTitle('Currently active events');
       embeds.setDescription('Select a currently active event to end it.');
       embeds.setFooter({ text: 'Manage Event' });
-
+      // Send reply with select menu and row and embeds
       await interaction.editReply({
         embeds: [embeds],
         components: [row],
       });
-
+      // Create filter base on user id
       const filter = (i: any) => i.user.id === interaction.user.id;
+      // Fetch reply
       const fetchReply = await interaction.fetchReply();
       try {
+        // Create collector for select menu
         const collector = fetchReply.createMessageComponentCollector({
           filter,
-          time: 60000,
+          time: 45_000,
         });
+        // On collect
         collector.on('collect', async (i: any) => {
+          // Create new embed
           const newEmbed = new EmbedBuilder()
             .setTitle('Event ended')
             .setDescription('Are you sure you want to end this event?');
+          // Create buttons
           const confirm = new ButtonBuilder()
             .setCustomId('confirm_remove')
             .setLabel('Confirm Remove')
             .setStyle(ButtonStyle.Success);
-
           const cancel = new ButtonBuilder()
             .setCustomId('cancel_remove')
             .setLabel('Cancel')
             .setStyle(ButtonStyle.Secondary);
-          const row = new ActionRowBuilder()
-            .addComponents(cancel, confirm);
+          // Create row with buttons
+          const row = new ActionRowBuilder().addComponents(cancel, confirm);
+          // Send reply with new embed and row
           const buttonResponse = await i.reply({
             embeds: [newEmbed],
             components: [row],
             flags: 'Ephemeral',
-            withResponse: true
+            withResponse: true,
           });
-          const collectorFilter = (i: Interaction) => i.user.id === interaction.user.id;
-          const confirmation = await buttonResponse.resource.message.awaitMessageComponent({ filter: collectorFilter, time: 60_000 });
+          // Create filter for button collector
+          const buttonFilter = (i: Interaction) =>
+            i.user.id === interaction.user.id;
+          const confirmation =
+            await buttonResponse.resource.message.awaitMessageComponent({
+              filter: buttonFilter,
+              time: 45_000,
+            });
+          // Check if button is confirmed or cancelled
           if (confirmation.customId === 'confirm_remove') {
             await Promise.all([
               prisma_config.t_gacha_schedule_config.findUnique({
@@ -276,13 +305,26 @@ const command: SlashCommand = {
                 },
               }),
             ]);
-            await confirmation.editReply({ content: 'Event ended', components: [], embeds: [] });
+            await confirmation.editReply({
+              content: 'Event ended',
+              components: [],
+              embeds: [],
+            });
           } else if (confirmation.customId === 'cancel_remove') {
-            await confirmation.editReply({ content: 'Action cancelled', components: [], embeds: [] });
+            await confirmation.editReply({
+              content: 'Action cancelled',
+              components: [],
+              embeds: [],
+            });
           }
         });
       } catch (error) {
-        await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling', components: [], embeds: [] });
+        // If no confirmation is received within 45s, cancel the action
+        await interaction.editReply({
+          content: 'Confirmation not received within 1 minute, cancelling',
+          components: [],
+          embeds: [],
+        });
       }
     }
   },

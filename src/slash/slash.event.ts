@@ -243,7 +243,6 @@ const command: SlashCommand = {
         time: 60000,
       });
       collector.on('collect', async (i: any) => {
-        console.log(i.values[0]);
         await Promise.all([
           prisma_config.t_gacha_schedule_config.delete({
             where: {

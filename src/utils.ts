@@ -8,7 +8,7 @@ import {
 } from 'discord.js';
 import { promisify } from 'node:util';
 import { createClient } from 'redis';
-
+import dayjs, { Dayjs } from 'dayjs';
 import { Localizaion } from './i18n';
 
 /** Item data from server
@@ -193,3 +193,65 @@ export const cacheGet = async (key: string) => {
  *   ticket: 'GM'
  * }
  * */
+
+type TimeRemaining = {
+  hours: number;
+  minutes: number;
+  seconds: number;
+  isEnded: boolean;
+};
+
+type SupplyTimeResponse = string;
+
+function calculateTimeRemaining(endTime: Dayjs): TimeRemaining {
+  const now = dayjs();
+  const diff = endTime.diff(now, 'second');
+
+  if (diff <= 0) {
+    return {
+      hours: 0,
+      minutes: 0,
+      seconds: 0,
+      isEnded: true
+    };
+  }
+
+  const hours = Math.floor(diff / 3600);
+  const minutes = Math.floor((diff % 3600) / 60);
+  const seconds = diff % 60;
+
+  return {
+    hours,
+    minutes,
+    seconds,
+    isEnded: false
+  };
+}
+
+function formatTimeRemaining(time: TimeRemaining): SupplyTimeResponse {
+  if (time.isEnded) {
+    return 'ended';
+  }
+
+  const parts: string[] = [];
+
+  if (time.hours > 0) {
+    parts.push(`${time.hours} hour${time.hours > 1 ? 's' : ''}`);
+  }
+
+  if (time.minutes > 0) {
+    parts.push(`${time.minutes} minute${time.minutes > 1 ? 's' : ''}`);
+  }
+
+  if (time.seconds > 0) {
+    parts.push(`${time.seconds} second${time.seconds > 1 ? 's' : ''}`);
+  }
+
+  return `ends in ${parts.join(', ')}`;
+}
+
+export function checkSupplyTime(supplyTime: string | Date): SupplyTimeResponse {
+  const endTime = dayjs(supplyTime);
+  const timeRemaining = calculateTimeRemaining(endTime);
+  return formatTimeRemaining(timeRemaining);
+}

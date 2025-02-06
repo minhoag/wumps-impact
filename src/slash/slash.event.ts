@@ -16,7 +16,7 @@ import {
 import { prisma_config } from '../prisma/prisma';
 import { schedule } from '../refs/ref.schedule';
 import type { GachaDatabase, SlashCommand } from '../types';
-import { embeds, translate } from '../utils';
+import { checkSupplyTime, embeds, translate } from '../utils';
 
 const command: SlashCommand = {
   command: new SlashCommandBuilder()
@@ -236,8 +236,8 @@ const command: SlashCommand = {
         dayjs.extend(relativeTime);
         return select.addOptions(
           new StringSelectMenuOptionBuilder()
-            .setLabel(label.globalName)
-            .setDescription('Ends in ' + dayjs(event.end_time).fromNow())
+            .setLabel(`${label.gachaType}. ${label.globalName}`)
+            .setDescription('Time: ' + checkSupplyTime(event.end_time))
             .setValue(event.schedule_id.toString()),
         );
       });
@@ -320,7 +320,7 @@ const command: SlashCommand = {
             components: [],
             embeds: [],
           });
-        }
+        } else console.log(error);
       }
     }
   },

@@ -51,7 +51,7 @@ export const Localizaion: {
    * **/
   'event:success': {
     vi: 'Thành công thêm sự kiện vào server!',
-    'en-US': 'Data not found',
+    'en-US': 'Successfully add event to server',
   },
   'event:begin:description': {
     vi: 'Thời gian bắt đầu sự kiện.',

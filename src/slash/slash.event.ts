@@ -5,9 +5,8 @@ import {
   type AutocompleteInteraction,
   ButtonBuilder,
   ButtonStyle,
-  CommandInteraction,
+  CommandInteraction, DiscordAPIError,
   EmbedBuilder,
-  type Interaction,
   PermissionFlagsBits,
   SlashCommandBuilder,
   StringSelectMenuBuilder,
@@ -122,7 +121,7 @@ const command: SlashCommand = {
       name: string;
       value: string;
     }[] = choices.filter((choice: any) =>
-      choice.name.includes(focusedOption.value),
+      choice.name.toLowerCase().includes(focusedOption.value.toLowerCase()),
     );
     const options = filtered.length > 25 ? filtered.slice(0, 25) : filtered;
     await interaction.respond(options);
@@ -198,6 +197,14 @@ const command: SlashCommand = {
         await prisma_config.t_gacha_schedule_config.create({
           data: finalized,
         });
+        embeds.setTitle('Success')
+        const success = embeds.setDescription(
+          translate({
+            message: 'event:success',
+            locale,
+          }),
+        );
+        return interaction.editReply({ embeds: [success] });
       } catch (error: any) {
         const unknown: string = translate({
           message: 'error:unknown',
@@ -207,13 +214,6 @@ const command: SlashCommand = {
         embeds.setDescription(error.message);
         return interaction.editReply({ embeds: [embeds] });
       }
-      const success = embeds.setDescription(
-        translate({
-          message: 'event:success',
-          locale,
-        }),
-      );
-      return interaction.editReply({ embeds: [success] });
     } else if (interaction.options.getSubcommand() === 'remove') {
       /**
        * Remove active event
@@ -262,14 +262,14 @@ const command: SlashCommand = {
         // Create collector for select menu
         const collector = fetchReply.createMessageComponentCollector({
           filter,
-          time: 45_000,
+          time: 5_000,
         });
         // On collect
         collector.on('collect', async (i: any) => {
           // Create new embed
           const newEmbed = new EmbedBuilder()
-            .setTitle('Event ended')
-            .setDescription('Are you sure you want to end this event?');
+            .setTitle('Confirmation')
+            .setDescription('Do you want to remove this event?');
           // Create buttons
           const confirm = new ButtonBuilder()
             .setCustomId('confirm_remove')
@@ -282,49 +282,45 @@ const command: SlashCommand = {
           // Create row with buttons
           const row = new ActionRowBuilder().addComponents(cancel, confirm);
           // Send reply with new embed and row
-          const buttonResponse = await i.reply({
+          const interactionWithButtonRow = await i.reply({
             embeds: [newEmbed],
             components: [row],
             flags: 'Ephemeral',
             withResponse: true,
-          });
+          })
           // Create filter for button collector
-          const buttonFilter = (i: Interaction) =>
-            i.user.id === interaction.user.id;
-          const confirmation =
-            await buttonResponse.resource.message.awaitMessageComponent({
-              filter: buttonFilter,
-              time: 45_000,
-            });
-          // Check if button is confirmed or cancelled
+          const buttonCollector= (i: CommandInteraction) => i.user.id === interaction.user.id;
+          const confirmation = await interactionWithButtonRow.resource.message.awaitMessageComponent({ filter: buttonCollector, time: 60_000 });
           if (confirmation.customId === 'confirm_remove') {
-            await Promise.all([
-              prisma_config.t_gacha_schedule_config.findUnique({
-                where: {
-                  schedule_id: Number(i.values[0]),
-                },
-              }),
-            ]);
-            await confirmation.editReply({
-              content: 'Event ended',
-              components: [],
-              embeds: [],
-            });
+            await prisma_config.t_gacha_schedule_config.delete({
+              where: {
+                schedule_id: Number(i.values[0])
+              }
+            })
+            newEmbed.setTitle('Success')
+            newEmbed.setDescription(`Event Id: ${i.values[0]} delete successfully`)
+            await confirmation.update({ components: [], embeds: [newEmbed] });
           } else if (confirmation.customId === 'cancel_remove') {
-            await confirmation.editReply({
-              content: 'Action cancelled',
-              components: [],
-              embeds: [],
-            });
+            newEmbed.setTitle('Cancel')
+            newEmbed.setDescription('Action cancelled')
+            await confirmation.update({ components: [], embeds: [newEmbed] });
           }
         });
-      } catch (error) {
+      } catch (error: unknown) {
         // If no confirmation is received within 45s, cancel the action
-        await interaction.editReply({
-          content: 'Confirmation not received within 1 minute, cancelling',
-          components: [],
-          embeds: [],
-        });
+        if(error instanceof Error) {
+          await interaction.editReply({
+            content: error.message,
+            components: [],
+            embeds: [],
+          });
+        } else if (error instanceof DiscordAPIError) {
+          await interaction.editReply({
+            content: 'Confirmation not received within 1 minute, cancelling',
+            components: [],
+            embeds: [],
+          });
+        }
       }
     }
   },

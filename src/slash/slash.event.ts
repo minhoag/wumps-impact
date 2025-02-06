@@ -262,7 +262,7 @@ const command: SlashCommand = {
         // Create collector for select menu
         const collector = fetchReply.createMessageComponentCollector({
           filter,
-          time: 45_000,
+          time: 120_000,
         });
         // On collect
         collector.on('collect', async (i: any) => {
@@ -290,7 +290,7 @@ const command: SlashCommand = {
           })
           // Create filter for button collector
           const buttonCollector= (i: CommandInteraction) => i.user.id === interaction.user.id;
-          const confirmation = await interactionWithButtonRow.resource.message.awaitMessageComponent({ filter: buttonCollector, time: 45_000 });
+          const confirmation = await interactionWithButtonRow.resource.message.awaitMessageComponent({ filter: buttonCollector, time: 120_000 });
           if (confirmation.customId === 'confirm_remove') {
             await prisma_config.t_gacha_schedule_config.delete({
               where: {

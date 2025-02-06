@@ -43,7 +43,7 @@ const command: SlashCommand = {
             .addChoices(
               { name: 'Character 1', value: 301 },
               { name: 'Character 2', value: 400 },
-              { name: 'Weapon 1', value: 426 },
+              { name: 'Weapon 1', value: 202 },
               { name: 'Weapon 2', value: 302 },
             ),
         )

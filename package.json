@@ -3,14 +3,13 @@
   "module": "index.ts",
   "type": "module",
   "scripts": {
-    "up": "bun build ./src/index.ts --outdir ./build  --target bun && pm2 restart all",
-    "dev": "bun run --watch ./src/index.ts",
-    "build": "bun build ./src/index.ts --outdir ./build  --target bun",
+    "up": "bun build ./index.ts --outdir ./build  --target bun && pm2 restart all",
+    "dev": "bun run --watch ./index.ts",
+    "build": "bun build ./index.ts --outdir ./build  --target bun",
     "pull:config": "bunx prisma db pull --schema prisma/config.prisma",
     "pull:user": "bunx prisma db push --schema prisma/user.prisma",
     "push:discord": "bunx prisma db push --schema prisma/discord.prisma",
-    "push:gacha": "bunx prisma db push --schema prisma/gacha.prisma",
-    "generate": "bunx prisma generate --schema prisma/discord.prisma && bunx prisma generate --schema prisma/user.prisma && bunx prisma generate --schema prisma/config.prisma"
+    "prisma:generate": "bunx prisma generate --schema prisma/discord.prisma && bunx prisma generate --schema prisma/user.prisma && bunx prisma generate --schema prisma/config.prisma"
   },
   "keywords": [],
   "author": "minhoag",
@@ -22,16 +21,11 @@
     "typescript": "^5.7.3"
   },
   "dependencies": {
-    "@discordjs/rest": "^1.1.0",
-    "@napi-rs/canvas": "^0.1.65",
-    "@prisma/client": "^6.2.1",
-    "@trivago/prettier-plugin-sort-imports": "^5.2.1",
-    "@types/node": "^22.10.10",
-    "dayjs": "^1.11.13",
-    "discord.js": "^14.17.3",
-    "express": "^4.21.1",
-    "prisma": "^6.2.1",
-    "redis": "^4.7.0",
-    "tsx": "^4.19.2"
+    "@discordjs/rest": "^2.5.1",
+    "@prisma/client": "^6.12.0",
+    "date-fns": "^4.1.0",
+    "discord.js": "^14.21.0",
+    "prettier": "^3.6.2",
+    "prisma": "^6.12.0"
   }
 }

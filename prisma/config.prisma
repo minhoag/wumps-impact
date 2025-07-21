@@ -30,10 +30,9 @@ model t_activity_data {
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model t_activity_schedule_config {
-  schedule_id Int?
-  begin_time  DateTime? @db.DateTime(0)
-  end_time    DateTime? @db.DateTime(0)
-  desc        String?   @db.VarChar(255)
+  schedule_id Int      @id @default(autoincrement())
+  begin_time  DateTime @db.DateTime(0)
+  end_time    DateTime @db.DateTime(0)
 
   @@ignore
 }

@@ -1,14 +1,19 @@
-node_modules
-bun.lockb
-pnpm-lock.yaml
-.env
-prisma/data.sqlite
-cmd.bat
-build
-.idea
-package-lock.json
-bun.lock
-.early.coverage
-README.md
+# npm / Yarn / pnpm
+node_modules/
+# compiled JavaScript, TypeScript declaration files and source maps
+dist/
+build/
+*.tsbuildinfo
+# dotenv, Prisma, Firebase, AWS, etc.
+.env*
+!.env.example
+.prisma/
+prisma/*.prisma
 
-*.sqlite
+# OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo

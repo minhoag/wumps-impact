@@ -1,36 +1,154 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_DISCORD")
+}
+
 generator client {
   provider = "prisma-client-js"
   output   = "../node_modules/@prisma-discord"
 }
 
-datasource db {
-  provider = "sqlite"
-  url      = "file:./data.sqlite"
+model t_discord_user {
+  id        Int                   @id @default(autoincrement())
+  discordId String                @unique
+  username  String
+  wallet    t_discord_wallet?
+  purchases t_discord_purchase[]
+  inventory t_discord_user_item[]
+  quota     t_discord_quota[]
 }
 
-model Server {
-  id             String   @id
-  currentLimit   Int      @default(500000000)
-  lastResetLimit DateTime @default(now())
+model t_discord_wallet {
+  userId      Int            @id
+  moraBalance BigInt         @default(0)
+  updatedAt   DateTime       @updatedAt
+  user        t_discord_user @relation(fields: [userId], references: [id])
 }
 
-model User {
-  id           String @id
-  uid          String
-  mora         BigInt
-  primogems    Int    @default(0)
-  masterless   Int    @default(0)
-  points       Int    @default(0)
-  lastUpdate   Int    @default(0)
-  weeklyMora   Int    @default(0)
-  weeklyPoints Int    @default(0)
-  weeklyCredit Int    @default(0)
+enum t_discord_item_type {
+  COSMETIC
+  QOL
+  RESIN_REFILL
+  GACHA_TICKET
+  UPGRADE_BUNDLE
+  HOUSING
+  TITLE
+  BP_SKIP
+  MYSTERY_BAG
 }
 
-model ShopItem {
-  id          String @id
-  name        String
-  description String
-  listed      String
-  for_sale    String
+model t_discord_item {
+  id        Int                      @id @default(autoincrement())
+  name      String
+  type      t_discord_item_type
+  rarity    Int
+  stackSize Int                      @default(1)
+  iconUrl   String?
+  listings  t_discord_shop_listing[]
+  inventory t_discord_user_item[]
+}
+
+model t_discord_shop_listing {
+  id             Int      @id @default(autoincrement())
+  itemId         Int
+  priceMora      BigInt
+  startsAt       DateTime
+  endsAt         DateTime
+  initialStock   Int
+  remainingStock Int
+  isActive       Boolean  @default(true)
+
+  item            t_discord_item            @relation(fields: [itemId], references: [id])
+  lines           t_discord_purchase_line[]
+  t_discord_quota t_discord_quota[]
+
+  @@unique([itemId, startsAt])
+  @@index([itemId, startsAt])
+}
+
+model t_discord_purchase {
+  id             Int      @id @default(autoincrement())
+  userId         Int
+  totalPriceMora BigInt
+  createdAt      DateTime @default(now())
+
+  user                t_discord_user            @relation(fields: [userId], references: [id])
+  lines               t_discord_purchase_line[]
+  t_discord_user_item t_discord_user_item[]
+}
+
+model t_discord_purchase_line {
+  id            Int    @id @default(autoincrement())
+  purchaseId    Int
+  listingId     Int
+  quantity      Int
+  linePriceMora BigInt
+
+  purchase t_discord_purchase     @relation(fields: [purchaseId], references: [id])
+  listing  t_discord_shop_listing @relation(fields: [listingId], references: [id])
+}
+
+model t_discord_user_item {
+  id               Int @id @default(autoincrement())
+  userId           Int
+  itemId           Int
+  quantity         Int
+  sourcePurchaseId Int
+
+  user           t_discord_user     @relation(fields: [userId], references: [id])
+  item           t_discord_item     @relation(fields: [itemId], references: [id])
+  sourcePurchase t_discord_purchase @relation(fields: [sourcePurchaseId], references: [id])
+}
+
+enum t_discord_quota_period {
+  DAILY
+  WEEKLY
+}
+
+model t_discord_quota {
+  userId    Int
+  listingId Int
+  period    t_discord_quota_period
+  qtyBought Int                    @default(0)
+  resetAt   DateTime
+
+  user    t_discord_user         @relation(fields: [userId], references: [id])
+  listing t_discord_shop_listing @relation(fields: [listingId], references: [id])
+
+  @@id([userId, listingId, period])
+}
+
+/// Static master data for every limited-time gacha banner (imported from ref.schedule.ts)
+model t_discord_gacha_data {
+  id               Int                        @id @default(autoincrement())
+  value            String
+  name             String
+  scheduleId       Int
+  gachaType        Int
+  bannerType       String
+  sortId           Int?
+  rateUpItems4     String?
+  rateUpItems5     String?
+  prefabPath       String?
+  previewprefabPath String?
+  titlePath        String?
+  globalName       String?
+  vietnameseName   String?
+  type             String?
+  image            String?
+
+  schedules t_discord_gacha_schedule[]
+}
+
+model t_discord_gacha_schedule {
+  id           Int                   @id @default(autoincrement())
+  gachaDataId  Int
+  gachaType    Int
+  beginTime    DateTime
+  endTime      DateTime
+
+  gachaData t_discord_gacha_data @relation(fields: [gachaDataId], references: [id])
+
+  @@index([gachaType, beginTime, endTime])
+  @@index([beginTime, endTime])
 }

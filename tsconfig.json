@@ -21,6 +21,16 @@
     // Some stricter flags
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noPropertyAccessFromIndexSignature": true
+    "noPropertyAccessFromIndexSignature": true,
+
+    // Path
+    "paths": {
+      "@/*": ["./src/*"],
+      "@handlers": ["./src/handlers.ts"],
+      "@type": ["./src/type.ts"],
+      "@utils": ["./src/utils/utils.ts"],
+      "@prisma-utils": ["./src/utils/prisma-utils.ts"],
+      "@discord-utils": ["./src/utils/discord-utils.ts"]
+    }
   }
 }

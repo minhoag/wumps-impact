@@ -12,6 +12,12 @@ export const GACHA_TYPE_SPECIAL_ACTIVITY_AVATAR = 400;
 export const ERROR_MESSAGE: {
     [key: number]: Record<Locale, string>;
 } = {
+    //--- Discord Related ---
+    //--- Cooldown Related ---
+    101: {
+        [Locale.Vietnamese]: 'Vui lòng đợi `{time}` giây trước khi sử dụng lại lệnh này.',
+        [Locale.EnglishUS]: 'Please wait `{time}` seconds before re-using this command.',
+    },
     //--- Gacha Command ---
     1001: {
         [Locale.Vietnamese]: '`start` phải trước `end`.',
@@ -22,12 +28,17 @@ export const ERROR_MESSAGE: {
         [Locale.EnglishUS]: 'Another gacha is already active in this time range.',
     },
     1003: {
-        [Locale.Vietnamese]: 'Giá trị sự kiện `{value}` đã được lên lịch trong khoảng thời gian này.',
-        [Locale.EnglishUS]: 'Event value `{value}` is already scheduled during this time range.',
+            [Locale.Vietnamese]: 'Giá trị sự kiện `{value}` đã tồn tại trong khoảng thời gian này.',
+            [Locale.EnglishUS]: 'Event value `{value}` is already scheduled during this time range.',
     },
     1004: {
         [Locale.Vietnamese]: 'Không tìm thấy dữ liệu Gacha cho giá trị `{value}`. Vui lòng tải lên trước.',
         [Locale.EnglishUS]: 'No gacha data found for value `{value}`. Please upload it first.',
+    },
+    //--- Database Error related ---
+    2001: {
+        [Locale.Vietnamese]: 'Lên lịch Gacha thất bại.',
+        [Locale.EnglishUS]: 'Gacha schedule creation failed.',
     },
 }
 
@@ -35,7 +46,11 @@ export const SUCCESS_MESSAGE: {
     [key: number]: Record<Locale, string>;
 } = {
     1000: {
-        [Locale.Vietnamese]: 'Lên lịch Gacha thành công.',
-        [Locale.EnglishUS]: 'Gacha schedule created successfully.',
+        [Locale.Vietnamese]: 'Lên lịch thành công cho `{characterName}` Thời gian: `{beginTime}` - `{endTime}`.',
+        [Locale.EnglishUS]: 'Gacha schedule created successfully for `{characterName}`. Time: `{beginTime}` - `{endTime}`.',
+    },
+    2000: {
+        [Locale.Vietnamese]: 'Tạo Gacha trên Game Server thành công.',
+        [Locale.EnglishUS]: 'Gacha created on game server successfully.',
     },
 }

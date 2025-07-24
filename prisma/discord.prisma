@@ -143,6 +143,7 @@ model t_discord_gacha_data {
 model t_discord_gacha_schedule {
   id           Int                   @id @default(autoincrement())
   gachaDataId  Int
+  gachaValue   String
   gachaType    Int
   beginTime    DateTime
   endTime      DateTime

@@ -24,6 +24,7 @@ export enum ResponseType {
 export type Command = {
   command: SlashCommandBuilder;
   cooldown: number;
+  defer?: boolean;
   autocomplete?(
     interaction: AutocompleteInteraction,
     option?: AutocompleteFocusedOption,
@@ -45,5 +46,6 @@ declare module 'discord.js' {
     events: Collection<string, Event>;
     cooldowns: Collection<string, number>;
     gachaData: any[];
+    gachaSchedule: any[];
   }
 }

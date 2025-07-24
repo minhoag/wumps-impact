@@ -1,3 +1,4 @@
+import { ERROR_MESSAGE } from '@/constant';
 import { EmbedType, ResponseType } from '@/type';
 import {
   CommandInteraction,
@@ -106,23 +107,25 @@ export const DiscordEvent = {
   ): Promise<void> => {
     const { client, commandName, user } = interaction;
     const command = client.commands.get(commandName);
-    // Guard command exist
+    //--- Guard command exist ----
     if (!command) {
       console.error(`No command matching ${commandName} was found.`);
       return;
     }
-    // No cooldown
+    
+    //--- Defer reply ----
+    if (command.defer) {
+      await interaction.deferReply();
+    }
+    
+    //--- No cooldown ----
     if (command.cooldown) {
       const cooldownKey = getCooldownKey(commandName, user.id);
       const now = Date.now();
       const expiresAt = client.cooldowns.get(cooldownKey);
       if (expiresAt && now < expiresAt) {
         const timeLeft = ((expiresAt - now) / 1000).toFixed(1);
-        await DiscordResponse.sendResponse({
-          interaction,
-          types: [ResponseType.STRING, ResponseType.EPHEMERAL],
-          content: `⏳ Please wait ${timeLeft}s before re-using "/${commandName}".`,
-        });
+        await DiscordResponse.sendFailed(interaction, ERROR_MESSAGE[101][interaction.locale].replace('{time}', timeLeft));
         return;
       }
       client.cooldowns.set(cooldownKey, now + command.cooldown * 1000);
@@ -134,7 +137,7 @@ export const DiscordEvent = {
     await command.execute(interaction);
   },
 
-  //--- Handle autocomplete command ----
+  //--- Handle autocomplete ----
   handleAutocomplete: async (
     interaction: AutocompleteInteraction,
   ): Promise<void> => {

@@ -1,31 +1,5 @@
 import { parse, isValid, startOfDay } from 'date-fns';
 
-export const parseDuration = (duration: string): number => {
-  const durationLower = duration.toLowerCase().trim();
-  const patterns = {
-    day: 24 * 60 * 60 * 1000,
-    days: 24 * 60 * 60 * 1000,
-    week: 7 * 24 * 60 * 60 * 1000,
-    weeks: 7 * 24 * 60 * 60 * 1000,
-    hour: 60 * 60 * 1000,
-    hours: 60 * 60 * 1000,
-    minute: 60 * 1000,
-    minutes: 60 * 1000,
-  };
-
-  const match = durationLower.match(
-    /(\d+)\s*(day|days|week|weeks|hour|hours|minute|minutes)/,
-  );
-  if (match) {
-    const value = parseInt(match[1]);
-    const unit = match[2] as keyof typeof patterns;
-    return value * patterns[unit];
-  }
-
-  // Default to 2 weeks if parsing fails
-  return 14 * 24 * 60 * 60 * 1000;
-};
-
 export const parseTimeRange = (input: string | null): Date | null => {
   if (!input) return null;
 

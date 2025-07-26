@@ -29,9 +29,7 @@ export type Command = {
     interaction: AutocompleteInteraction,
     option?: AutocompleteFocusedOption,
   ): Promise<ApplicationCommandOptionChoiceData[]>;
-  execute(
-    interaction: CommandInteraction
-  ): Promise<void>;
+  execute(interaction: CommandInteraction): Promise<void>;
 };
 
 export type Event = {

@@ -5,9 +5,13 @@ import {
   PermissionFlagsBits,
   SlashCommandBuilder,
   type ApplicationCommandOptionChoiceData,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
+  ActionRowBuilder,
 } from 'discord.js';
 
-import { Item, type ItemProps } from '../refs/ref.item';
+import { Item, type ItemProps } from '../data/item';
 import type { Command } from '../type';
 import { GMUtils } from '../utils/gm-utils';
 import { DiscordResponse } from '@/utils/discord-utils';
@@ -18,7 +22,10 @@ const command: Command = {
   command: new SlashCommandBuilder()
     .setName('gm')
     .setDescription('GM admin command.')
-    .setDescriptionLocalization('vi', 'Lệnh dành cho quản trị viên GM.')
+    .setDescriptionLocalization(
+      'vi',
+      'Lệnh dành cho quản trị viên GM.',
+    )
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     .addSubcommand((subcommand) =>
       subcommand
@@ -117,10 +124,21 @@ const command: Command = {
         .addNumberOption((option) =>
           option.setName('amount').setDescription('Số lượng'),
         ),
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName('send-mail')
+        .setDescription('Send mail to all players.')
+        .setDescriptionLocalization(
+          'vi',
+          'Gửi mail cho tất cả người chơi.',
+        ),
     ),
   cooldown: 1,
   defer: true,
-  autocomplete: async (interaction: AutocompleteInteraction): Promise<ApplicationCommandOptionChoiceData[]> => {
+  autocomplete: async (
+    interaction: AutocompleteInteraction,
+  ): Promise<ApplicationCommandOptionChoiceData[]> => {
     const focusedOption = interaction.options.getFocused(true);
     if (
       interaction.options.getSubcommand() === 'give' ||
@@ -130,9 +148,12 @@ const command: Command = {
         value: string;
         name: string;
       }[] = Item.filter((choice: ItemProps) =>
-        choice.name.toLowerCase().includes(focusedOption.value.toLowerCase()),
+        choice.name
+          .toLowerCase()
+          .includes(focusedOption.value.toLowerCase()),
       );
-      const options = filtered.length > 25 ? filtered.slice(0, 25) : filtered;
+      const options =
+        filtered.length > 25 ? filtered.slice(0, 25) : filtered;
       await interaction.respond(options);
       return options;
     }
@@ -141,108 +162,165 @@ const command: Command = {
   },
   execute: async (interaction: CommandInteraction) => {
     if (!interaction.isChatInputCommand()) return;
-    if (!interaction.guild) return;
-
     const locale: Locale = interaction.locale;
     const subcommand = interaction.options.getSubcommand();
 
     try {
       switch (subcommand) {
         case 'give': {
-          const uid: string = interaction.options.getString('uid', true);
-          const id: string = interaction.options.getString('id', true);
-          const amount: number = interaction.options.getNumber('amount') ?? 1;
+          const uid: string = interaction.options.getString(
+            'uid',
+            true,
+          );
+          const id: string = interaction.options.getString(
+            'id',
+            true,
+          );
+          const amount: number =
+            interaction.options.getNumber('amount') ?? 1;
+          const result = await GMUtils.giveItem(interaction, {
+            uid,
+            id,
+            amount,
+          });
+          const itemName = Item.find(
+            (item: ItemProps) => item.value === id,
+          )?.name;
 
-          const result = await GMUtils.giveItem({ uid, id, amount });
-          
           if (result.success) {
-            await DiscordResponse.sendSuccess(interaction, SUCCESS_MESSAGE[3000][locale]
-            .replace('{action}', 'gived')
-            .replace('{itemName}', id)
-            .replace('{playerName}', uid)
-            .replace('{quantity}', amount.toString())
+            await DiscordResponse.sendSuccess(
+              interaction,
+              SUCCESS_MESSAGE[3000][locale]
+                .replace('{action}', 'give')
+                .replace('{itemName}', itemName ?? id)
+                .replace('{playerName}', uid)
+                .replace('{quantity}', amount.toString()),
             );
           } else {
-            await DiscordResponse.sendFailed(interaction, ERROR_MESSAGE[3001][locale]
-            .replace('{action}', 'gived')
-            .replace('{itemName}', id)
-            .replace('{playerName}', uid)
-            .replace('{quantity}', amount.toString())
+            await DiscordResponse.sendFailed(
+              interaction,
+              ERROR_MESSAGE[3001][locale]
+                .replace('{action}', 'give')
+                .replace('{itemName}', id)
+                .replace('{playerName}', uid)
+                .replace('{quantity}', amount.toString()),
             );
           }
           break;
         }
 
         case 'delete': {
-          const uid: string = interaction.options.getString('uid', true);
-          const id: string = interaction.options.getString('id', true);
-          const amount: number = interaction.options.getNumber('amount') ?? 1;
+          const uid: string = interaction.options.getString(
+            'uid',
+            true,
+          );
+          const id: string = interaction.options.getString(
+            'id',
+            true,
+          );
+          const amount: number =
+            interaction.options.getNumber('amount') ?? 1;
 
-          const result = await GMUtils.deleteItem({ uid, id, amount });
-          
+          const result = await GMUtils.deleteItem({
+            uid,
+            id,
+            amount,
+          });
+
           if (result.success) {
             await interaction.reply({
-              content: GMUtils.translate('admin:delete:success', locale) + ` ${uid}`,
+              content: SUCCESS_MESSAGE[3000][locale]
+                .replace('{action}', 'delete')
+                .replace('{itemName}', id)
+                .replace('{playerName}', uid)
+                .replace('{quantity}', amount.toString()),
               ephemeral: true,
             });
           } else {
             await interaction.reply({
-              content: GMUtils.translate('admin:delete:error', locale) + uid,
+              content: ERROR_MESSAGE[3001][locale]
+                .replace('{action}', 'delete')
+                .replace('{itemName}', id)
+                .replace('{playerName}', uid)
+                .replace('{quantity}', amount.toString()),
               ephemeral: true,
             });
           }
           break;
         }
 
-        case 'transfer': {
-          const uid = interaction.options.getString('uid', true);
-          const type = interaction.options.getString('type', true);
-          const amount = interaction.options.getNumber('amount') ?? 1;
+        case 'send-mail': {
+          const modal = new ModalBuilder()
+            .setCustomId('mailForm')
+            .setTitle('Soạn thư gửi');
 
-          const result = await GMUtils.transferCurrency({ uid, type, amount });
-          const currencyName = GMUtils.getCurrencyDisplayName(type, locale);
-          
-          if (result.success) {
-            await DiscordResponse.sendSuccess(interaction, SUCCESS_MESSAGE[3000][locale]
-            .replace('{action}', 'transfered')
-            .replace('{itemName}', currencyName)
-            .replace('{playerName}', uid)
-            .replace('{quantity}', amount.toString())
-            );
-          } else {  
-            await DiscordResponse.sendFailed(interaction, ERROR_MESSAGE[3001][locale]
-            .replace('{action}', 'transfered')
-            .replace('{itemName}', currencyName)
-            .replace('{playerName}', uid)
-            .replace('{quantity}', amount.toString())
-            );
-          }
-          break;
-        }
+          const receiver = new TextInputBuilder()
+            .setCustomId('receiverInput')
+            .setLabel('Người nhận (UID hoặc "all" cho tất cả)')
+            .setStyle(TextInputStyle.Short)
+            .setPlaceholder(
+              'Nhập UID cụ thể hoặc "all" để gửi cho tất cả người chơi',
+            )
+            .setRequired(true);
 
-        case 'takeaway': {
-          const uid = interaction.options.getString('uid', true);
-          const type = interaction.options.getString('type', true);
-          const amount = interaction.options.getNumber('amount') ?? 1;
+          const title = new TextInputBuilder()
+            .setCustomId('titleInput')
+            .setLabel('Tiêu đề thư')
+            .setStyle(TextInputStyle.Short)
+            .setPlaceholder('Nhập tiêu đề thư...')
+            .setRequired(true);
 
-          const result = await GMUtils.takeawayCurrency({ uid, type, amount });
-          const currencyName = GMUtils.getCurrencyDisplayName(type, locale);
-          
-          if (result.success) {
-            await DiscordResponse.sendSuccess(interaction, SUCCESS_MESSAGE[3000][locale]
-            .replace('{action}', 'takeawayed')
-            .replace('{itemName}', currencyName)
-            .replace('{playerName}', uid)
-            .replace('{quantity}', amount.toString())
+          const content = new TextInputBuilder()
+            .setCustomId('contentInput')
+            .setLabel('Nội dung thư')
+            .setStyle(TextInputStyle.Paragraph)
+            .setPlaceholder('Nhập nội dung chi tiết của thư...')
+            .setRequired(true);
+
+          const expiry = new TextInputBuilder()
+            .setCustomId('expiryInput')
+            .setLabel('Thời hạn (ngày)')
+            .setStyle(TextInputStyle.Short)
+            .setPlaceholder('Số ngày hết hạn (mặc định: 30)')
+            .setValue('30')
+            .setRequired(false);
+
+          const item = new TextInputBuilder()
+            .setCustomId('itemInput')
+            .setLabel('Items đính kèm (tùy chọn)')
+            .setStyle(TextInputStyle.Short)
+            .setPlaceholder('VD: 201,100 hoặc để trống nếu không có')
+            .setRequired(false);
+
+          const firstRow =
+            new ActionRowBuilder<TextInputBuilder>().addComponents(
+              receiver,
             );
-          } else {
-            await DiscordResponse.sendFailed(interaction, ERROR_MESSAGE[3001][locale]
-            .replace('{action}', 'takeawayed')
-            .replace('{itemName}', currencyName)
-            .replace('{playerName}', uid)
-            .replace('{quantity}', amount.toString())
+          const secondRow =
+            new ActionRowBuilder<TextInputBuilder>().addComponents(
+              title,
             );
-          }
+          const thirdRow =
+            new ActionRowBuilder<TextInputBuilder>().addComponents(
+              content,
+            );
+          const fourthRow =
+            new ActionRowBuilder<TextInputBuilder>().addComponents(
+              expiry,
+            );
+          const fifthRow =
+            new ActionRowBuilder<TextInputBuilder>().addComponents(
+              item,
+            );
+
+          modal.addComponents(
+            firstRow,
+            secondRow,
+            thirdRow,
+            fourthRow,
+            fifthRow,
+          );
+          await interaction.showModal(modal);
           break;
         }
 
@@ -256,8 +334,12 @@ const command: Command = {
       if (error instanceof Error) {
         await DiscordResponse.sendFailed(interaction, error.message);
       } else if (error instanceof DiscordException) {
-        await DiscordResponse.sendFailed(interaction, ERROR_MESSAGE[103][locale]
-          .replace('{detail}', error.message)
+        await DiscordResponse.sendFailed(
+          interaction,
+          ERROR_MESSAGE[103][locale].replace(
+            '{detail}',
+            error.message,
+          ),
         );
       }
     }
@@ -265,4 +347,3 @@ const command: Command = {
 };
 
 export default command;
-  

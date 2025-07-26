@@ -7,7 +7,8 @@ async function main() {
   );
 
   // Group weapons by scheduleId to handle secondary weapons
-  const weaponGroups: { [scheduleId: number]: typeof gachaSchedule } = {};
+  const weaponGroups: { [scheduleId: number]: typeof gachaSchedule } =
+    {};
 
   for (const banner of gachaSchedule) {
     // --- name & vietnamese name post-processing ----
@@ -22,7 +23,7 @@ async function main() {
       vietnameseName = englishName;
     }
 
-    if (banner.bannerType === "WEAPON") {
+    if (banner.bannerType === 'WEAPON') {
       // Group weapons by scheduleId
       if (!weaponGroups[banner.scheduleId]) {
         weaponGroups[banner.scheduleId] = [];
@@ -30,7 +31,7 @@ async function main() {
       weaponGroups[banner.scheduleId].push({
         ...banner,
         name: englishName,
-        vietnameseName: vietnameseName
+        vietnameseName: vietnameseName,
       });
     } else {
       // For non-weapon banners, create entry directly
@@ -61,10 +62,13 @@ async function main() {
   for (const [scheduleId, weapons] of Object.entries(weaponGroups)) {
     if (weapons.length > 1) {
       // Multiple weapons with same scheduleId - combine rateUpItems5
-      const combinedRateUpItems5 = Array.from(new Set(weapons
-        .map(weapon => weapon.rateUpItems5)
-        .filter(items => items)
-      )).join(',');
+      const combinedRateUpItems5 = Array.from(
+        new Set(
+          weapons
+            .map((weapon) => weapon.rateUpItems5)
+            .filter((items) => items),
+        ),
+      ).join(',');
 
       // Create entries for each weapon with combined rateUpItems5
       for (const weapon of weapons) {

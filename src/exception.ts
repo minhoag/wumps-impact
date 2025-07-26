@@ -22,10 +22,14 @@ export class DiscordException extends Error {
     }
   }
 
-  public async sendError(code: number, interaction: CommandInteraction): Promise<void> {
+  public async sendError(
+    code: number,
+    interaction: CommandInteraction,
+  ): Promise<void> {
     const locale = interaction.locale;
     const embed = DiscordResponse.createEmbed({
-      title: ERROR_MESSAGE[code as keyof typeof ERROR_MESSAGE][locale],
+      title:
+        ERROR_MESSAGE[code as keyof typeof ERROR_MESSAGE][locale],
       description: this.message,
       type: EmbedType.ERROR,
       fields: [],
@@ -34,7 +38,7 @@ export class DiscordException extends Error {
     await DiscordResponse.sendResponse({
       interaction,
       types: [ResponseType.EMBED, ResponseType.EPHEMERAL],
-      embed
+      embed,
     });
   }
 }

@@ -1,8 +1,4 @@
-import {
-  Client,
-  Collection,
-  Routes
-} from 'discord.js';
+import { Client, Collection, Routes } from 'discord.js';
 import { REST } from '@discordjs/rest';
 import { readdirSync } from 'fs';
 import { join } from 'path';
@@ -46,9 +42,7 @@ export default async function Handlers(client: Client) {
     const command = await import(`${commandsDir}/${file}`);
     if (command.default) {
       commands.push(command.default);
-      console.log(
-        `Loaded command: ${command.default.command.name}`,
-      );
+      console.log(`Loaded command: ${command.default.command.name}`);
       client.commands.set(
         command.default.command.name,
         command.default,
@@ -77,5 +71,5 @@ export default async function Handlers(client: Client) {
     )
     .catch((e: Error) => {
       console.error(e);
-    })
+    });
 }

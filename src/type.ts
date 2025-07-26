@@ -2,8 +2,8 @@ import {
   AutocompleteInteraction,
   Collection,
   CommandInteraction,
-  Locale,
   SlashCommandBuilder,
+  type SlashCommandSubcommandsOnlyBuilder,
   type ApplicationCommandOptionChoiceData,
   type AutocompleteFocusedOption,
 } from 'discord.js';
@@ -22,7 +22,7 @@ export enum ResponseType {
 }
 
 export type Command = {
-  command: SlashCommandBuilder;
+  command: SlashCommandBuilder | SlashCommandSubcommandsOnlyBuilder;
   cooldown: number;
   defer?: boolean;
   autocomplete?(

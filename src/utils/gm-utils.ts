@@ -1,5 +1,5 @@
 import { Locale } from 'discord.js';
-import { ENDPOINT, CONFIG, BASE_URL } from '@/constant';
+import { ENDPOINT, CONFIG, BASE_URL } from '@/constant/config';
 import type { GMOperationResult, ItemOperation, CurrencyOperation } from '@/interface';
 
 export class GMUtils {

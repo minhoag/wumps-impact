@@ -4,24 +4,27 @@ import {
   SlashCommandBuilder,
   AutocompleteInteraction,
   type ApplicationCommandOptionChoiceData,
+  PermissionFlagsBits,
 } from 'discord.js';
 import { DiscordResponse } from '@/utils/discord-utils';
 import { DiscordPrisma } from '@/utils/prisma-utils';
 import { parseTimeRange } from '@/utils/utils';
-import { ERROR_MESSAGE, SUCCESS_MESSAGE } from '@/constant';
+import { ERROR_MESSAGE, SUCCESS_MESSAGE } from '@/constant/response';
 import { GachaUtils } from '@/utils/gacha-utils';
 import type { GachaScheduleData } from '@/interface';
 import { format } from 'date-fns';
+import type { Command } from '@/type';
 
 const GACHA_TYPE = {
   WEAPON: [302, 202],
   EVENT: [301, 400],
 }
 
-const Gacha = {
+const Gacha: Command = {
   command: new SlashCommandBuilder()
     .setName('gacha')
     .setDescription('Manage gacha schedules')
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     .setDescriptionLocalizations({
       [Locale.Vietnamese]: 'Quản lý lịch trình gacha',
     })

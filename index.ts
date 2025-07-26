@@ -20,7 +20,6 @@ async function initialize() {
     console.log('Bot logged in successfully!');
   } catch (error) {
     console.error('Error initializing bot:', error);
-    console.error('Invalid Token: ', process.env['DISCORD_TOKEN']);
   }
 }
 

@@ -10,113 +10,116 @@ import {
 import { Item, type ItemProps } from '../refs/ref.item';
 import type { Command } from '../type';
 import { GMUtils } from '../utils/gm-utils';
-
-const gmCommand = new SlashCommandBuilder()
-  .setName('gm')
-  .setDescription('GM admin command.')
-  .setDescriptionLocalization('vi', 'Lệnh dành cho quản trị viên GM.')
-  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
-  .addSubcommand((subcommand) =>
-    subcommand
-      .setName('give')
-      .setDescription('Give item to player.')
-      .setDescriptionLocalization('vi', 'Gửi item cho người chơi.')
-      .addStringOption((option) =>
-        option
-          .setName('uid')
-          .setDescription('UID của người chơi')
-          .setRequired(true),
-      )
-      .addStringOption((option) =>
-        option
-          .setName('id')
-          .setDescription('Id của item')
-          .setRequired(true)
-          .setAutocomplete(true),
-      )
-      .addNumberOption((option) =>
-        option.setName('amount').setDescription('Số lượng'),
-      ),
-  )
-  .addSubcommand((subcommand) =>
-    subcommand
-      .setName('delete')
-      .setDescription('Take away item from player.')
-      .setDescriptionLocalization('vi', 'Xóa item của người chơi.')
-      .addStringOption((option) =>
-        option
-          .setName('uid')
-          .setDescription('UID của người chơi')
-          .setRequired(true),
-      )
-      .addStringOption((option) =>
-        option
-          .setName('id')
-          .setDescription('Id của item')
-          .setRequired(true)
-          .setAutocomplete(true),
-      )
-      .addNumberOption((option) =>
-        option.setName('amount').setDescription('Số lượng'),
-      ),
-  )
-  .addSubcommand((subcommand) =>
-    subcommand
-      .setName('transfer')
-      .setDescription('Give money to player.')
-      .setDescriptionLocalization('vi', 'Gửi tiền cho người chơi.')
-      .addStringOption((option) =>
-        option
-          .setName('uid')
-          .setDescription('UID của người chơi')
-          .setRequired(true),
-      )
-      .addStringOption((option) =>
-        option
-          .setName('type')
-          .setDescription('Chọn loại tiền tệ')
-          .setRequired(true)
-          .addChoices(
-            { name: 'Đá sáng thế', value: 'mcoin' },
-            { name: 'Mora', value: 'scoin' },
-            { name: 'Nguyên thạch', value: 'hcoin' },
-            { name: 'Tiền Động Tiên', value: 'home_coin' },
-          ),
-      )
-      .addNumberOption((option) =>
-        option.setName('amount').setDescription('Số lượng'),
-      ),
-  )
-  .addSubcommand((subcommand) =>
-    subcommand
-      .setName('takeaway')
-      .setDescription('Take away money from player.')
-      .setDescriptionLocalization('vi', 'Xóa tiền của người chơi.')
-      .addStringOption((option) =>
-        option
-          .setName('uid')
-          .setDescription('UID của người chơi')
-          .setRequired(true),
-      )
-      .addStringOption((option) =>
-        option
-          .setName('type')
-          .setDescription('Chọn loại tiền tệ')
-          .setRequired(true)
-          .addChoices(
-            { name: 'Đá sáng thế', value: 'mcoin' },
-            { name: 'Mora', value: 'scoin' },
-            { name: 'Nguyên thạch', value: 'hcoin' },
-            { name: 'Tiền Động Tiên', value: 'home_coin' },
-          ),
-      )
-      .addNumberOption((option) =>
-        option.setName('amount').setDescription('Số lượng'),
-      ),
-  );
+import { DiscordResponse } from '@/utils/discord-utils';
+import { ERROR_MESSAGE, SUCCESS_MESSAGE } from '@/constant';
+import { DiscordException } from '@/exception';
 
 const command: Command = {
-  command: gmCommand as SlashCommandBuilder,
+  command: new SlashCommandBuilder()
+    .setName('gm')
+    .setDescription('GM admin command.')
+    .setDescriptionLocalization('vi', 'Lệnh dành cho quản trị viên GM.')
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName('give')
+        .setDescription('Give item to player.')
+        .setDescriptionLocalization('vi', 'Gửi item cho người chơi.')
+        .addStringOption((option) =>
+          option
+            .setName('uid')
+            .setDescription('UID của người chơi')
+            .setRequired(true),
+        )
+        .addStringOption((option) =>
+          option
+            .setName('id')
+            .setDescription('Id của item')
+            .setRequired(true)
+            .setAutocomplete(true),
+        )
+        .addNumberOption((option) =>
+          option.setName('amount').setDescription('Số lượng'),
+        ),
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName('delete')
+        .setDescription('Take away item from player.')
+        .setDescriptionLocalization('vi', 'Xóa item của người chơi.')
+        .addStringOption((option) =>
+          option
+            .setName('uid')
+            .setDescription('UID của người chơi')
+            .setRequired(true),
+        )
+        .addStringOption((option) =>
+          option
+            .setName('id')
+            .setDescription('Id của item')
+            .setRequired(true)
+            .setAutocomplete(true),
+        )
+        .addNumberOption((option) =>
+          option.setName('amount').setDescription('Số lượng'),
+        ),
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName('transfer')
+        .setDescription('Give money to player.')
+        .setDescriptionLocalization('vi', 'Gửi tiền cho người chơi.')
+        .addStringOption((option) =>
+          option
+            .setName('uid')
+            .setDescription('UID của người chơi')
+            .setRequired(true),
+        )
+        .addStringOption((option) =>
+          option
+            .setName('type')
+            .setDescription('Chọn loại tiền tệ')
+            .setRequired(true)
+            .addChoices(
+              { name: 'Đá sáng thế', value: 'mcoin' },
+              { name: 'Mora', value: 'scoin' },
+              { name: 'Nguyên thạch', value: 'hcoin' },
+              { name: 'Tiền Động Tiên', value: 'home_coin' },
+            ),
+        )
+        .addNumberOption((option) =>
+          option.setName('amount').setDescription('Số lượng'),
+        ),
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName('takeaway')
+        .setDescription('Take away money from player.')
+        .setDescriptionLocalization('vi', 'Xóa tiền của người chơi.')
+        .addStringOption((option) =>
+          option
+            .setName('uid')
+            .setDescription('UID của người chơi')
+            .setRequired(true),
+        )
+        .addStringOption((option) =>
+          option
+            .setName('type')
+            .setDescription('Chọn loại tiền tệ')
+            .setRequired(true)
+            .addChoices(
+              { name: 'Đá sáng thế', value: 'mcoin' },
+              { name: 'Mora', value: 'scoin' },
+              { name: 'Nguyên thạch', value: 'hcoin' },
+              { name: 'Tiền Động Tiên', value: 'home_coin' },
+            ),
+        )
+        .addNumberOption((option) =>
+          option.setName('amount').setDescription('Số lượng'),
+        ),
+    ),
+  cooldown: 1,
+  defer: true,
   autocomplete: async (interaction: AutocompleteInteraction): Promise<ApplicationCommandOptionChoiceData[]> => {
     const focusedOption = interaction.options.getFocused(true);
     if (
@@ -136,7 +139,6 @@ const command: Command = {
     await interaction.respond([]);
     return [];
   },
-  cooldown: 1,
   execute: async (interaction: CommandInteraction) => {
     if (!interaction.isChatInputCommand()) return;
     if (!interaction.guild) return;
@@ -154,15 +156,19 @@ const command: Command = {
           const result = await GMUtils.giveItem({ uid, id, amount });
           
           if (result.success) {
-            await interaction.reply({
-              content: GMUtils.translate('admin:give:success', locale) + uid,
-              ephemeral: true,
-            });
+            await DiscordResponse.sendSuccess(interaction, SUCCESS_MESSAGE[3000][locale]
+            .replace('{action}', 'gived')
+            .replace('{itemName}', id)
+            .replace('{playerName}', uid)
+            .replace('{quantity}', amount.toString())
+            );
           } else {
-            await interaction.reply({
-              content: GMUtils.translate('admin:give:error', locale) + uid,
-              ephemeral: true,
-            });
+            await DiscordResponse.sendFailed(interaction, ERROR_MESSAGE[3001][locale]
+            .replace('{action}', 'gived')
+            .replace('{itemName}', id)
+            .replace('{playerName}', uid)
+            .replace('{quantity}', amount.toString())
+            );
           }
           break;
         }
@@ -197,15 +203,19 @@ const command: Command = {
           const currencyName = GMUtils.getCurrencyDisplayName(type, locale);
           
           if (result.success) {
-            await interaction.reply({
-              content: `Đã thêm ${currencyName} cho người chơi UID ${uid}`,
-              ephemeral: true,
-            });
-          } else {
-            await interaction.reply({
-              content: `Lỗi khi thêm ${currencyName} cho người chơi UID ${uid}`,
-              ephemeral: true,
-            });
+            await DiscordResponse.sendSuccess(interaction, SUCCESS_MESSAGE[3000][locale]
+            .replace('{action}', 'transfered')
+            .replace('{itemName}', currencyName)
+            .replace('{playerName}', uid)
+            .replace('{quantity}', amount.toString())
+            );
+          } else {  
+            await DiscordResponse.sendFailed(interaction, ERROR_MESSAGE[3001][locale]
+            .replace('{action}', 'transfered')
+            .replace('{itemName}', currencyName)
+            .replace('{playerName}', uid)
+            .replace('{quantity}', amount.toString())
+            );
           }
           break;
         }
@@ -219,15 +229,19 @@ const command: Command = {
           const currencyName = GMUtils.getCurrencyDisplayName(type, locale);
           
           if (result.success) {
-            await interaction.reply({
-              content: `Đã xóa ${currencyName} của người chơi UID ${uid}`,
-              ephemeral: true,
-            });
+            await DiscordResponse.sendSuccess(interaction, SUCCESS_MESSAGE[3000][locale]
+            .replace('{action}', 'takeawayed')
+            .replace('{itemName}', currencyName)
+            .replace('{playerName}', uid)
+            .replace('{quantity}', amount.toString())
+            );
           } else {
-            await interaction.reply({
-              content: `Lỗi khi xóa ${currencyName} của người chơi UID ${uid}`,
-              ephemeral: true,
-            });
+            await DiscordResponse.sendFailed(interaction, ERROR_MESSAGE[3001][locale]
+            .replace('{action}', 'takeawayed')
+            .replace('{itemName}', currencyName)
+            .replace('{playerName}', uid)
+            .replace('{quantity}', amount.toString())
+            );
           }
           break;
         }
@@ -239,11 +253,13 @@ const command: Command = {
           });
       }
     } catch (error: unknown) {
-      console.error('GM command error:', error);
-      await interaction.reply({
-        content: GMUtils.translate('error:unknown', locale) + String(error),
-        ephemeral: true,
-      });
+      if (error instanceof Error) {
+        await DiscordResponse.sendFailed(interaction, error.message);
+      } else if (error instanceof DiscordException) {
+        await DiscordResponse.sendFailed(interaction, ERROR_MESSAGE[103][locale]
+          .replace('{detail}', error.message)
+        );
+      }
     }
   },
 };

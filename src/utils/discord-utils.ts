@@ -1,4 +1,4 @@
-import { ERROR_MESSAGE } from '@/constant';
+import { ERROR_MESSAGE } from '@/constant/response';
 import { EmbedType, ResponseType } from '@/type';
 import {
   CommandInteraction,
@@ -125,7 +125,7 @@ export const DiscordEvent = {
       const expiresAt = client.cooldowns.get(cooldownKey);
       if (expiresAt && now < expiresAt) {
         const timeLeft = ((expiresAt - now) / 1000).toFixed(1);
-        await DiscordResponse.sendFailed(interaction, ERROR_MESSAGE[101][interaction.locale].replace('{time}', timeLeft));
+        await DiscordResponse.sendFailed(interaction, ERROR_MESSAGE[101][interaction.locale]?.replace('{time}', timeLeft) || '');
         return;
       }
       client.cooldowns.set(cooldownKey, now + command.cooldown * 1000);

@@ -1,7 +1,7 @@
 import type { CommandInteraction } from 'discord.js';
 import { DiscordResponse } from './utils/discord-utils';
 import { EmbedType, ResponseType } from './type';
-import { ERROR_MESSAGE } from './constant';
+import { ERROR_MESSAGE } from './constant/response';
 
 export class DiscordException extends Error {
   public readonly code?: number;

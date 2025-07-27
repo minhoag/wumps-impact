@@ -1,5 +1,5 @@
 {
-  "name": "twilightserverbot",
+  "name": "wumps-impact",
   "module": "index.ts",
   "type": "module",
   "scripts": {

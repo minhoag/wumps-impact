@@ -16,7 +16,7 @@ async function initialize() {
     await Handlers(client);
     console.log('Handlers loaded successfully!');
 
-    await client.login(process.env['DISCORD_TOKEN']);
+    await client.login(process.env.DISCORD_TOKEN);
     console.log('Bot logged in successfully!');
   } catch (error) {
     console.error('Error initializing bot:', error);

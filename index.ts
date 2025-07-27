@@ -10,7 +10,7 @@ const client = new Client({
     GatewayIntentBits.GuildMembers,
   ],
 });
-
+console.log(process.env['DISCORD_TOKEN']);
 async function initialize() {
   try {
     console.log('Loading Discord bot...');

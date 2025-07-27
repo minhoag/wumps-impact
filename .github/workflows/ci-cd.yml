@@ -38,8 +38,9 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key:     ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            export PATH="$HOME/.nvm/versions/node/v22.17.1/bin:$PATH"
-            source ~/.bashrc
+            export NVM_DIR="$HOME/.nvm"
+            nvm use default --silent
+            command -v pm2
             cd /discord
             pm2 reload ecosystem.config.js --update-env
             pm2 save

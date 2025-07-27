@@ -1,4 +1,6 @@
 import 'dotenv/config';
+import dotenv from 'dotenv';
+dotenv.config({ path: '/discord/.env' });
 import { Client, GatewayIntentBits } from 'discord.js';
 import Handlers from './src/handlers';
 

@@ -1,7 +1,7 @@
 import {
   type AutocompleteInteraction,
   CommandInteraction,
-  type Locale,
+  Locale,
   PermissionFlagsBits,
   SlashCommandBuilder,
   type ApplicationCommandOptionChoiceData,
@@ -16,29 +16,30 @@ import { Item, type ItemProps } from '../data/item';
 import type { Command } from '../type';
 import { GMUtils } from '../utils/gm-utils';
 import { DiscordResponse } from '@/utils/discord-utils';
-import { ERROR_MESSAGE } from '@/constant';
+import { API_MESSAGE, DICT, ERROR_MESSAGE } from '@/constant';
 import { DiscordException } from '@/exception';
-import { ARTIFACT_DATA, type ArtifactProps } from '@/data/artifact';
+import { ARTIFACT_COMPONENT, ARTIFACT_DATA, type ArtifactProps } from '@/data/artifact';
 import { SUBSTAT_NAMES } from '@/constant/artifact';
 
 const command: Command = {
   command: new SlashCommandBuilder()
     .setName('gm')
     .setDescription('GM admin command.')
-    .setDescriptionLocalization('vi', 'Lệnh dành cho quản trị viên GM.')
+    .setDescriptionLocalization(Locale["Vietnamese"], 'Lệnh dành cho quản trị viên GM.')
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     .addSubcommand((subcommand) =>
       subcommand
         .setName('give')
         .setDescription('Give item to player.')
-        .setDescriptionLocalization('vi', 'Gửi item cho người chơi.')
+        .setDescriptionLocalization(Locale["Vietnamese"], 'Gửi item cho người chơi.')
         .addStringOption((option) =>
           option.setName('uid').setDescription('UID của người chơi').setRequired(true),
         )
         .addStringOption((option) =>
           option
-            .setName('id')
-            .setDescription('Id của item')
+            .setName('name')
+            .setDescription('Item name')
+            .setDescriptionLocalization(Locale["Vietnamese"], 'Tên item')
             .setRequired(true)
             .setAutocomplete(true),
         )
@@ -47,39 +48,18 @@ const command: Command = {
     .addSubcommand((subcommand) =>
       subcommand
         .setName('delete')
-        .setDescription('Take away item from player.')
-        .setDescriptionLocalization('vi', 'Xóa item của người chơi.')
+        .setDescription('Delete item from player.')
+        .setDescriptionLocalization(Locale["Vietnamese"], 'Xóa item của người chơi.')
         .addStringOption((option) =>
           option.setName('uid').setDescription('UID của người chơi').setRequired(true),
         )
         .addStringOption((option) =>
           option
-            .setName('id')
-            .setDescription('Id của item')
+            .setName('name')
+            .setDescription('Item name')
+            .setDescriptionLocalization(Locale["Vietnamese"], 'Tên item')
             .setRequired(true)
             .setAutocomplete(true),
-        )
-        .addNumberOption((option) => option.setName('amount').setDescription('Số lượng')),
-    )
-    .addSubcommand((subcommand) =>
-      subcommand
-        .setName('transfer')
-        .setDescription('Give money to player.')
-        .setDescriptionLocalization('vi', 'Gửi tiền cho người chơi.')
-        .addStringOption((option) =>
-          option.setName('uid').setDescription('UID của người chơi').setRequired(true),
-        )
-        .addStringOption((option) =>
-          option
-            .setName('type')
-            .setDescription('Chọn loại tiền tệ')
-            .setRequired(true)
-            .addChoices(
-              { name: 'Đá sáng thế', value: 'mcoin' },
-              { name: 'Mora', value: 'scoin' },
-              { name: 'Nguyên thạch', value: 'hcoin' },
-              { name: 'Tiền Động Tiên', value: 'home_coin' },
-            ),
         )
         .addNumberOption((option) => option.setName('amount').setDescription('Số lượng')),
     )
@@ -87,45 +67,55 @@ const command: Command = {
       subcommand
         .setName('give-artifact')
         .setDescription('Give artifact to player.')
-        .setDescriptionLocalization('vi', 'Gửi thánh di vật cho người chơi.')
+        .setDescriptionLocalization(Locale["Vietnamese"], 'Gửi thánh di vật cho người chơi.')
         .addStringOption((option) =>
           option.setName('uid').setDescription('UID của người chơi').setRequired(true),
         )
         .addStringOption((option) =>
           option
-            .setName('id')
-            .setDescription('Id của artifact')
+            .setName('name')
+            .setDescription('Artifact name')
+            .setDescriptionLocalization(Locale["Vietnamese"], 'Tên thánh di vật')
             .setRequired(true)
             .setAutocomplete(true),
         )
         .addStringOption((option) =>
           option
             .setName('main-prop-id')
-            .setDescription('Main stat của artifact')
+            .setDescription('Artifact main stats')
+            .setDescriptionLocalization(Locale["Vietnamese"], 'Main stat của thánh di vật')
             .setRequired(true)
             .addChoices(
-              { name: 'Crit Rate', value: '30960' },
-              { name: 'Crit Damage', value: '30950' },
-              { name: 'Healing Bonus', value: '30940' },
-              { name: 'ATK %', value: '50990' },
-              { name: 'HP %', value: '50980' },
-              { name: 'DEF %', value: '50970' },
-              { name: 'Elemental Mastery', value: '50880' },
-              { name: 'Pyro DMG Bonus', value: '50960' },
-              { name: 'Electro DMG Bonus', value: '50950' },
-              { name: 'Cryo DMG Bonus', value: '50940' },
-              { name: 'Hydro DMG Bonus', value: '50930' },
-              { name: 'Anemo DMG Bonus', value: '50920' },
-              { name: 'Geo DMG Bonus', value: '50910' },
-              { name: 'Dendro DMG Bonus', value: '50900' },
-              { name: 'Physical DMG Bonus', value: '50890' },
+              // Flower/Plume only
+              { name: 'HP (Flower only)', value: '50980' },
+              { name: 'ATK (Plume only)', value: '50990' },
+              // Sands options
+              { name: 'ATK % (Sands/Goblet/Circlet)', value: '50064' },
+              { name: 'HP % (Sands/Goblet/Circlet)', value: '50034' },
+              { name: 'DEF % (Sands/Goblet/Circlet)', value: '50094' },
+              { name: 'Elemental Mastery (Sands/Goblet/Circlet)', value: '50244' },
+              { name: 'Energy Recharge (Sands only)', value: '50234' },
+              // Goblet elemental damage options
+              { name: 'Pyro DMG Bonus (Goblet only)', value: '50144' },
+              { name: 'Electro DMG Bonus (Goblet only)', value: '50154' },
+              { name: 'Cryo DMG Bonus (Goblet only)', value: '50164' },
+              { name: 'Hydro DMG Bonus (Goblet only)', value: '50174' },
+              { name: 'Anemo DMG Bonus (Goblet only)', value: '50184' },
+              { name: 'Geo DMG Bonus (Goblet only)', value: '50194' },
+              { name: 'Dendro DMG Bonus (Goblet only)', value: '50214' },
+              { name: 'Physical DMG Bonus (Goblet only)', value: '50134' },
+              // Circlet crit options
+              { name: 'Crit Rate (Circlet only)', value: '50204' },
+              { name: 'Crit Damage (Circlet only)', value: '50224' },
+              { name: 'Healing Bonus (Circlet only)', value: '50254' }
             ),
         )
         .addStringOption((option) =>
           option
             .setName('substat1')
-            .setDescription('Substat 1 (tùy chọn)')
-            .setRequired(false)
+            .setDescription('Substat 1')
+            .setDescriptionLocalization(Locale["Vietnamese"], 'Dòng phụ 1')
+            .setRequired(true)
             .addChoices(
               { name: 'Crit Rate', value: '501204' },
               { name: 'Crit Damage', value: '501224' },
@@ -142,8 +132,9 @@ const command: Command = {
         .addStringOption((option) =>
           option
             .setName('substat2')
-            .setDescription('Substat 2 (tùy chọn)')
-            .setRequired(false)
+            .setDescription('Substat 2')
+            .setDescriptionLocalization(Locale["Vietnamese"], 'Dòng phụ 2')
+            .setRequired(true)
             .addChoices(
               { name: 'Crit Rate', value: '501204' },
               { name: 'Crit Damage', value: '501224' },
@@ -160,8 +151,9 @@ const command: Command = {
         .addStringOption((option) =>
           option
             .setName('substat3')
-            .setDescription('Substat 3 (tùy chọn)')
-            .setRequired(false)
+            .setDescription('Substat 3')
+            .setDescriptionLocalization(Locale["Vietnamese"], 'Dòng phụ 3')
+            .setRequired(true)
             .addChoices(
               { name: 'Crit Rate', value: '501204' },
               { name: 'Crit Damage', value: '501224' },
@@ -178,7 +170,8 @@ const command: Command = {
         .addStringOption((option) =>
           option
             .setName('substat4')
-            .setDescription('Substat 4 (tùy chọn)')
+            .setDescription('Substat 4')
+            .setDescriptionLocalization(Locale["Vietnamese"], 'Dòng phụ 4')
             .setRequired(false)
             .addChoices(
               { name: 'Crit Rate', value: '501204' },
@@ -206,27 +199,41 @@ const command: Command = {
     interaction: AutocompleteInteraction,
   ): Promise<ApplicationCommandOptionChoiceData[]> => {
     const focusedOption = interaction.options.getFocused(true);
-    if (
-      interaction.options.getSubcommand() === 'give' ||
-      interaction.options.getSubcommand() === 'delete'
-    ) {
+    const subcommand = interaction.options.getSubcommand();
+
+    if (subcommand === 'give' || subcommand === 'delete') {
       const filtered: { value: string; name: string }[] = Item.filter((choice: ItemProps) =>
         choice.name.toLowerCase().includes(focusedOption.value.toLowerCase()),
       );
       const options = filtered.length > 25 ? filtered.slice(0, 25) : filtered;
       await interaction.respond(options);
       return options;
-    } else if (interaction.options.getSubcommand() === 'give-artifact') {
-      //-- Filter artifact data by name --
+    }
+
+    else if (subcommand === 'give-artifact') {
       const filtered: { name: string; value: string }[] = ARTIFACT_DATA.filter(
-        (choice: ArtifactProps) =>
-          choice.name.toLowerCase().includes(focusedOption.value.toLowerCase()),
+        (choice: ArtifactProps) => choice.name.toLowerCase().includes(focusedOption.value.toLowerCase()),
       );
-      //-- Limit the number of options to 25 --
-      const options = filtered.length > 25 ? filtered.slice(0, 25) : filtered;
+
+      const expandedOptions: { name: string; value: string }[] = [];
+      filtered.forEach(artifact => {
+        const setId = artifact.value;
+        const components = ARTIFACT_COMPONENT[setId];
+
+        if (components) {
+          expandedOptions.push({ name: `${artifact.name} - Flower`, value: components[0].toString() });
+          expandedOptions.push({ name: `${artifact.name} - Plume`, value: components[1].toString() });
+          expandedOptions.push({ name: `${artifact.name} - Sands`, value: components[2].toString() });
+          expandedOptions.push({ name: `${artifact.name} - Goblet`, value: components[3].toString() });
+          expandedOptions.push({ name: `${artifact.name} - Circlet`, value: components[4].toString() });
+        }
+      });
+
+      const options = expandedOptions.length > 25 ? expandedOptions.slice(0, 25) : expandedOptions;
       await interaction.respond(options);
       return options;
     }
+
     await interaction.respond([]);
     return [];
   },
@@ -234,42 +241,50 @@ const command: Command = {
     if (!interaction.isChatInputCommand()) return;
     const locale: Locale = interaction.locale;
     const subcommand = interaction.options.getSubcommand();
-
     try {
       switch (subcommand) {
         //--- Give item ---
         case 'give': {
           const uid: string = interaction.options.getString('uid', true);
-          const id: string = interaction.options.getString('id', true);
+          const id: string = interaction.options.getString('name', true);
           const amount: number = interaction.options.getNumber('amount') ?? 1;
+          await interaction.deferReply({ flags: MessageFlags.Ephemeral });
           const result = await GMUtils.giveItem(interaction, {
             uid,
             id,
             amount,
           });
-          await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-          await DiscordResponse.sendApiResponse(interaction, result);
+          const retcode: number = result.retcode;
+          if (result.success) {
+            await DiscordResponse.sendSuccess(interaction, API_MESSAGE[retcode][locale].replace('{desc}', DICT['item_add'][locale]));
+          } else {
+            await DiscordResponse.sendFailed(interaction, API_MESSAGE[retcode][locale].replace('{desc}', result.msg));
+          }
           break;
         }
         //--- Delete item ---
         case 'delete': {
           const uid: string = interaction.options.getString('uid', true);
-          const id: string = interaction.options.getString('id', true);
+          const id: string = interaction.options.getString('name', true);
           const amount: number = interaction.options.getNumber('amount') ?? 1;
-
+          await interaction.deferReply({ flags: MessageFlags.Ephemeral });
           const result = await GMUtils.deleteItem(interaction, {
             uid,
             id,
             amount,
           });
-          await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-          await DiscordResponse.sendApiResponse(interaction, result);
+          const retcode: number = result.retcode;
+          if (result.success) {
+            await DiscordResponse.sendSuccess(interaction, API_MESSAGE[retcode][locale].replace('{desc}', DICT['item_remove'][locale]));
+          } else {
+            await DiscordResponse.sendFailed(interaction, API_MESSAGE[retcode][locale]);
+          }
           break;
         }
         //--- Give artifact ---
         case 'give-artifact': {
           const uid: string = interaction.options.getString('uid', true);
-          const id: string = interaction.options.getString('id', true);
+          const id: string = interaction.options.getString('name', true);
           const mainPropId: string = interaction.options.getString('main-prop-id', true);
 
           const substats: string[] = [];
@@ -281,8 +296,15 @@ const command: Command = {
             const val = interaction.options.getString(n);
             if (val) {
               const displayName = SUBSTAT_NAMES[parseInt(val)] || val;
-
-              if (substatNames.includes(displayName)) {
+              if (substatNames.includes(mainPropId)) {
+                duplicateFound = true;
+                duplicateName = displayName;
+                break;
+              } else if (substatNames.includes(displayName)) {
+                duplicateFound = true;
+                duplicateName = displayName;
+                break;
+              } else if (substatNames.length >= 4) {
                 duplicateFound = true;
                 duplicateName = displayName;
                 break;
@@ -302,18 +324,20 @@ const command: Command = {
             );
             break;
           }
-
           await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-
           const result = await GMUtils.createArtifact(interaction, {
             uid,
             itemId: id,
             mainPropId,
-            level: 1, // Always level 1
+            level: 1,
             appendPropIdList: substats,
           });
-
-          await DiscordResponse.sendApiResponse(interaction, result);
+          const retcode: number = result.retcode;
+          if (result.success) {
+            await DiscordResponse.sendSuccess(interaction, API_MESSAGE[retcode][locale].replace('{desc}', result.msg));
+          } else {
+            await DiscordResponse.sendFailed(interaction, API_MESSAGE[retcode][locale]);
+          }
           break;
         }
         case 'send-mail': {

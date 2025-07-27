@@ -1,5 +1,5 @@
 import { ERROR_MESSAGE } from '@/constant/response';
-import { CustomResponse, EmbedType, ResponseType } from '@/type';
+import { EmbedType, ResponseType } from '@/type';
 import {
   CommandInteraction,
   AutocompleteInteraction,
@@ -11,7 +11,6 @@ import {
   ModalSubmitInteraction,
 } from 'discord.js';
 import { GMUtils } from './gm-utils';
-import { RETCODE } from '@/constant/config';
 
 const COOLDOWN_SEPARATOR = '-';
 
@@ -74,19 +73,6 @@ export const DiscordResponse = {
     } else if (!interaction.replied) {
       await interaction.reply(response);
     }
-  },
-
-  sendApiResponse: async (interaction: CommandInteraction, response: CustomResponse) => {
-    const embed = DiscordResponse.createEmbed({
-      title: response.retcode === RETCODE.SUCCESS ? 'Success' : 'Failed',
-      description: response.data ?? response.msg ?? '',
-      type: response.retcode === RETCODE.SUCCESS ? EmbedType.SUCCESS : EmbedType.ERROR,
-    });
-    await DiscordResponse.sendResponse({
-      interaction,
-      types: [ResponseType.EMBED, ResponseType.EPHEMERAL],
-      embed,
-    });
   },
 
   sendSuccess: async (interaction: CommandInteraction, message: string) => {

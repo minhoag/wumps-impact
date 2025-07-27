@@ -1,6 +1,6 @@
 import { CommandInteraction } from 'discord.js';
-import { ENDPOINT, CONFIG, BASE_URL } from '@/constant/config';
-import type { ItemOperation } from '@/interface';
+import { ENDPOINT, CONFIG, BASE_URL, RETCODE } from '@/constant/config';
+import type { GMResponse, ItemOperation } from '@/interface';
 import { CustomResponse } from '@/type';
 import { DiscordEvent } from './discord-utils';
 import { UserPrisma } from './prisma-utils';
@@ -13,10 +13,11 @@ export class GMUtils {
   private static readonly ENDPOINT = ENDPOINT.GM;
   private static readonly SENDER = 'P・A・I・M・O・N';
 
+  //--- Give item ---
   public static async giveItem(
     interaction: CommandInteraction,
     operation: ItemOperation,
-  ): Promise<CustomResponse> {
+  ): Promise<GMResponse> {
     const { uid, id, amount } = operation;
     const ticket = this.generateTicket();
     const url = this.computeUrl({
@@ -28,17 +29,23 @@ export class GMUtils {
       item_count: amount,
     });
     const response: CustomResponse = await fetch(url).then(res => res.json());
-    DiscordEvent.recordEventLog(
-      interaction,
-      `Successfully gave ${amount}x item ${id} to player ${uid}`,
-    );
-    return new CustomResponse(response.data, response.msg, response.retcode, response.ticket);
+    if (response.msg === "succ" && response.retcode === RETCODE.SUCCESS) {
+      DiscordEvent.recordEventLog(
+        interaction,
+        `Successfully gave ${amount}x item ${id} to player ${uid}`,
+      );
+    }
+    return {
+      success: response.msg === 'succ',
+      retcode: response.retcode || 0,
+      msg: response.msg || 'Unknown Error'
+    }
   }
 
   public static async deleteItem(
     interaction: CommandInteraction,
     operation: ItemOperation,
-  ): Promise<CustomResponse> {
+  ): Promise<GMResponse> {
     const { uid, id, amount } = operation;
     const ticket = this.generateTicket();
     const url = this.computeUrl({
@@ -47,14 +54,21 @@ export class GMUtils {
       cmd: CONFIG.CMD.DEL_ITEM,
       uid,
       item_id: id,
-      item_count: amount,
+      item_num: amount,
     });
+    console.log(url);
     const response: CustomResponse = await fetch(url).then(res => res.json());
-    DiscordEvent.recordEventLog(
-      interaction,
-      `Successfully removed ${amount}x item ${id} from player ${uid}`,
-    );
-    return new CustomResponse(response.data, response.msg, response.retcode, response.ticket);
+    if (response.msg === 'succ' && response.retcode === RETCODE.SUCCESS) {
+      DiscordEvent.recordEventLog(
+        interaction,
+        `Successfully removed ${amount}x item ${id} from player ${uid}`,
+      );
+    }
+    return {
+      success: response.msg === 'succ',
+      retcode: response.retcode || 0,
+      msg: response.msg || 'Unknown Error'
+    }
   }
 
   public static async sendMailToPlayer(
@@ -106,7 +120,7 @@ export class GMUtils {
   public static async createArtifact(
     interaction: CommandInteraction,
     operation: ArtifactOperation,
-  ): Promise<CustomResponse> {
+  ): Promise<GMResponse> {
     const { uid, itemId, level, mainPropId, appendPropIdList = [] } = operation;
 
     // Resolve main & sub stats to numeric IDs
@@ -136,7 +150,7 @@ export class GMUtils {
         extra_params: JSON.stringify(extraParams),
       });
       const response: CustomResponse = await fetch(url).then(res => res.json());
-      if (response.data) {
+      if (response.msg === 'succ' && response.retcode === RETCODE.SUCCESS) {
         const mainStatName =
           Object.keys(MAIN_STAT_IDS).find((key) => MAIN_STAT_IDS[key] === mainPropNumeric) ||
           `ID:${mainPropNumeric}`;
@@ -154,17 +168,24 @@ export class GMUtils {
           interaction,
           `Successfully created Level ${level} Artifact ${itemId} for player ${uid}. Stats: ${mainStatName} ${generatedSubstats.map((substat) => substat.displayValue).join(', ')}`,
         );
-        return new CustomResponse(message);
-      } else if (response.msg === 'fail') {
-        return new CustomResponse(`Failed to create artifact ${itemId} for player ${uid}: Operation failed`);
-      } else if (response.retcode === 1002 && response.msg === 'para error') {
-        return new CustomResponse(`Failed to create artifact ${itemId} for player ${uid}: Parameter error - check item ID, level, or property IDs`);
-      } else {
-        return new CustomResponse(`Failed to create artifact ${itemId} for player ${uid}: ${response.msg} (retcode: ${response.retcode})`);
+        return {
+          success: true,
+          retcode: 0,
+          msg: message,
+        }
+      }
+      return {
+        success: false,
+        retcode: response.retcode || 500,
+        msg: response.msg || 'Unknown Error',
       }
     } catch (error) {
       console.error('Create artifact failed:', error);
-      return new CustomResponse(`Failed to create artifact: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      return {
+        success: false,
+        retcode: 500,
+        msg: `Failed to create artifact: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      }
     }
   }
 

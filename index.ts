@@ -1,6 +1,3 @@
-import 'dotenv/config';
-import dotenv from 'dotenv';
-dotenv.config({ path: '/discord/.env' });
 import { Client, GatewayIntentBits } from 'discord.js';
 import Handlers from './src/handlers';
 
@@ -12,7 +9,7 @@ const client = new Client({
     GatewayIntentBits.GuildMembers,
   ],
 });
-console.log(process.env['DISCORD_TOKEN']);
+
 async function initialize() {
   try {
     console.log('Loading Discord bot...');

@@ -6,7 +6,7 @@ import { DiscordEvent } from './discord-utils';
 import { UserPrisma } from './prisma-utils';
 import type { ArtifactOperation } from '@/interface';
 import { normalize } from './utils';
-import { MAIN_STAT_IDS, SUB_STAT_IDS, SUBSTAT_VALUES, SUBSTAT_NAMES, SUBSTAT_IS_PERCENTAGE } from '@/constant/artifact';
+import { MAIN_STAT_IDS, SUB_STAT_IDS, SUBSTAT_VALUES, SUBSTAT_NAMES, SUBSTAT_IS_PERCENTAGE } from '@/constant';
 
 export class GMUtils {
   private static readonly REGION = CONFIG.REGION.DEV_GIO;

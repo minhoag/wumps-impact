@@ -1,3 +1,4 @@
+import { ERROR_MESSAGE } from '@/constant/response';
 import { EmbedType, ResponseType } from '@/type';
 import {
   CommandInteraction,
@@ -5,14 +6,16 @@ import {
   EmbedBuilder,
   MessageFlags,
   type ColorResolvable,
+  ChannelType,
+  TextChannel,
+  ModalSubmitInteraction,
 } from 'discord.js';
+import { GMUtils } from './gm-utils';
 
 const COOLDOWN_SEPARATOR = '-';
 
-const getCooldownKey = (
-  commandName: string,
-  userId: string,
-): string => `${commandName}${COOLDOWN_SEPARATOR}${userId}`;
+const getCooldownKey = (commandName: string, userId: string): string =>
+  `${commandName}${COOLDOWN_SEPARATOR}${userId}`;
 
 export const DiscordResponse = {
   //--- Create embed ----
@@ -96,48 +99,46 @@ export const DiscordResponse = {
       types: [ResponseType.EMBED, ResponseType.EPHEMERAL],
       embed,
     });
-  },  
+  },
 };
 
 export const DiscordEvent = {
   //--- Handle chat input command ----
-  handleChatInput: async (
-    interaction: CommandInteraction,
-  ): Promise<void> => {
+  handleChatInput: async (interaction: CommandInteraction): Promise<void> => {
     const { client, commandName, user } = interaction;
     const command = client.commands.get(commandName);
-    // Guard command exist
+    //--- Guard command exist ----
     if (!command) {
       console.error(`No command matching ${commandName} was found.`);
       return;
     }
-    // No cooldown
+
+    //--- Defer reply ----
+    if (command.defer) {
+      await interaction.deferReply();
+    }
+
+    //--- No cooldown ----
     if (command.cooldown) {
       const cooldownKey = getCooldownKey(commandName, user.id);
       const now = Date.now();
       const expiresAt = client.cooldowns.get(cooldownKey);
       if (expiresAt && now < expiresAt) {
         const timeLeft = ((expiresAt - now) / 1000).toFixed(1);
-        await DiscordResponse.sendResponse({
+        await DiscordResponse.sendFailed(
           interaction,
-          types: [ResponseType.STRING, ResponseType.EPHEMERAL],
-          content: `⏳ Please wait ${timeLeft}s before re-using "/${commandName}".`,
-        });
+          ERROR_MESSAGE[101][interaction.locale]?.replace('{time}', timeLeft) || '',
+        );
         return;
       }
       client.cooldowns.set(cooldownKey, now + command.cooldown * 1000);
-      setTimeout(
-        () => client.cooldowns.delete(cooldownKey),
-        command.cooldown * 1000,
-      );
+      setTimeout(() => client.cooldowns.delete(cooldownKey), command.cooldown * 1000);
     }
     await command.execute(interaction);
   },
 
-  //--- Handle autocomplete command ----
-  handleAutocomplete: async (
-    interaction: AutocompleteInteraction,
-  ): Promise<void> => {
+  //--- Handle autocomplete ----
+  handleAutocomplete: async (interaction: AutocompleteInteraction): Promise<void> => {
     const { client, commandName } = interaction;
     const command = client.commands.get(commandName);
 
@@ -145,9 +146,83 @@ export const DiscordEvent = {
       console.error(`No autocomplete handler for ${commandName}.`);
       return;
     }
-    await command.autocomplete(
-      interaction,
-      interaction.options.getFocused(true),
-    );
+    await command.autocomplete(interaction, interaction.options.getFocused(true));
+  },
+
+  //--- Handle modal submit ----
+  handleModalSubmit: async (interaction: ModalSubmitInteraction): Promise<void> => {
+    if (!interaction.isModalSubmit() || interaction.customId !== 'mailForm') return;
+
+    try {
+      const receiver = interaction.fields.getTextInputValue('receiverInput');
+      const title = interaction.fields.getTextInputValue('titleInput');
+      const content = interaction.fields.getTextInputValue('contentInput');
+      const expiryInput = interaction.fields.getTextInputValue('expiryInput') || '30';
+      const item = interaction.fields.getTextInputValue('itemInput').replace(/\s/g, '') || '';
+
+      const expiry = parseInt(expiryInput);
+      if (isNaN(expiry) || expiry <= 0) {
+        await interaction.reply({
+          content: 'Thời hạn phải là số ngày hợp lệ (lớn hơn 0)',
+          flags: MessageFlags.Ephemeral,
+        });
+        return;
+      }
+
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+      if (receiver.toLowerCase() === 'all') {
+        const result = await GMUtils.sendMailToAll(title, content, item, expiry);
+        if (result.data) {
+          await interaction.editReply({
+            content: result.data,
+          });
+        } else {
+          await interaction.editReply({
+            content: `❌ Gửi thư thất bại: ${result.msg}`,
+          });
+        }
+      } else {
+        const result = await GMUtils.sendMailToPlayer(receiver, title, content, item, expiry);
+        if (result.data) {
+          await interaction.editReply({
+            content: `✅ Gửi thư thành công cho người chơi ${receiver}`,
+          });
+        } else {
+          await interaction.editReply({
+            content: `❌ Gửi thư thất bại cho người chơi ${receiver}: ${result.msg}`,
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Modal submit error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Lỗi không xác định';
+
+      if (interaction.deferred) {
+        await interaction.editReply({
+          content: `❌ Đã xảy ra lỗi: ${errorMessage}`,
+        });
+      } else {
+        await interaction.reply({
+          content: `❌ Đã xảy ra lỗi: ${errorMessage}`,
+          flags: MessageFlags.Ephemeral,
+        });
+      }
+    }
+  },
+
+  recordEventLog: async (interaction: CommandInteraction, event: string) => {
+    //--- Create channel if not exist ----
+    let channel = interaction.guild?.channels.cache.find(
+      (channel) => channel.name === 'event-log',
+    ) as TextChannel;
+    if (!channel) {
+      channel = (await interaction.guild?.channels.create({
+        name: 'event-log',
+        type: ChannelType.GuildText,
+      })) as TextChannel;
+    }
+    //--- Send message to channel ----
+    await channel?.send(`${interaction.user.username} - ${event}`);
   },
 };

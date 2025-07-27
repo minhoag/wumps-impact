@@ -10,6 +10,8 @@ const InteractionCreateEvent: Event = {
       await DiscordEvent.handleChatInput(interaction);
     } else if (interaction.isAutocomplete()) {
       await DiscordEvent.handleAutocomplete(interaction);
+    } else if (interaction.isModalSubmit()) {
+      await DiscordEvent.handleModalSubmit(interaction);
     }
   },
 };

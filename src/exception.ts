@@ -1,17 +1,13 @@
 import type { CommandInteraction } from 'discord.js';
 import { DiscordResponse } from './utils/discord-utils';
 import { EmbedType, ResponseType } from './type';
-import { ERROR_MESSAGE } from './constant';
+import { ERROR_MESSAGE } from './constant/response';
 
 export class DiscordException extends Error {
   public readonly code?: number;
   public readonly interaction?: CommandInteraction;
 
-  constructor(
-    message: string,
-    code?: number,
-    interaction?: CommandInteraction,
-  ) {
+  constructor(message: string, code?: number, interaction?: CommandInteraction) {
     super(message);
     this.name = 'DiscordException';
     this.code = code;
@@ -34,7 +30,7 @@ export class DiscordException extends Error {
     await DiscordResponse.sendResponse({
       interaction,
       types: [ResponseType.EMBED, ResponseType.EPHEMERAL],
-      embed
+      embed,
     });
   }
 }

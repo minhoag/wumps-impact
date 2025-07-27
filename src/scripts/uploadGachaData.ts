@@ -2,13 +2,10 @@ import { DiscordPrisma } from '@/utils/prisma-utils';
 import { schedule as gachaSchedule } from '../events/ref.schedule';
 
 async function main() {
-  console.log(
-    `⬆️  Uploading ${gachaSchedule.length} gacha banners to MySQL…`,
-  );
+  console.log(`⬆️  Uploading ${gachaSchedule.length} gacha banners to MySQL…`);
 
   // Group weapons by scheduleId to handle secondary weapons
-  const weaponGroups: { [scheduleId: number]: typeof gachaSchedule } =
-    {};
+  const weaponGroups: { [scheduleId: number]: typeof gachaSchedule } = {};
 
   for (const banner of gachaSchedule) {
     // --- name & vietnamese name post-processing ----
@@ -63,11 +60,7 @@ async function main() {
     if (weapons.length > 1) {
       // Multiple weapons with same scheduleId - combine rateUpItems5
       const combinedRateUpItems5 = Array.from(
-        new Set(
-          weapons
-            .map((weapon) => weapon.rateUpItems5)
-            .filter((items) => items),
-        ),
+        new Set(weapons.map((weapon) => weapon.rateUpItems5).filter((items) => items)),
       ).join(',');
 
       // Create entries for each weapon with combined rateUpItems5

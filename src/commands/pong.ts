@@ -1,9 +1,5 @@
 import { DiscordResponse } from '@/utils/discord-utils';
-import {
-  SlashCommandBuilder,
-  Locale,
-  CommandInteraction,
-} from 'discord.js';
+import { SlashCommandBuilder, Locale, CommandInteraction } from 'discord.js';
 import { ResponseType, type Command } from '@/type';
 
 const Ping: Command = {

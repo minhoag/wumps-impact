@@ -23,10 +23,7 @@ const command: Command = {
   command: new SlashCommandBuilder()
     .setName('gm')
     .setDescription('GM admin command.')
-    .setDescriptionLocalization(
-      'vi',
-      'Lệnh dành cho quản trị viên GM.',
-    )
+    .setDescriptionLocalization('vi', 'Lệnh dành cho quản trị viên GM.')
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     .addSubcommand((subcommand) =>
       subcommand
@@ -34,10 +31,7 @@ const command: Command = {
         .setDescription('Give item to player.')
         .setDescriptionLocalization('vi', 'Gửi item cho người chơi.')
         .addStringOption((option) =>
-          option
-            .setName('uid')
-            .setDescription('UID của người chơi')
-            .setRequired(true),
+          option.setName('uid').setDescription('UID của người chơi').setRequired(true),
         )
         .addStringOption((option) =>
           option
@@ -46,9 +40,7 @@ const command: Command = {
             .setRequired(true)
             .setAutocomplete(true),
         )
-        .addNumberOption((option) =>
-          option.setName('amount').setDescription('Số lượng'),
-        ),
+        .addNumberOption((option) => option.setName('amount').setDescription('Số lượng')),
     )
     .addSubcommand((subcommand) =>
       subcommand
@@ -56,10 +48,7 @@ const command: Command = {
         .setDescription('Take away item from player.')
         .setDescriptionLocalization('vi', 'Xóa item của người chơi.')
         .addStringOption((option) =>
-          option
-            .setName('uid')
-            .setDescription('UID của người chơi')
-            .setRequired(true),
+          option.setName('uid').setDescription('UID của người chơi').setRequired(true),
         )
         .addStringOption((option) =>
           option
@@ -68,9 +57,7 @@ const command: Command = {
             .setRequired(true)
             .setAutocomplete(true),
         )
-        .addNumberOption((option) =>
-          option.setName('amount').setDescription('Số lượng'),
-        ),
+        .addNumberOption((option) => option.setName('amount').setDescription('Số lượng')),
     )
     .addSubcommand((subcommand) =>
       subcommand
@@ -78,10 +65,7 @@ const command: Command = {
         .setDescription('Give money to player.')
         .setDescriptionLocalization('vi', 'Gửi tiền cho người chơi.')
         .addStringOption((option) =>
-          option
-            .setName('uid')
-            .setDescription('UID của người chơi')
-            .setRequired(true),
+          option.setName('uid').setDescription('UID của người chơi').setRequired(true),
         )
         .addStringOption((option) =>
           option
@@ -95,23 +79,15 @@ const command: Command = {
               { name: 'Tiền Động Tiên', value: 'home_coin' },
             ),
         )
-        .addNumberOption((option) =>
-          option.setName('amount').setDescription('Số lượng'),
-        ),
+        .addNumberOption((option) => option.setName('amount').setDescription('Số lượng')),
     )
     .addSubcommand((subcommand) =>
       subcommand
         .setName('give-artifact')
         .setDescription('Give artifact to player.')
-        .setDescriptionLocalization(
-          'vi',
-          'Gửi thánh di vật cho người chơi.',
-        )
+        .setDescriptionLocalization('vi', 'Gửi thánh di vật cho người chơi.')
         .addStringOption((option) =>
-          option
-            .setName('uid')
-            .setDescription('UID của người chơi')
-            .setRequired(true),
+          option.setName('uid').setDescription('UID của người chơi').setRequired(true),
         )
         .addStringOption((option) =>
           option
@@ -220,10 +196,7 @@ const command: Command = {
       subcommand
         .setName('send-mail')
         .setDescription('Send mail to all players.')
-        .setDescriptionLocalization(
-          'vi',
-          'Gửi mail cho tất cả người chơi.',
-        ),
+        .setDescriptionLocalization('vi', 'Gửi mail cho tất cả người chơi.'),
     ),
   cooldown: 1,
   defer: false,
@@ -235,29 +208,20 @@ const command: Command = {
       interaction.options.getSubcommand() === 'give' ||
       interaction.options.getSubcommand() === 'delete'
     ) {
-      const filtered: { value: string; name: string }[] = Item.filter(
-        (choice: ItemProps) =>
-          choice.name
-            .toLowerCase()
-            .includes(focusedOption.value.toLowerCase()),
+      const filtered: { value: string; name: string }[] = Item.filter((choice: ItemProps) =>
+        choice.name.toLowerCase().includes(focusedOption.value.toLowerCase()),
       );
-      const options =
-        filtered.length > 25 ? filtered.slice(0, 25) : filtered;
+      const options = filtered.length > 25 ? filtered.slice(0, 25) : filtered;
       await interaction.respond(options);
       return options;
-    } else if (
-      interaction.options.getSubcommand() === 'give-artifact'
-    ) {
+    } else if (interaction.options.getSubcommand() === 'give-artifact') {
       //-- Filter artifact data by name --
-      const filtered: { name: string; value: string }[] =
-        ARTIFACT_DATA.filter((choice: ArtifactProps) =>
-          choice.name
-            .toLowerCase()
-            .includes(focusedOption.value.toLowerCase()),
-        );
+      const filtered: { name: string; value: string }[] = ARTIFACT_DATA.filter(
+        (choice: ArtifactProps) =>
+          choice.name.toLowerCase().includes(focusedOption.value.toLowerCase()),
+      );
       //-- Limit the number of options to 25 --
-      const options =
-        filtered.length > 25 ? filtered.slice(0, 25) : filtered;
+      const options = filtered.length > 25 ? filtered.slice(0, 25) : filtered;
       await interaction.respond(options);
       return options;
     }
@@ -272,24 +236,15 @@ const command: Command = {
     try {
       switch (subcommand) {
         case 'give': {
-          const uid: string = interaction.options.getString(
-            'uid',
-            true,
-          );
-          const id: string = interaction.options.getString(
-            'id',
-            true,
-          );
-          const amount: number =
-            interaction.options.getNumber('amount') ?? 1;
+          const uid: string = interaction.options.getString('uid', true);
+          const id: string = interaction.options.getString('id', true);
+          const amount: number = interaction.options.getNumber('amount') ?? 1;
           const result = await GMUtils.giveItem(interaction, {
             uid,
             id,
             amount,
           });
-          const itemName = Item.find(
-            (item: ItemProps) => item.value === id,
-          )?.name;
+          const itemName = Item.find((item: ItemProps) => item.value === id)?.name;
           interaction.deferReply({ ephemeral: true });
           if (result.success) {
             await DiscordResponse.sendSuccess(
@@ -315,16 +270,9 @@ const command: Command = {
         }
 
         case 'delete': {
-          const uid: string = interaction.options.getString(
-            'uid',
-            true,
-          );
-          const id: string = interaction.options.getString(
-            'id',
-            true,
-          );
-          const amount: number =
-            interaction.options.getNumber('amount') ?? 1;
+          const uid: string = interaction.options.getString('uid', true);
+          const id: string = interaction.options.getString('id', true);
+          const amount: number = interaction.options.getNumber('amount') ?? 1;
 
           const result = await GMUtils.deleteItem(interaction, {
             uid,
@@ -354,41 +302,29 @@ const command: Command = {
           break;
         }
         case 'give-artifact': {
-          const uid: string = interaction.options.getString(
-            'uid',
-            true,
-          );
-          const id: string = interaction.options.getString(
-            'id',
-            true,
-          );
-          const mainPropId: string = interaction.options.getString(
-            'main-prop-id',
-            true,
-          );
+          const uid: string = interaction.options.getString('uid', true);
+          const id: string = interaction.options.getString('id', true);
+          const mainPropId: string = interaction.options.getString('main-prop-id', true);
 
           const substats: string[] = [];
           const substatNames: string[] = [];
 
-          ['substat1', 'substat2', 'substat3', 'substat4'].forEach(
-            (n) => {
-              const val = interaction.options.getString(n);
-              if (val) {
-                const displayName =
-                  SUBSTAT_NAMES[parseInt(val)] || val;
+          ['substat1', 'substat2', 'substat3', 'substat4'].forEach((n) => {
+            const val = interaction.options.getString(n);
+            if (val) {
+              const displayName = SUBSTAT_NAMES[parseInt(val)] || val;
 
-                if (substatNames.includes(displayName)) {
-                  interaction.reply({
-                    content: `❌ Duplicate substat detected: ${displayName}. Each artifact can only have one of each substat type.`,
-                    ephemeral: true,
-                  });
-                  return;
-                }
-                substats.push(val);
-                substatNames.push(displayName);
+              if (substatNames.includes(displayName)) {
+                interaction.reply({
+                  content: `❌ Duplicate substat detected: ${displayName}. Each artifact can only have one of each substat type.`,
+                  ephemeral: true,
+                });
+                return;
               }
-            },
-          );
+              substats.push(val);
+              substatNames.push(displayName);
+            }
+          });
 
           const result = await GMUtils.createArtifact(interaction, {
             uid,
@@ -399,30 +335,20 @@ const command: Command = {
           });
           interaction.deferReply({ ephemeral: true });
           if (result.success) {
-            await DiscordResponse.sendSuccess(
-              interaction,
-              result.message,
-            );
+            await DiscordResponse.sendSuccess(interaction, result.message);
           } else {
-            await DiscordResponse.sendFailed(
-              interaction,
-              result.message,
-            );
+            await DiscordResponse.sendFailed(interaction, result.message);
           }
           break;
         }
         case 'send-mail': {
-          const modal = new ModalBuilder()
-            .setCustomId('mailForm')
-            .setTitle('Soạn thư gửi');
+          const modal = new ModalBuilder().setCustomId('mailForm').setTitle('Soạn thư gửi');
 
           const receiver = new TextInputBuilder()
             .setCustomId('receiverInput')
             .setLabel('Người nhận (UID hoặc "all" cho tất cả)')
             .setStyle(TextInputStyle.Short)
-            .setPlaceholder(
-              'Nhập UID cụ thể hoặc "all" để gửi cho tất cả người chơi',
-            )
+            .setPlaceholder('Nhập UID cụ thể hoặc "all" để gửi cho tất cả người chơi')
             .setRequired(true);
 
           const title = new TextInputBuilder()
@@ -454,34 +380,13 @@ const command: Command = {
             .setPlaceholder('VD: 201,100 hoặc để trống nếu không có')
             .setRequired(false);
 
-          const firstRow =
-            new ActionRowBuilder<TextInputBuilder>().addComponents(
-              receiver,
-            );
-          const secondRow =
-            new ActionRowBuilder<TextInputBuilder>().addComponents(
-              title,
-            );
-          const thirdRow =
-            new ActionRowBuilder<TextInputBuilder>().addComponents(
-              content,
-            );
-          const fourthRow =
-            new ActionRowBuilder<TextInputBuilder>().addComponents(
-              expiry,
-            );
-          const fifthRow =
-            new ActionRowBuilder<TextInputBuilder>().addComponents(
-              item,
-            );
+          const firstRow = new ActionRowBuilder<TextInputBuilder>().addComponents(receiver);
+          const secondRow = new ActionRowBuilder<TextInputBuilder>().addComponents(title);
+          const thirdRow = new ActionRowBuilder<TextInputBuilder>().addComponents(content);
+          const fourthRow = new ActionRowBuilder<TextInputBuilder>().addComponents(expiry);
+          const fifthRow = new ActionRowBuilder<TextInputBuilder>().addComponents(item);
 
-          modal.addComponents(
-            firstRow,
-            secondRow,
-            thirdRow,
-            fourthRow,
-            fifthRow,
-          );
+          modal.addComponents(firstRow, secondRow, thirdRow, fourthRow, fifthRow);
           await interaction.showModal(modal);
           break;
         }
@@ -498,10 +403,7 @@ const command: Command = {
       } else if (error instanceof DiscordException) {
         await DiscordResponse.sendFailed(
           interaction,
-          ERROR_MESSAGE[103][locale].replace(
-            '{detail}',
-            error.message,
-          ),
+          ERROR_MESSAGE[103][locale].replace('{detail}', error.message),
         );
       }
     }

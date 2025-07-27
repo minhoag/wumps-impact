@@ -2,25 +2,18 @@
 
 import { Locale } from 'discord.js';
 
-export const ERROR_MESSAGE: {
-  [key: number]: Record<Locale, string>;
-} = {
+export const ERROR_MESSAGE: { [key: number]: Record<Locale, string> } = {
   //--- General Error ---
   101: {
-    [Locale.Vietnamese]:
-      'Vui lòng đợi `{time}` giây trước khi sử dụng lại lệnh này.',
-    [Locale.EnglishUS]:
-      'Please wait `{time}` seconds before re-using this command.',
+    [Locale.Vietnamese]: 'Vui lòng đợi `{time}` giây trước khi sử dụng lại lệnh này.',
+    [Locale.EnglishUS]: 'Please wait `{time}` seconds before re-using this command.',
   },
   102: {
-    [Locale.Vietnamese]:
-      'Lệnh này chỉ có thể được sử dụng bởi người quản trị.',
-    [Locale.EnglishUS]:
-      'This command can only be used by administrators.',
+    [Locale.Vietnamese]: 'Lệnh này chỉ có thể được sử dụng bởi người quản trị.',
+    [Locale.EnglishUS]: 'This command can only be used by administrators.',
   },
   103: {
-    [Locale.Vietnamese]:
-      'Đã có lỗi không xác định xảy ra. Chi tiết: {detail}',
+    [Locale.Vietnamese]: 'Đã có lỗi không xác định xảy ra. Chi tiết: {detail}',
     [Locale.EnglishUS]: 'An unknown error occurred. Detail: {detail}',
   },
   //--- Gacha Command ---
@@ -29,29 +22,22 @@ export const ERROR_MESSAGE: {
     [Locale.EnglishUS]: '`start` must be before `end`.',
   },
   202: {
-    [Locale.Vietnamese]:
-      'Một sự kiện Gacha khác đã được tạo trong khoảng thời gian này.',
-    [Locale.EnglishUS]:
-      'Another gacha is already active in this time range.',
+    [Locale.Vietnamese]: 'Một sự kiện Gacha khác đã được tạo trong khoảng thời gian này.',
+    [Locale.EnglishUS]: 'Another gacha is already active in this time range.',
   },
   203: {
-    [Locale.Vietnamese]:
-      'Giá trị sự kiện `{value}` đã tồn tại trong khoảng thời gian này.',
-    [Locale.EnglishUS]:
-      'Event value `{value}` is already scheduled during this time range.',
+    [Locale.Vietnamese]: 'Giá trị sự kiện `{value}` đã tồn tại trong khoảng thời gian này.',
+    [Locale.EnglishUS]: 'Event value `{value}` is already scheduled during this time range.',
   },
   204: {
     [Locale.Vietnamese]:
       'Không tìm thấy dữ liệu Gacha cho giá trị `{value}`. Vui lòng tải lên trước.',
-    [Locale.EnglishUS]:
-      'No gacha data found for value `{value}`. Please upload it first.',
+    [Locale.EnglishUS]: 'No gacha data found for value `{value}`. Please upload it first.',
   },
   //--- Database Error related ---
   205: {
-    [Locale.Vietnamese]:
-      'Lên lịch Gacha thất bại. Nguyên nhân: {reason}',
-    [Locale.EnglishUS]:
-      'Gacha schedule creation failed. Reason: {reason}',
+    [Locale.Vietnamese]: 'Lên lịch Gacha thất bại. Nguyên nhân: {reason}',
+    [Locale.EnglishUS]: 'Gacha schedule creation failed. Reason: {reason}',
   },
   //--- GM Command ---
   301: {
@@ -62,9 +48,7 @@ export const ERROR_MESSAGE: {
   },
 };
 
-export const SUCCESS_MESSAGE: {
-  [key: number]: Record<Locale, string>;
-} = {
+export const SUCCESS_MESSAGE: { [key: number]: Record<Locale, string> } = {
   200: {
     [Locale.Vietnamese]:
       'Lên lịch thành công cho `{characterName}` Thời gian: `{beginTime}` - `{endTime}`.',

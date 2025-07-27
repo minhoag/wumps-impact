@@ -8,14 +8,10 @@ const ReadyEvent: Event = {
   execute: async (client: Client) => {
     console.log(`Logged in as ${client.user?.tag}`);
     try {
-      const data =
-        await DiscordPrisma.t_discord_gacha_data.findMany();
-      const scheduleData =
-        await DiscordPrisma.t_discord_gacha_schedule.findMany();
+      const data = await DiscordPrisma.t_discord_gacha_data.findMany();
+      const scheduleData = await DiscordPrisma.t_discord_gacha_schedule.findMany();
       // remove ended schedule
-      const endedSchedule = scheduleData.filter(
-        (schedule) => schedule.endTime < new Date(),
-      );
+      const endedSchedule = scheduleData.filter((schedule) => schedule.endTime < new Date());
       await DiscordPrisma.t_discord_gacha_schedule.deleteMany({
         where: { endTime: { lt: new Date() } },
       });

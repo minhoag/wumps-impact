@@ -101,15 +101,12 @@ function generateRandomSubstatValue(statId: number): {
   }
 
   // Randomly select one of the 4 tiers
-  const randomValue =
-    values[Math.floor(Math.random() * values.length)];
+  const randomValue = values[Math.floor(Math.random() * values.length)];
   const statName = SUBSTAT_NAMES[statId];
 
   // Format display value based on stat type
   let displayValue: string;
-  if (
-    [501204, 501224, 501064, 501034, 501094, 501234].includes(statId)
-  ) {
+  if ([501204, 501224, 501064, 501034, 501094, 501234].includes(statId)) {
     // Percentage stats
     displayValue = `${statName} +${randomValue}%`;
   } else {
@@ -129,17 +126,11 @@ export class GMUtils {
     return `GM@${new Date().getTime().toString()}`;
   }
 
-  private static async sendGMRequest(
-    uid: string,
-    command: string,
-  ): Promise<CustomResponse> {
+  private static async sendGMRequest(uid: string, command: string): Promise<CustomResponse> {
     try {
       const url = `${this.URL}&ticket=${this.generateTicket()}&cmd=${CONFIG.CMD.GM_TALK}&uid=${uid}&msg=${encodeURIComponent(command)}`;
       const response = await fetch(url);
-      return new CustomResponse(
-        response.ok,
-        response.statusText ?? 'Unknown error',
-      );
+      return new CustomResponse(response.ok, response.statusText ?? 'Unknown error');
     } catch (error) {
       console.error('GM request failed:', error);
       return new CustomResponse(
@@ -159,23 +150,15 @@ export class GMUtils {
   ): Promise<CustomResponse> {
     try {
       const now = new Date();
-      const expiryDate = new Date(
-        now.getTime() + expiry * 24 * 60 * 60 * 1000,
-      );
+      const expiryDate = new Date(now.getTime() + expiry * 24 * 60 * 60 * 1000);
       const seconds = Math.floor(expiryDate.getTime() / 1000);
       const uuid = new Date().getTime();
       const url = `${BASE_URL}:${ENDPOINT.GM}/api?sender=${encodeURIComponent('P・A・I・M・O・N')}&title=${encodeURIComponent(title)}&content=${encodeURIComponent(content)}&item_list=${encodeURIComponent(item)}&expire_time=${seconds}&is_collectible=False&uid=${uid}&cmd=${CONFIG.CMD.SEND_MAIL}&region=${CONFIG.REGION.DEV_GIO}&ticket=GM%40${seconds}&sign=${uuid}`;
       const response = await fetch(url);
 
       if (response.ok) {
-        DiscordEvent.recordEventLog(
-          interaction,
-          `Successfully sent mail to UID ${uid}`,
-        );
-        return new CustomResponse(
-          true,
-          `Mail sent successfully to UID ${uid}`,
-        );
+        DiscordEvent.recordEventLog(interaction, `Successfully sent mail to UID ${uid}`);
+        return new CustomResponse(true, `Mail sent successfully to UID ${uid}`);
       } else {
         return new CustomResponse(
           false,
@@ -199,14 +182,7 @@ export class GMUtils {
     expiry: number,
     interaction: CommandInteraction,
   ): Promise<CustomResponse> {
-    return await this.sendMail(
-      uid,
-      title,
-      content,
-      item,
-      expiry,
-      interaction,
-    );
+    return await this.sendMail(uid, title, content, item, expiry, interaction);
   }
 
   public static async sendMailToAll(
@@ -219,10 +195,7 @@ export class GMUtils {
     try {
       const users = await UserPrisma.t_player_uid.findMany();
       if (!users.length) {
-        return new CustomResponse(
-          false,
-          'No users found in database',
-        );
+        return new CustomResponse(false, 'No users found in database');
       }
 
       const failedUIDs: string[] = [];
@@ -265,25 +238,16 @@ export class GMUtils {
     interaction: CommandInteraction,
     operation: ArtifactOperation,
   ): Promise<CustomResponse> {
-    const {
-      uid,
-      itemId,
-      level,
-      mainPropId,
-      appendPropIdList = [],
-    } = operation;
+    const { uid, itemId, level, mainPropId, appendPropIdList = [] } = operation;
 
     // Resolve main & sub stats to numeric IDs
     let mainPropNumeric: number;
     let appendPropNumeric: number[] = [];
-    let generatedSubstats: { value: number; displayValue: string }[] =
-      [];
+    let generatedSubstats: { value: number; displayValue: string }[] = [];
 
     mainPropNumeric = resolveMainStatId(mainPropId);
     appendPropNumeric = appendPropIdList.map(resolveSubStatId);
-    generatedSubstats = appendPropNumeric.map((statId) =>
-      generateRandomSubstatValue(statId),
-    );
+    generatedSubstats = appendPropNumeric.map((statId) => generateRandomSubstatValue(statId));
 
     try {
       const ticket = this.generateTicket();
@@ -298,9 +262,8 @@ export class GMUtils {
       if (response.ok) {
         // Get main stat name for display
         const mainStatName =
-          Object.keys(MAIN_STAT_IDS).find(
-            (key) => MAIN_STAT_IDS[key] === mainPropNumeric,
-          ) || `ID:${mainPropNumeric}`;
+          Object.keys(MAIN_STAT_IDS).find((key) => MAIN_STAT_IDS[key] === mainPropNumeric) ||
+          `ID:${mainPropNumeric}`;
 
         let message = `Successfully created Level ${level} Artifact ${itemId} for player ${uid}\n`;
         message += `Main Stat: ${mainStatName.charAt(0).toUpperCase() + mainStatName.slice(1)}`;
@@ -316,18 +279,12 @@ export class GMUtils {
           `Successfully created Level ${level} Artifact ${itemId} for player ${uid}. Stats: ${mainStatName} ${generatedSubstats.map((substat) => substat.displayValue).join(', ')}`,
         );
         return new CustomResponse(true, message);
-      } else if (
-        response.status === 1 &&
-        response.statusText === 'fail'
-      ) {
+      } else if (response.status === 1 && response.statusText === 'fail') {
         return new CustomResponse(
           false,
           `Failed to create artifact ${itemId} for player ${uid}: Operation failed`,
         );
-      } else if (
-        response.status === 1002 &&
-        response.statusText === 'para error'
-      ) {
+      } else if (response.status === 1002 && response.statusText === 'para error') {
         return new CustomResponse(
           false,
           `Failed to create artifact ${itemId} for player ${uid}: Parameter error - check item ID, level, or property IDs`,

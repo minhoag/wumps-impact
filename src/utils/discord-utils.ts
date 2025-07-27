@@ -15,10 +15,8 @@ import { GMUtils } from './gm-utils';
 
 const COOLDOWN_SEPARATOR = '-';
 
-const getCooldownKey = (
-  commandName: string,
-  userId: string,
-): string => `${commandName}${COOLDOWN_SEPARATOR}${userId}`;
+const getCooldownKey = (commandName: string, userId: string): string =>
+  `${commandName}${COOLDOWN_SEPARATOR}${userId}`;
 
 export const DiscordResponse = {
   //--- Create embed ----
@@ -78,10 +76,7 @@ export const DiscordResponse = {
     }
   },
 
-  sendSuccess: async (
-    interaction: CommandInteraction,
-    message: string,
-  ) => {
+  sendSuccess: async (interaction: CommandInteraction, message: string) => {
     const embed = DiscordResponse.createEmbed({
       title: 'Success',
       description: message,
@@ -94,10 +89,7 @@ export const DiscordResponse = {
     });
   },
 
-  sendFailed: async (
-    interaction: CommandInteraction,
-    message: string,
-  ) => {
+  sendFailed: async (interaction: CommandInteraction, message: string) => {
     const embed = DiscordResponse.createEmbed({
       title: 'Failed',
       description: message,
@@ -113,9 +105,7 @@ export const DiscordResponse = {
 
 export const DiscordEvent = {
   //--- Handle chat input command ----
-  handleChatInput: async (
-    interaction: CommandInteraction,
-  ): Promise<void> => {
+  handleChatInput: async (interaction: CommandInteraction): Promise<void> => {
     const { client, commandName, user } = interaction;
     const command = client.commands.get(commandName);
     //--- Guard command exist ----
@@ -138,29 +128,18 @@ export const DiscordEvent = {
         const timeLeft = ((expiresAt - now) / 1000).toFixed(1);
         await DiscordResponse.sendFailed(
           interaction,
-          ERROR_MESSAGE[101][interaction.locale]?.replace(
-            '{time}',
-            timeLeft,
-          ) || '',
+          ERROR_MESSAGE[101][interaction.locale]?.replace('{time}', timeLeft) || '',
         );
         return;
       }
-      client.cooldowns.set(
-        cooldownKey,
-        now + command.cooldown * 1000,
-      );
-      setTimeout(
-        () => client.cooldowns.delete(cooldownKey),
-        command.cooldown * 1000,
-      );
+      client.cooldowns.set(cooldownKey, now + command.cooldown * 1000);
+      setTimeout(() => client.cooldowns.delete(cooldownKey), command.cooldown * 1000);
     }
     await command.execute(interaction);
   },
 
   //--- Handle autocomplete ----
-  handleAutocomplete: async (
-    interaction: AutocompleteInteraction,
-  ): Promise<void> => {
+  handleAutocomplete: async (interaction: AutocompleteInteraction): Promise<void> => {
     const { client, commandName } = interaction;
     const command = client.commands.get(commandName);
 
@@ -168,35 +147,19 @@ export const DiscordEvent = {
       console.error(`No autocomplete handler for ${commandName}.`);
       return;
     }
-    await command.autocomplete(
-      interaction,
-      interaction.options.getFocused(true),
-    );
+    await command.autocomplete(interaction, interaction.options.getFocused(true));
   },
 
   //--- Handle modal submit ----
-  handleModalSubmit: async (
-    interaction: ModalSubmitInteraction,
-  ): Promise<void> => {
-    if (
-      !interaction.isModalSubmit() ||
-      interaction.customId !== 'mailForm'
-    )
-      return;
+  handleModalSubmit: async (interaction: ModalSubmitInteraction): Promise<void> => {
+    if (!interaction.isModalSubmit() || interaction.customId !== 'mailForm') return;
 
     try {
-      const receiver =
-        interaction.fields.getTextInputValue('receiverInput');
-      const title =
-        interaction.fields.getTextInputValue('titleInput');
-      const content =
-        interaction.fields.getTextInputValue('contentInput');
-      const expiryInput =
-        interaction.fields.getTextInputValue('expiryInput') || '30';
-      const item =
-        interaction.fields
-          .getTextInputValue('itemInput')
-          .replace(/\s/g, '') || '';
+      const receiver = interaction.fields.getTextInputValue('receiverInput');
+      const title = interaction.fields.getTextInputValue('titleInput');
+      const content = interaction.fields.getTextInputValue('contentInput');
+      const expiryInput = interaction.fields.getTextInputValue('expiryInput') || '30';
+      const item = interaction.fields.getTextInputValue('itemInput').replace(/\s/g, '') || '';
 
       const expiry = parseInt(expiryInput);
       if (isNaN(expiry) || expiry <= 0) {
@@ -210,12 +173,7 @@ export const DiscordEvent = {
       await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
       if (receiver.toLowerCase() === 'all') {
-        const result = await GMUtils.sendMailToAll(
-          title,
-          content,
-          item,
-          expiry,
-        );
+        const result = await GMUtils.sendMailToAll(title, content, item, expiry);
         if (result.success) {
           await interaction.editReply({
             content: `✅ Gửi thư thành công cho tất cả người chơi! ${result.successCount > 0 ? `(${result.successCount} người nhận)` : ''}${result.failedUIDs.length > 0 ? `\n❌ Gửi thất bại cho: ${result.failedUIDs.join(', ')}` : ''}`,
@@ -226,13 +184,7 @@ export const DiscordEvent = {
           });
         }
       } else {
-        const result = await GMUtils.sendMailToPlayer(
-          receiver,
-          title,
-          content,
-          item,
-          expiry,
-        );
+        const result = await GMUtils.sendMailToPlayer(receiver, title, content, item, expiry);
         if (result.success) {
           await interaction.editReply({
             content: `✅ Gửi thư thành công cho người chơi ${receiver}`,
@@ -245,8 +197,7 @@ export const DiscordEvent = {
       }
     } catch (error) {
       console.error('Modal submit error:', error);
-      const errorMessage =
-        error instanceof Error ? error.message : 'Lỗi không xác định';
+      const errorMessage = error instanceof Error ? error.message : 'Lỗi không xác định';
 
       if (interaction.deferred) {
         await interaction.editReply({
@@ -261,10 +212,7 @@ export const DiscordEvent = {
     }
   },
 
-  recordEventLog: async (
-    interaction: CommandInteraction,
-    event: string,
-  ) => {
+  recordEventLog: async (interaction: CommandInteraction, event: string) => {
     //--- Create channel if not exist ----
     let channel = interaction.guild?.channels.cache.find(
       (channel) => channel.name === 'event-log',

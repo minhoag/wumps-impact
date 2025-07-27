@@ -11,13 +11,7 @@ export class GachaUtils {
   }
 
   //--- Helper functions ----
-  private SORT_ID = {
-    202: 1002,
-    302: 1003,
-    201: 1004,
-    301: 1005,
-    400: 1006,
-  };
+  private SORT_ID = { 202: 1002, 302: 1003, 201: 1004, 301: 1005, 400: 1006 };
   //--- Get the probability rule for the gacha type ----
   private getProbabilityRule(gachaType: number): number {
     switch (gachaType) {
@@ -47,14 +41,10 @@ export class GachaUtils {
     const rateUpItems4 = gachaData.rateUpItems4;
     const rateUpItems5 = gachaData.rateUpItems5;
     const items4Array = rateUpItems4
-      ? rateUpItems4
-          .split(',')
-          .map((id: string) => parseInt(id.trim(), 10))
+      ? rateUpItems4.split(',').map((id: string) => parseInt(id.trim(), 10))
       : [];
     const items5Array = rateUpItems5
-      ? rateUpItems5
-          .split(',')
-          .map((id: string) => parseInt(id.trim(), 10))
+      ? rateUpItems5.split(',').map((id: string) => parseInt(id.trim(), 10))
       : [];
 
     return JSON.stringify({
@@ -77,9 +67,7 @@ export class GachaUtils {
     const endTime = this.options.end_time;
     const gachaData = this.scheduleData;
 
-    const costItemId = [301, 400].includes(this.options.gacha_type)
-      ? 223
-      : 223;
+    const costItemId = [301, 400].includes(this.options.gacha_type) ? 223 : 223;
     const rateUpItems4 = gachaData.rateUpItems4;
     try {
       await ConfigPrisma.t_gacha_schedule_config.create({
@@ -90,14 +78,11 @@ export class GachaUtils {
           cost_item_id: costItemId,
           cost_item_num: 1,
           gacha_pool_id: 201,
-          gacha_prob_rule_id: this.getProbabilityRule(
-            this.options.gacha_type,
-          ),
+          gacha_prob_rule_id: this.getProbabilityRule(this.options.gacha_type),
           gacha_up_config: this.getGachaUpConfig(gachaData),
           gacha_rule_config: '{}',
           gacha_prefab_path: this.generatePrefabPath(gachaData),
-          gacha_preview_prefab_path:
-            'UI_Tab_' + this.generatePrefabPath(gachaData),
+          gacha_preview_prefab_path: 'UI_Tab_' + this.generatePrefabPath(gachaData),
           //TODO: create actual url
           gacha_prob_url: 'http://localhost/',
           gacha_record_url: 'http://localhost/',

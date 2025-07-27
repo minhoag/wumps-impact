@@ -18,8 +18,5 @@ jobs:
             git pull origin main
             bun install --frozen-lockfile
             bun run build
-            export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-            nvm use default --silent
-            pm2 reload /root/pm2.config.js --update-env
+            pm2 reload /root/pm2.config.js
             pm2 save

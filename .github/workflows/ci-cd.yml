@@ -43,5 +43,5 @@ jobs:
             nvm use default --silent
             command -v pm2
             cd /discord
-            pm2 reload ecosystem.config.js --update-env
+            pm2 reload pm2.config.js --update-env
             pm2 save

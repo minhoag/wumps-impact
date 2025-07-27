@@ -40,3 +40,9 @@ export interface CurrencyOperation {
   type: string;
   amount: number;
 }
+
+export interface GMResponse {
+  success: boolean;
+  retcode: number;
+  msg: string;
+}

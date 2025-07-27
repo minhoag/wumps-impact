@@ -2,6 +2,17 @@
 
 import { Locale } from 'discord.js';
 
+export const DICT: { [key: string]: Record<Locale, string> } = {
+  "item_add": {
+    [Locale.Vietnamese]: 'Thêm vật phẩm',
+    [Locale.EnglishUS]: 'Add item',
+  }, 
+  "item_remove": {
+    [Locale.Vietnamese]: 'Xóa vật phẩm',
+    [Locale.EnglishUS]: 'Remove item',
+  }
+}
+
 export const ERROR_MESSAGE: { [key: number]: Record<Locale, string> } = {
   //--- General Error ---
   101: {
@@ -48,15 +59,26 @@ export const ERROR_MESSAGE: { [key: number]: Record<Locale, string> } = {
   },
   302: {
     [Locale.Vietnamese]:
-      'Tạo thánh dị vật thất bại. Nguyên nhân: dòng phụ trùng lặp `{reason}`',
-    [Locale.EnglishUS]: 'Artifact creation failed. Reason: duplicate substat `{reason}`',
-  },
-
-  2001: {
-    [Locale.Vietnamese]: 'Thêm vật phẩm thất bại. Nguyên nhân: {reason}',
-    [Locale.EnglishUS]: 'Failed to add item. Reason: {reason}',
+      'Tạo thánh dị vật thất bại. Nguyên nhân: Dòng phụ trùng lặp `{reason}`',
+    [Locale.EnglishUS]: 'Artifact creation failed. Reason: Duplicate substat `{reason}`',
   }
 };
+
+//--- API RETCODE ---
+export const API_MESSAGE: { [key: number]: Record<Locale, string> } = {
+  0: {
+    [Locale.Vietnamese]: 'Thành công {desc}.',
+    [Locale.EnglishUS]: '{desc} successfully.',
+  },
+  1002: {
+    [Locale.Vietnamese]: 'Gửi request GM thất bại. Nguyên nhân: Lỗi param.',
+    [Locale.EnglishUS]: 'Failed to send request GM. Reason: Invalid param.',
+  },
+  2001: {
+    [Locale.Vietnamese]: 'Gửi request GM thất bại. UID không tồn tại',
+    [Locale.EnglishUS]: 'Failed to send request GM. UID not found.',
+  }
+}
 
 export const SUCCESS_MESSAGE: { [key: number]: Record<Locale, string> } = {
   200: {

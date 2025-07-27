@@ -1,5 +1,11 @@
 import { parse, isValid, startOfDay } from 'date-fns';
 
+//--- Helper functions ----
+/**
+ * Parse a time range string into a Date object.
+ * @param input - The input string to parse.
+ * @returns The parsed Date object or null if the input is invalid.
+ */
 export const parseTimeRange = (input: string | null): Date | null => {
   if (!input) return null;
 
@@ -42,3 +48,10 @@ export const parseTimeRange = (input: string | null): Date | null => {
 
   return null;
 };
+
+/**
+ * Normalize a string by trimming and converting to lowercase.
+ * @param s - The string to normalize.
+ * @returns The normalized string.
+ */
+export const normalize = (s: string) => s.trim().toLowerCase();

@@ -21,6 +21,14 @@ export interface GachaScheduleData {
   display_up4_item_list?: string;
 }
 
+export interface ArtifactOperation {
+  uid: string;
+  itemId: string;
+  level: number;
+  mainPropId: number | string;
+  appendPropIdList?: (number | string)[];
+}
+
 export interface ItemOperation {
   uid: string;
   id: string;

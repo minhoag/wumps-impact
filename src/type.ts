@@ -48,12 +48,25 @@ declare module 'discord.js' {
 }
 
 export class CustomResponse extends Response {
-  success: boolean;
-  message: string;
+  data?: string;
+  msg?: string;
+  retcode?: number;
+  ticket?: string;
 
-  constructor(success: boolean, message: string) {
+  constructor(data?: string, msg?: string, retcode?: number, ticket?: string) {
     super();
-    this.success = success;
-    this.message = message;
+    this.data = data;
+    this.msg = msg;
+    this.retcode = retcode;
+    this.ticket = ticket;
+  }
+
+  toJSON() {
+    return {
+      data: this.data,
+      msg: this.msg,
+      retcode: this.retcode,
+      ticket: this.ticket,
+    };
   }
 }

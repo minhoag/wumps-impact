@@ -9,15 +9,17 @@ import {
   TextInputBuilder,
   TextInputStyle,
   ActionRowBuilder,
+  MessageFlags,
 } from 'discord.js';
 
 import { Item, type ItemProps } from '../data/item';
 import type { Command } from '../type';
-import { GMUtils, SUBSTAT_NAMES } from '../utils/gm-utils';
+import { GMUtils } from '../utils/gm-utils';
 import { DiscordResponse } from '@/utils/discord-utils';
-import { ERROR_MESSAGE, SUCCESS_MESSAGE } from '@/constant';
+import { ERROR_MESSAGE } from '@/constant';
 import { DiscordException } from '@/exception';
 import { ARTIFACT_DATA, type ArtifactProps } from '@/data/artifact';
+import { SUBSTAT_NAMES } from '@/constant/artifact';
 
 const command: Command = {
   command: new SlashCommandBuilder()
@@ -235,6 +237,7 @@ const command: Command = {
 
     try {
       switch (subcommand) {
+        //--- Give item ---
         case 'give': {
           const uid: string = interaction.options.getString('uid', true);
           const id: string = interaction.options.getString('id', true);
@@ -244,31 +247,11 @@ const command: Command = {
             id,
             amount,
           });
-          const itemName = Item.find((item: ItemProps) => item.value === id)?.name;
-          interaction.deferReply({ ephemeral: true });
-          if (result.success) {
-            await DiscordResponse.sendSuccess(
-              interaction,
-              SUCCESS_MESSAGE[300][locale]
-                .replace('{action}', 'give')
-                .replace('{itemName}', itemName ?? id)
-                .replace('{playerName}', uid)
-                .replace('{quantity}', amount.toString()),
-            );
-          } else {
-            await DiscordResponse.sendFailed(
-              interaction,
-              ERROR_MESSAGE[301][locale]
-                .replace('{action}', 'give')
-                .replace('{itemName}', id)
-                .replace('{playerName}', uid)
-                .replace('{quantity}', amount.toString())
-                .replace('{reason}', result.message),
-            );
-          }
+          await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+          await DiscordResponse.sendApiResponse(interaction, result);
           break;
         }
-
+        //--- Delete item ---
         case 'delete': {
           const uid: string = interaction.options.getString('uid', true);
           const id: string = interaction.options.getString('id', true);
@@ -279,28 +262,11 @@ const command: Command = {
             id,
             amount,
           });
-          interaction.deferReply({ ephemeral: true });
-          if (result.success) {
-            await interaction.reply({
-              content: SUCCESS_MESSAGE[300][locale]
-                .replace('{action}', 'delete')
-                .replace('{itemName}', id)
-                .replace('{playerName}', uid)
-                .replace('{quantity}', amount.toString()),
-              ephemeral: true,
-            });
-          } else {
-            await interaction.reply({
-              content: ERROR_MESSAGE[301][locale]
-                .replace('{action}', 'delete')
-                .replace('{itemName}', id)
-                .replace('{playerName}', uid)
-                .replace('{quantity}', amount.toString()),
-              ephemeral: true,
-            });
-          }
+          await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+          await DiscordResponse.sendApiResponse(interaction, result);
           break;
         }
+        //--- Give artifact ---
         case 'give-artifact': {
           const uid: string = interaction.options.getString('uid', true);
           const id: string = interaction.options.getString('id', true);
@@ -308,23 +274,36 @@ const command: Command = {
 
           const substats: string[] = [];
           const substatNames: string[] = [];
+          let duplicateFound = false;
+          let duplicateName = '';
 
-          ['substat1', 'substat2', 'substat3', 'substat4'].forEach((n) => {
+          for (const n of ['substat1', 'substat2', 'substat3', 'substat4']) {
             const val = interaction.options.getString(n);
             if (val) {
               const displayName = SUBSTAT_NAMES[parseInt(val)] || val;
 
               if (substatNames.includes(displayName)) {
-                interaction.reply({
-                  content: `❌ Duplicate substat detected: ${displayName}. Each artifact can only have one of each substat type.`,
-                  ephemeral: true,
-                });
-                return;
+                duplicateFound = true;
+                duplicateName = displayName;
+                break;
               }
               substats.push(val);
               substatNames.push(displayName);
             }
-          });
+          }
+
+          if (duplicateFound) {
+            await DiscordResponse.sendFailed(
+              interaction,
+              ERROR_MESSAGE[302][locale].replace(
+                '{reason}',
+                duplicateName,
+              ),
+            );
+            break;
+          }
+
+          await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
           const result = await GMUtils.createArtifact(interaction, {
             uid,
@@ -333,12 +312,8 @@ const command: Command = {
             level: 1, // Always level 1
             appendPropIdList: substats,
           });
-          interaction.deferReply({ ephemeral: true });
-          if (result.success) {
-            await DiscordResponse.sendSuccess(interaction, result.message);
-          } else {
-            await DiscordResponse.sendFailed(interaction, result.message);
-          }
+
+          await DiscordResponse.sendApiResponse(interaction, result);
           break;
         }
         case 'send-mail': {
@@ -392,19 +367,13 @@ const command: Command = {
         }
 
         default:
-          await interaction.reply({
-            content: 'Unknown subcommand',
-            ephemeral: true,
-          });
+          await DiscordResponse.sendFailed(interaction, ERROR_MESSAGE[103][locale]);
       }
     } catch (error: unknown) {
       if (error instanceof Error) {
-        await DiscordResponse.sendFailed(interaction, error.message);
+        console.error(error.message);
       } else if (error instanceof DiscordException) {
-        await DiscordResponse.sendFailed(
-          interaction,
-          ERROR_MESSAGE[103][locale].replace('{detail}', error.message),
-        );
+        await DiscordResponse.sendFailed(interaction, error.message);
       }
     }
   },

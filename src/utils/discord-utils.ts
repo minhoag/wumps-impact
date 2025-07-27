@@ -1,5 +1,5 @@
 import { ERROR_MESSAGE } from '@/constant/response';
-import { EmbedType, ResponseType } from '@/type';
+import { CustomResponse, EmbedType, ResponseType } from '@/type';
 import {
   CommandInteraction,
   AutocompleteInteraction,
@@ -7,11 +7,11 @@ import {
   MessageFlags,
   type ColorResolvable,
   ChannelType,
-  channelLink,
   TextChannel,
   ModalSubmitInteraction,
 } from 'discord.js';
 import { GMUtils } from './gm-utils';
+import { RETCODE } from '@/constant/config';
 
 const COOLDOWN_SEPARATOR = '-';
 
@@ -74,6 +74,19 @@ export const DiscordResponse = {
     } else if (!interaction.replied) {
       await interaction.reply(response);
     }
+  },
+
+  sendApiResponse: async (interaction: CommandInteraction, response: CustomResponse) => {
+    const embed = DiscordResponse.createEmbed({
+      title: response.retcode === RETCODE.SUCCESS ? 'Success' : 'Failed',
+      description: response.data ?? response.msg ?? '',
+      type: response.retcode === RETCODE.SUCCESS ? EmbedType.SUCCESS : EmbedType.ERROR,
+    });
+    await DiscordResponse.sendResponse({
+      interaction,
+      types: [ResponseType.EMBED, ResponseType.EPHEMERAL],
+      embed,
+    });
   },
 
   sendSuccess: async (interaction: CommandInteraction, message: string) => {
@@ -174,24 +187,24 @@ export const DiscordEvent = {
 
       if (receiver.toLowerCase() === 'all') {
         const result = await GMUtils.sendMailToAll(title, content, item, expiry);
-        if (result.success) {
+        if (result.data) {
           await interaction.editReply({
-            content: `✅ Gửi thư thành công cho tất cả người chơi! ${result.successCount > 0 ? `(${result.successCount} người nhận)` : ''}${result.failedUIDs.length > 0 ? `\n❌ Gửi thất bại cho: ${result.failedUIDs.join(', ')}` : ''}`,
+            content: result.data,
           });
         } else {
           await interaction.editReply({
-            content: `❌ Gửi thư thất bại: ${result.message}`,
+            content: `❌ Gửi thư thất bại: ${result.msg}`,
           });
         }
       } else {
         const result = await GMUtils.sendMailToPlayer(receiver, title, content, item, expiry);
-        if (result.success) {
+        if (result.data) {
           await interaction.editReply({
             content: `✅ Gửi thư thành công cho người chơi ${receiver}`,
           });
         } else {
           await interaction.editReply({
-            content: `❌ Gửi thư thất bại cho người chơi ${receiver}: ${result.message}`,
+            content: `❌ Gửi thư thất bại cho người chơi ${receiver}: ${result.msg}`,
           });
         }
       }

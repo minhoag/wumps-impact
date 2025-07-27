@@ -46,6 +46,16 @@ export const ERROR_MESSAGE: { [key: number]: Record<Locale, string> } = {
     [Locale.EnglishUS]:
       'Failed `{action}` `{itemName}` for player `{playerName}`. Quantity: `{quantity}`. Reason: {reason}',
   },
+  302: {
+    [Locale.Vietnamese]:
+      'Tạo thánh dị vật thất bại. Nguyên nhân: dòng phụ trùng lặp `{reason}`',
+    [Locale.EnglishUS]: 'Artifact creation failed. Reason: duplicate substat `{reason}`',
+  },
+
+  2001: {
+    [Locale.Vietnamese]: 'Thêm vật phẩm thất bại. Nguyên nhân: {reason}',
+    [Locale.EnglishUS]: 'Failed to add item. Reason: {reason}',
+  }
 };
 
 export const SUCCESS_MESSAGE: { [key: number]: Record<Locale, string> } = {

@@ -7,6 +7,12 @@ export const GACHA_TYPE_ACTIVITY_AVATAR = 301;
 export const GACHA_TYPE_ACTIVITY_WEAPON = 302;
 export const GACHA_TYPE_SPECIAL_ACTIVITY_AVATAR = 400;
 
+export const RETCODE = {
+  PARAM_ERROR: 1002,
+  UID_NOT_FOUND: 2001,
+  SUCCESS: 0,
+};
+
 //--- Endpoints Config ---
 export const BASE_URL = 'http://localhost';
 export const ENDPOINT = { GM: '14861' };

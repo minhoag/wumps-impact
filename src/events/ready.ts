@@ -17,11 +17,7 @@ const ReadyEvent: Event = {
         (schedule) => schedule.endTime < new Date(),
       );
       await DiscordPrisma.t_discord_gacha_schedule.deleteMany({
-        where: {
-          endTime: {
-            lt: new Date(),
-          },
-        },
+        where: { endTime: { lt: new Date() } },
       });
       client.gachaData = data;
       client.gachaSchedule = endedSchedule;

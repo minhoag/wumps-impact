@@ -15,10 +15,7 @@ import type { GachaScheduleData } from '@/interface';
 import { format } from 'date-fns';
 import type { Command } from '@/type';
 
-const GACHA_TYPE = {
-  WEAPON: [302, 202],
-  EVENT: [301, 400],
-};
+const GACHA_TYPE = { WEAPON: [302, 202], EVENT: [301, 400] };
 
 const Gacha: Command = {
   command: new SlashCommandBuilder()
@@ -176,10 +173,7 @@ const Gacha: Command = {
             isVietnamese && b.vietnameseName
               ? b.vietnameseName
               : b.name;
-          const choice = {
-            name: name,
-            value: String(b.value),
-          };
+          const choice = { name: name, value: String(b.value) };
           return choice;
         });
       await interaction.respond(choices);
@@ -283,7 +277,7 @@ async function executeCreateGacha(
   if (start >= end) {
     await DiscordResponse.sendFailed(
       interaction,
-      ERROR_MESSAGE[1000][interaction.locale],
+      ERROR_MESSAGE[201][interaction.locale],
     );
     return;
   }
@@ -295,7 +289,7 @@ async function executeCreateGacha(
   if (!gachaData) {
     await DiscordResponse.sendFailed(
       interaction,
-      ERROR_MESSAGE[1004][interaction.locale].replace(
+      ERROR_MESSAGE[204][interaction.locale].replace(
         '{value}',
         value,
       ),
@@ -349,7 +343,7 @@ async function executeCreateGacha(
   if (itemAlreadyScheduled) {
     await DiscordResponse.sendFailed(
       interaction,
-      ERROR_MESSAGE[1002][interaction.locale].replace(
+      ERROR_MESSAGE[202][interaction.locale].replace(
         '{value}',
         value,
       ),
@@ -365,15 +359,15 @@ async function executeCreateGacha(
     enabled: enabled,
   };
   const gachaUtils = new GachaUtils(options, gachaData);
-  const success = await gachaUtils.create();
+  const result = await gachaUtils.create();
 
-  if (success) {
+  if (result === 'Success') {
     const characterName = interaction.client.gachaData.find(
       (gacha) => gacha.value === value,
     )?.name;
     await DiscordResponse.sendSuccess(
       interaction,
-      SUCCESS_MESSAGE[2000][interaction.locale]
+      SUCCESS_MESSAGE[200][interaction.locale]
         .replace('{characterName}', characterName)
         .replace('{beginTime}', format(start, 'dd/MM/yyyy HH:mm'))
         .replace('{endTime}', format(end, 'dd/MM/yyyy HH:mm')),
@@ -397,7 +391,10 @@ async function executeCreateGacha(
   } else {
     await DiscordResponse.sendFailed(
       interaction,
-      ERROR_MESSAGE[2001][interaction.locale],
+      ERROR_MESSAGE[205][interaction.locale].replace(
+        '{reason}',
+        result,
+      ),
     );
   }
 }
@@ -419,7 +416,7 @@ async function executeUpdateGacha(
   if (start && end && start >= end) {
     await DiscordResponse.sendFailed(
       interaction,
-      ERROR_MESSAGE[1000][interaction.locale],
+      ERROR_MESSAGE[201][interaction.locale],
     );
     return;
   }
@@ -433,17 +430,29 @@ async function executeUpdateGacha(
   };
 
   const gachaUtils = new GachaUtils(options, {});
-  const success = await gachaUtils.update();
+  const result = await gachaUtils.update();
 
-  if (success) {
+  if (result === 'Success') {
     await DiscordResponse.sendSuccess(
       interaction,
-      'Gacha schedule updated successfully',
+      SUCCESS_MESSAGE[200][interaction.locale]
+        .replace('{characterName}', scheduleId.toString())
+        .replace(
+          '{beginTime}',
+          format(start || new Date(), 'dd/MM/yyyy HH:mm'),
+        )
+        .replace(
+          '{endTime}',
+          format(end || new Date(), 'dd/MM/yyyy HH:mm'),
+        ),
     );
   } else {
     await DiscordResponse.sendFailed(
       interaction,
-      'Failed to update gacha schedule',
+      ERROR_MESSAGE[205][interaction.locale].replace(
+        '{reason}',
+        result,
+      ),
     );
   }
 }
@@ -465,19 +474,18 @@ async function executeDeleteGacha(
   };
 
   const gachaUtils = new GachaUtils(options, {});
-  const success = await gachaUtils.delete();
+  const result = await gachaUtils.delete();
 
-  if (success) {
+  if (result) {
     await DiscordResponse.sendSuccess(
       interaction,
-      'Gacha schedule deleted successfully',
+      SUCCESS_MESSAGE[200][interaction.locale].replace(
+        '{characterName}',
+        scheduleId.toString(),
+      ),
     );
     await DiscordPrisma.t_discord_gacha_schedule.deleteMany({
-      where: {
-        gachaData: {
-          scheduleId: scheduleId,
-        },
-      },
+      where: { gachaData: { scheduleId: scheduleId } },
     });
     const scheduleIndex = interaction.client.gachaSchedule.findIndex(
       (schedule: any) => schedule.gachaDataId === scheduleId,
@@ -488,7 +496,10 @@ async function executeDeleteGacha(
   } else {
     await DiscordResponse.sendFailed(
       interaction,
-      'Failed to delete gacha schedule',
+      ERROR_MESSAGE[205][interaction.locale].replace(
+        '{reason}',
+        result,
+      ),
     );
   }
 }

@@ -59,16 +59,8 @@ export class GachaUtils {
 
     return JSON.stringify({
       gacha_up_list: [
-        {
-          item_parent_type: 2,
-          prob: 500,
-          item_list: items4Array,
-        },
-        {
-          item_parent_type: 1,
-          prob: 500,
-          item_list: items5Array,
-        },
+        { item_parent_type: 2, prob: 500, item_list: items4Array },
+        { item_parent_type: 1, prob: 500, item_list: items5Array },
       ],
     });
   }
@@ -80,7 +72,7 @@ export class GachaUtils {
 
   //--- Main function ----
   //--- Create a gacha schedule in the game server ----
-  public async create(): Promise<boolean> {
+  public async create(): Promise<string> {
     const startTime = this.options.begin_time;
     const endTime = this.options.end_time;
     const gachaData = this.scheduleData;
@@ -89,7 +81,7 @@ export class GachaUtils {
       ? 223
       : 223;
     const rateUpItems4 = gachaData.rateUpItems4;
-    const createdGacha =
+    try {
       await ConfigPrisma.t_gacha_schedule_config.create({
         data: {
           gacha_type: this.options.gacha_type,
@@ -122,13 +114,14 @@ export class GachaUtils {
             : '',
         },
       });
-
-    if (!createdGacha) return false;
-    return true;
+      return 'Success';
+    } catch (error) {
+      return 'Failed. ' + error;
+    }
   }
 
-  public async update(): Promise<boolean> {
-    const updatedGacha =
+  public async update(): Promise<string> {
+    try {
       await ConfigPrisma.t_gacha_schedule_config.update({
         where: { schedule_id: this.options.schedule_id },
         //--- Only allow update basic information ----
@@ -138,18 +131,20 @@ export class GachaUtils {
           enabled: this.options.enabled,
         },
       });
-
-    if (!updatedGacha) return false;
-    return true;
+      return 'Success';
+    } catch (error) {
+      return 'Failed. ' + error;
+    }
   }
 
-  public async delete(): Promise<boolean> {
-    const deletedGacha =
+  public async delete(): Promise<string> {
+    try {
       await ConfigPrisma.t_gacha_schedule_config.delete({
         where: { schedule_id: this.options.schedule_id },
       });
-
-    if (!deletedGacha) return false;
-    return true;
+      return 'Success';
+    } catch (error) {
+      return 'Failed. ' + error;
+    }
   }
 }

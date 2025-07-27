@@ -9,16 +9,11 @@ export const GACHA_TYPE_SPECIAL_ACTIVITY_AVATAR = 400;
 
 //--- Endpoints Config ---
 export const BASE_URL = 'http://localhost';
-export const ENDPOINT = {
-  GM: '14861',
-};
+export const ENDPOINT = { GM: '14861' };
 
 //--- Request Config ---
 export const CONFIG = {
-  REGION: {
-    DEV_GIO: 'dev_gio',
-    DEV_GIO_OVERSEA: 'dev_gio_oversea',
-  },
+  REGION: { DEV_GIO: 'dev_gio', DEV_GIO_OVERSEA: 'dev_gio_oversea' },
   CMD: {
     SEND_MAIL: '1005',
     GUEST_BIND_ACCOUNT: '1110',

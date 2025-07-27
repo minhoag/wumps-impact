@@ -20,10 +20,6 @@ export interface GachaScheduleData {
   title_textmap?: string;
   display_up4_item_list?: string;
 }
-export interface GMOperationResult {
-  success: boolean;
-  message: string;
-}
 
 export interface ItemOperation {
   uid: string;

@@ -24,49 +24,54 @@ export const ERROR_MESSAGE: {
     [Locale.EnglishUS]: 'An unknown error occurred. Detail: {detail}',
   },
   //--- Gacha Command ---
-  1001: {
+  201: {
     [Locale.Vietnamese]: '`start` phải trước `end`.',
     [Locale.EnglishUS]: '`start` must be before `end`.',
   },
-  1002: {
+  202: {
     [Locale.Vietnamese]:
       'Một sự kiện Gacha khác đã được tạo trong khoảng thời gian này.',
     [Locale.EnglishUS]:
       'Another gacha is already active in this time range.',
   },
-  1003: {
+  203: {
     [Locale.Vietnamese]:
       'Giá trị sự kiện `{value}` đã tồn tại trong khoảng thời gian này.',
     [Locale.EnglishUS]:
       'Event value `{value}` is already scheduled during this time range.',
   },
-  1004: {
+  204: {
     [Locale.Vietnamese]:
       'Không tìm thấy dữ liệu Gacha cho giá trị `{value}`. Vui lòng tải lên trước.',
     [Locale.EnglishUS]:
       'No gacha data found for value `{value}`. Please upload it first.',
   },
   //--- Database Error related ---
-  2001: {
-    [Locale.Vietnamese]: 'Lên lịch Gacha thất bại.',
-    [Locale.EnglishUS]: 'Gacha schedule creation failed.',
+  205: {
+    [Locale.Vietnamese]:
+      'Lên lịch Gacha thất bại. Nguyên nhân: {reason}',
+    [Locale.EnglishUS]:
+      'Gacha schedule creation failed. Reason: {reason}',
+  },
+  //--- GM Command ---
+  301: {
+    [Locale.Vietnamese]:
+      'Thất bại `{action}` `{itemName}` cho người chơi `{playerName}`. Số lượng: `{quantity}`. Nguyên nhân: {reason}',
+    [Locale.EnglishUS]:
+      'Failed `{action}` `{itemName}` for player `{playerName}`. Quantity: `{quantity}`. Reason: {reason}',
   },
 };
 
 export const SUCCESS_MESSAGE: {
   [key: number]: Record<Locale, string>;
 } = {
-  1000: {
+  200: {
     [Locale.Vietnamese]:
       'Lên lịch thành công cho `{characterName}` Thời gian: `{beginTime}` - `{endTime}`.',
     [Locale.EnglishUS]:
       'Gacha schedule created successfully for `{characterName}`. Time: `{beginTime}` - `{endTime}`.',
   },
-  2000: {
-    [Locale.Vietnamese]: 'Tạo Gacha trên Game Server thành công.',
-    [Locale.EnglishUS]: 'Gacha created on game server successfully.',
-  },
-  3000: {
+  300: {
     [Locale.Vietnamese]:
       'Thành công `{action}` `{itemName}` cho người chơi `{playerName}`. Số lượng: `{quantity}`.',
     [Locale.EnglishUS]:

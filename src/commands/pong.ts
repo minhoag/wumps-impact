@@ -10,9 +10,7 @@ const Ping: Command = {
   command: new SlashCommandBuilder()
     .setName('pong')
     .setDescription('Pong the bot')
-    .setDescriptionLocalizations({
-      [Locale.Vietnamese]: 'Pong bot',
-    }),
+    .setDescriptionLocalizations({ [Locale.Vietnamese]: 'Pong bot' }),
   cooldown: 1,
   execute: async (interaction: CommandInteraction) => {
     const latency = Date.now() - interaction.createdTimestamp;

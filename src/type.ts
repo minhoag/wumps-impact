@@ -37,7 +37,6 @@ export type Event = {
   once: boolean;
   execute: (...args: any[]) => void | Promise<void>;
 };
-
 declare module 'discord.js' {
   interface Client {
     commands: Collection<string, Command>;
@@ -45,5 +44,16 @@ declare module 'discord.js' {
     cooldowns: Collection<string, number>;
     gachaData: any[];
     gachaSchedule: any[];
+  }
+}
+
+export class CustomResponse extends Response {
+  success: boolean;
+  message: string;
+
+  constructor(success: boolean, message: string) {
+    super();
+    this.success = success;
+    this.message = message;
   }
 }

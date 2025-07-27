@@ -153,3 +153,11 @@ model t_discord_gacha_schedule {
   @@index([gachaType, beginTime, endTime])
   @@index([beginTime, endTime])
 }
+
+model t_discord_whitelist {
+  id        Int    @id @default(autoincrement())
+  discordId String @unique
+  createdAt DateTime @default(now())
+
+  @@index([discordId])
+}

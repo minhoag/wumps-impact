@@ -21,7 +21,7 @@ export const DiscordResponse = {
   //--- Create embed ----
   createEmbed: (options: {
     title?: string;
-    description: string;
+    description?: string;
     type: EmbedType;
     fields?: { name: string; value: string }[];
     image?: string | null;
@@ -33,12 +33,13 @@ export const DiscordResponse = {
       INFO: '#FEE75C' as ColorResolvable,
       DEFAULT: '#FEE75C' as ColorResolvable,
     };
-    return new EmbedBuilder()
-      .setTitle(title || '')
-      .setDescription(description)
-      .setColor(color[type])
-      .addFields(fields || [])
-      .setImage(image || null);
+    const embed = new EmbedBuilder()
+    if (title) embed.setTitle(title);
+    if (description) embed.setDescription(description);
+    if (type) embed.setColor(color[type]);
+    if (fields) embed.addFields(fields);
+    if (image) embed.setImage(image);
+    return embed;
   },
 
   //--- Send response ----

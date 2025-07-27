@@ -9,6 +9,7 @@
     "pull:config": "bunx prisma db pull --schema prisma/config.prisma",
     "pull:user": "bunx prisma db push --schema prisma/user.prisma",
     "push:discord": "bunx prisma db push --schema prisma/discord.prisma",
+    "migrate:discord": "bunx prisma migrate dev --schema prisma/discord.prisma --name ",
     "prisma:generate": "bunx prisma generate --schema prisma/discord.prisma && bunx prisma generate --schema prisma/user.prisma && bunx prisma generate --schema prisma/config.prisma"
   },
   "keywords": [],

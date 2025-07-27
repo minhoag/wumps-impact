@@ -1,5 +1,5 @@
 import { DiscordPrisma } from '@/utils/prisma-utils';
-import { schedule as gachaSchedule } from '../events/ref.schedule';
+import { schedule as gachaSchedule } from '@/data/schedule';
 
 async function main() {
   console.log(`⬆️  Uploading ${gachaSchedule.length} gacha banners to MySQL…`);
@@ -56,7 +56,7 @@ async function main() {
   }
 
   // Process weapon groups
-  for (const [scheduleId, weapons] of Object.entries(weaponGroups)) {
+  for (const [_, weapons] of Object.entries(weaponGroups)) {
     if (weapons.length > 1) {
       // Multiple weapons with same scheduleId - combine rateUpItems5
       const combinedRateUpItems5 = Array.from(

@@ -1,4 +1,5 @@
 import { parse, isValid, startOfDay } from 'date-fns';
+import { DiscordPrisma } from './prisma-utils';
 
 //--- Helper functions ----
 /**
@@ -55,3 +56,18 @@ export const parseTimeRange = (input: string | null): Date | null => {
  * @returns The normalized string.
  */
 export const normalize = (s: string) => s.trim().toLowerCase();
+
+
+/**
+ * Check if a server is whitelisted.
+ * @param id - The discord id to check.
+ * @returns True if the user is whitelisted, false otherwise.
+ */
+export const checkWhiteList = async (guildId: string): Promise<boolean> => {
+  const whitelist = await DiscordPrisma.t_discord_whitelist.findUnique({
+    where: {
+      discordId: guildId,
+    }
+  });
+  return whitelist !== null;
+};

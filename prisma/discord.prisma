@@ -136,21 +136,15 @@ model t_discord_gacha_data {
   vietnameseName   String?
   type             String?
   image            String?
-
-  schedules t_discord_gacha_schedule[]
 }
 
 model t_discord_gacha_schedule {
   id           Int                   @id @default(autoincrement())
-  gachaDataId  Int
-  gachaValue   String
-  gachaType    Int
+  name         String
+  value        String
+  type         Int
   beginTime    DateTime
   endTime      DateTime
-
-  gachaData t_discord_gacha_data @relation(fields: [gachaDataId], references: [id])
-
-  @@index([gachaType, beginTime, endTime])
   @@index([beginTime, endTime])
 }
 

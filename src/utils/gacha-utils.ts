@@ -1,5 +1,6 @@
 import type { GachaScheduleData } from '@/interface';
-import { ConfigPrisma } from '@/utils/prisma-utils';
+import type { GachaResponse } from '@/type';
+import { ConfigPrisma, DiscordPrisma } from '@/utils/prisma-utils';
 
 export class GachaUtils {
   private options: GachaScheduleData;
@@ -62,7 +63,7 @@ export class GachaUtils {
 
   //--- Main function ----
   //--- Create a gacha schedule in the game server ----
-  public async create(): Promise<string> {
+  public async create(): Promise<GachaResponse> {
     const startTime = this.options.begin_time;
     const endTime = this.options.end_time;
     const gachaData = this.scheduleData;
@@ -70,7 +71,7 @@ export class GachaUtils {
     const costItemId = [301, 400].includes(this.options.gacha_type) ? 223 : 223;
     const rateUpItems4 = gachaData.rateUpItems4;
     try {
-      await ConfigPrisma.t_gacha_schedule_config.create({
+      const data = await ConfigPrisma.t_gacha_schedule_config.create({
         data: {
           gacha_type: this.options.gacha_type,
           begin_time: startTime,
@@ -99,13 +100,19 @@ export class GachaUtils {
             : '',
         },
       });
-      return 'Success';
+      return {
+        schedule_id: data.schedule_id,
+        gacha_type: data.gacha_type,
+      };
     } catch (error) {
-      return 'Failed. ' + error;
+      return {
+        schedule_id: 0,
+        gacha_type: 0,
+      };
     }
   }
 
-  public async update(): Promise<string> {
+  public async update(): Promise<GachaResponse> {
     try {
       await ConfigPrisma.t_gacha_schedule_config.update({
         where: { schedule_id: this.options.schedule_id },
@@ -116,20 +123,42 @@ export class GachaUtils {
           enabled: this.options.enabled,
         },
       });
-      return 'Success';
+      await DiscordPrisma.t_discord_gacha_schedule.update({
+        where: { id: this.options.schedule_id },
+        data: {
+          beginTime: this.options.begin_time,
+          endTime: this.options.end_time
+        },
+      });
+      return {
+        schedule_id: this.options.schedule_id ?? 0,
+        gacha_type: this.options.gacha_type ?? 0,
+      };
     } catch (error) {
-      return 'Failed. ' + error;
+      return {
+        schedule_id: 0,
+        gacha_type: 0,
+      };
     }
   }
 
-  public async delete(): Promise<string> {
+  public async delete(): Promise<GachaResponse> {
     try {
       await ConfigPrisma.t_gacha_schedule_config.delete({
         where: { schedule_id: this.options.schedule_id },
       });
-      return 'Success';
+      await DiscordPrisma.t_discord_gacha_schedule.delete({
+        where: { id: this.options.schedule_id },
+      });
+      return {
+        schedule_id: this.options.schedule_id ?? 0,
+        gacha_type: this.options.gacha_type ?? 0,
+      };
     } catch (error) {
-      return 'Failed. ' + error;
+      return {
+        schedule_id: 0,
+        gacha_type: 0,
+      };
     }
   }
 }

@@ -7,6 +7,7 @@ import {
   type ApplicationCommandOptionChoiceData,
   type AutocompleteFocusedOption,
 } from 'discord.js';
+import type { t_discord_gacha_data, t_discord_gacha_schedule } from '@prisma-discord/client';
 
 export enum EmbedType {
   ERROR = 'ERROR',
@@ -32,6 +33,11 @@ export type Command = {
   execute(interaction: CommandInteraction): Promise<void>;
 };
 
+export type GachaResponse = {
+  schedule_id: number;
+  gacha_type: number
+};
+
 export type Event = {
   name: string;
   once: boolean;
@@ -42,8 +48,8 @@ declare module 'discord.js' {
     commands: Collection<string, Command>;
     events: Collection<string, Event>;
     cooldowns: Collection<string, number>;
-    gachaData: any[];
-    gachaSchedule: any[];
+    gacha_data: t_discord_gacha_data[];
+    gacha_schedule: t_discord_gacha_schedule[];
   }
 }
 

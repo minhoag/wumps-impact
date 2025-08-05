@@ -12,7 +12,7 @@ export class GachaUtils {
   }
 
   //--- Helper functions ----
-  private SORT_ID = { 202: 1002, 302: 1003, 201: 1004, 301: 1005, 400: 1006 };
+  private SORT_ID = { 200: 1000, 301: 9000, 400: 8000, 302: 7000, 202: 1002 };
   //--- Get the probability rule for the gacha type ----
   private getProbabilityRule(gachaType: number): number {
     switch (gachaType) {
@@ -68,7 +68,7 @@ export class GachaUtils {
     const endTime = this.options.end_time;
     const gachaData = this.scheduleData;
 
-    const costItemId = [301, 400].includes(this.options.gacha_type) ? 223 : 223;
+    const costItemId = this.options.gacha_type === 200 ? 224 : 223;
     const rateUpItems4 = gachaData.rateUpItems4;
     try {
       const data = await ConfigPrisma.t_gacha_schedule_config.create({
@@ -78,7 +78,7 @@ export class GachaUtils {
           end_time: endTime,
           cost_item_id: costItemId,
           cost_item_num: 1,
-          gacha_pool_id: 201,
+          gacha_pool_id: this.options.gacha_type === 200 ? 101 : 201,
           gacha_prob_rule_id: this.getProbabilityRule(this.options.gacha_type),
           gacha_up_config: this.getGachaUpConfig(gachaData),
           gacha_rule_config: '{}',

@@ -12,7 +12,7 @@ export class GachaUtils {
   }
 
   //--- Helper functions ----
-  private SORT_ID = { 200: 1000, 301: 9000, 400: 8000, 302: 7000, 202: 1002 };
+  private SORT_ID = { 200: 1000, 301: 9000, 400: 8000, 302: 7000, 202: 6000 };
   //--- Get the probability rule for the gacha type ----
   private getProbabilityRule(gachaType: number): number {
     switch (gachaType) {

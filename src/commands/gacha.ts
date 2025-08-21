@@ -12,6 +12,7 @@ import { MESSAGE_CODES } from '@/constant/response';
 import { Gacha, GachaType } from '@/utils/gacha-utils';
 import type { Command } from '@/type';
 import type { t_discord_gacha_schedule } from '@prisma-discord/client';
+import { DiscordPrisma } from '@/utils/prisma-utils';
 
 const GachaCommand: Command = {
   command: new SlashCommandBuilder()
@@ -231,7 +232,7 @@ const GachaCommand: Command = {
       const search = (focusedOption.value as string) || '';
       const isVietnamese =
         interaction.locale === Locale.Vietnamese || interaction.locale.startsWith('vi');
-      const allBanners: any[] = (interaction.client as any).gachaData || [];
+      const allBanners: any[] = interaction.client.gacha_data || [];
       
       const banners = allBanners
         .filter((banner) => {
@@ -260,7 +261,7 @@ const GachaCommand: Command = {
       return choices;
     }
 
-    //--- Delete and update gacha schedule ---
+    //--- Autocomplete for 'schedule_id' option in 'update' and 'delete' subcommands ---
     if (
       (subcommand === 'update' || subcommand === 'delete') &&
       focusedOption.name === 'schedule_id'
@@ -268,17 +269,21 @@ const GachaCommand: Command = {
       const search = (focusedOption.value as string) || '';
       const isVietnamese =
         interaction.locale === Locale.Vietnamese || interaction.locale.startsWith('vi');
-      const gachaSchedules: any[] = (interaction.client as any).gachaSchedule || [];
-      const gachaData: any[] = (interaction.client as any).gachaData || [];
+      const gachaSchedules: t_discord_gacha_schedule[] = interaction.client.gacha_schedule || [];
 
       const filteredSchedules = gachaSchedules
         .filter((schedule: t_discord_gacha_schedule) => {
           // Find the corresponding gacha data to get the name
+          const gachaData: any[] = interaction.client.gacha_data || [];
           const bannerData = gachaData.find(
-            (data: any) => data.value.toString() === schedule.value?.toString(),
+            (data: any) => data.value === schedule.value,
           );
           
-          if (!bannerData) return false;
+          if (!bannerData) {
+            const searchTerm = search.toLowerCase();
+            const haystack = `schedule ${schedule.id} type ${schedule.type}`.toLowerCase();
+            return haystack.includes(searchTerm);
+          }
           
           const displayName = isVietnamese && bannerData.vietnameseName 
             ? bannerData.vietnameseName 
@@ -291,14 +296,15 @@ const GachaCommand: Command = {
         .slice(0, 25);
 
       const choices: ApplicationCommandOptionChoiceData[] = filteredSchedules.map(
-        (schedule: any) => {
+        (schedule: t_discord_gacha_schedule) => {
+          const gachaData: any[] = interaction.client.gacha_data || [];
           const bannerData = gachaData.find(
-            (data: any) => data.value.toString() === schedule.gachaValue?.toString(),
+            (data: any) => data.value === schedule.value,
           );
           
           if (!bannerData) {
             return {
-              name: `Unknown Banner (${schedule.gachaValue}) - Schedule #${schedule.id}`,
+              name: `Unknown Banner (Type: ${schedule.type}) - Schedule #${schedule.id}`,
               value: schedule.id,
             };
           }
@@ -378,11 +384,48 @@ async function executeCreateGacha(interaction: ChatInputCommandInteraction) {
 
   const gachaCreate = await gacha.create();
   if (gachaCreate.success) {
-    await DiscordResponse.sendSuccess(interaction, {
-      messageCode: MESSAGE_CODES.GACHA.SCHEDULE_SUCCESS,
-      placeholders: { characterName: gachaCreate.message },
-      title: 'Gacha Schedule Created'
-    });
+    try {
+      // Find the banner data for the created gacha
+      const bannerData = interaction.client.gacha_data?.find((data: any) => data.value == id.toString());
+      const bannerName = bannerData ? bannerData.name : `Unknown Banner (${id})`;
+      
+      // Create entry in Discord database for tracking
+      await DiscordPrisma.t_discord_gacha_schedule.create({
+        data: {
+          name: bannerName,
+          value: id.toString(),
+          type: gachaType,
+          beginTime: start,
+          endTime: end,
+          enabled: enabled === 1,
+        },
+      });
+
+      // Update the client cache
+      const newSchedule = {
+        id: 0, // Will be set by database
+        name: bannerName,
+        value: id.toString(),
+        type: gachaType,
+        beginTime: start,
+        endTime: end,
+        enabled: enabled === 1,
+      };
+      interaction.client.gacha_schedule.push(newSchedule);
+
+      await DiscordResponse.sendSuccess(interaction, {
+        messageCode: MESSAGE_CODES.GACHA.SCHEDULE_SUCCESS,
+        placeholders: { characterName: gachaCreate.message },
+        title: 'Gacha Schedule Created'
+      });
+    } catch (discordError) {
+      console.error('Failed to create Discord schedule entry:', discordError);
+      await DiscordResponse.sendSuccess(interaction, {
+        messageCode: MESSAGE_CODES.GACHA.SCHEDULE_SUCCESS,
+        placeholders: { characterName: gachaCreate.message },
+        title: 'Gacha Schedule Created (Warning: Discord tracking failed)'
+      });
+    }
   } else {
     await DiscordResponse.sendFailed(interaction, {
       messageCode: MESSAGE_CODES.GACHA.SCHEDULE_FAILED,
@@ -425,11 +468,42 @@ async function executeUpdateGacha(interaction: ChatInputCommandInteraction) {
 
   const gachaUpdate = await gacha.update(scheduleId);
   if (gachaUpdate.success) {
-    await DiscordResponse.sendSuccess(interaction, {
-      messageCode: MESSAGE_CODES.GACHA.SCHEDULE_SUCCESS,
-      placeholders: { characterName: gachaUpdate.message },
-      title: 'Gacha Schedule Updated'
-    });
+    try {
+      // Update Discord database tracking
+      await DiscordPrisma.t_discord_gacha_schedule.update({
+        where: { id: scheduleId },
+        data: {
+          beginTime: start,
+          endTime: end,
+          enabled: enabled === 1,
+        },
+      });
+
+      // Update the client cache
+      const scheduleCache = interaction.client.gacha_schedule;
+      const scheduleIndex = scheduleCache.findIndex((s: any) => s.id === scheduleId);
+      if (scheduleIndex !== -1) {
+        scheduleCache[scheduleIndex] = {
+          ...scheduleCache[scheduleIndex],
+          beginTime: start,
+          endTime: end,
+          enabled: enabled === 1,
+        };
+      }
+
+      await DiscordResponse.sendSuccess(interaction, {
+        messageCode: MESSAGE_CODES.GACHA.SCHEDULE_SUCCESS,
+        placeholders: { characterName: gachaUpdate.message },
+        title: 'Gacha Schedule Updated'
+      });
+    } catch (discordError) {
+      console.error('Failed to update Discord schedule entry:', discordError);
+      await DiscordResponse.sendSuccess(interaction, {
+        messageCode: MESSAGE_CODES.GACHA.SCHEDULE_SUCCESS,
+        placeholders: { characterName: gachaUpdate.message },
+        title: 'Gacha Schedule Updated (Warning: Discord tracking failed)'
+      });
+    }
   } else {
     await DiscordResponse.sendFailed(interaction, {
       messageCode: MESSAGE_CODES.GACHA.SCHEDULE_FAILED,
@@ -446,11 +520,32 @@ async function executeDeleteGacha(interaction: ChatInputCommandInteraction) {
   const gacha = new Gacha({ id: scheduleId });
   const gachaDelete = await gacha.delete(scheduleId);
   if (gachaDelete.success) {
-    await DiscordResponse.sendSuccess(interaction, {
-      messageCode: MESSAGE_CODES.GACHA.SCHEDULE_SUCCESS,
-      placeholders: { characterName: gachaDelete.message },
-      title: 'Gacha Schedule Deleted'
-    });
+    try {
+      // Delete from Discord database tracking
+      await DiscordPrisma.t_discord_gacha_schedule.delete({
+        where: { id: scheduleId },
+      });
+
+      // Remove from client cache
+      const scheduleCache = interaction.client.gacha_schedule;
+      const scheduleIndex = scheduleCache.findIndex((s: any) => s.id === scheduleId);
+      if (scheduleIndex !== -1) {
+        scheduleCache.splice(scheduleIndex, 1);
+      }
+
+      await DiscordResponse.sendSuccess(interaction, {
+        messageCode: MESSAGE_CODES.GACHA.SCHEDULE_SUCCESS,
+        placeholders: { characterName: gachaDelete.message },
+        title: 'Gacha Schedule Deleted'
+      });
+    } catch (discordError) {
+      console.error('Failed to delete Discord schedule entry:', discordError);
+      await DiscordResponse.sendSuccess(interaction, {
+        messageCode: MESSAGE_CODES.GACHA.SCHEDULE_SUCCESS,
+        placeholders: { characterName: gachaDelete.message },
+        title: 'Gacha Schedule Deleted (Warning: Discord tracking cleanup failed)'
+      });
+    }
   } else {
     await DiscordResponse.sendFailed(interaction, {
       messageCode: MESSAGE_CODES.GACHA.SCHEDULE_FAILED,

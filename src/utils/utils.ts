@@ -64,6 +64,7 @@ export const normalize = (s: string) => s.trim().toLowerCase();
  * @returns True if the user is whitelisted, false otherwise.
  */
 export const checkWhiteList = async (guildId: string): Promise<boolean> => {
+  if (guildId === '0' || guildId === '' || guildId === null) return false;
   const whitelist = await DiscordPrisma.t_discord_whitelist.findUnique({
     where: {
       discordId: guildId,
@@ -71,3 +72,21 @@ export const checkWhiteList = async (guildId: string): Promise<boolean> => {
   });
   return whitelist !== null;
 };
+
+export function extractGachaUpConfig(gachaSchedule: any): string {
+  let bannerValue = gachaSchedule.gacha_type.toString(); // fallback
+  try {
+    if (gachaSchedule.gacha_up_config) {
+      const gachaConfig = JSON.parse(gachaSchedule.gacha_up_config);
+      if (gachaConfig.gacha_up_list) {
+        const fiveStarItems = gachaConfig.gacha_up_list.find((list: any) => list.item_parent_type === 1);
+        if (fiveStarItems && fiveStarItems.item_list && fiveStarItems.item_list.length > 0) {
+          bannerValue = fiveStarItems.item_list[0].toString(); // Use first 5-star item as banner value
+        }
+      }
+    }
+  } catch (parseError) {
+    // Use fallback value if parsing fails
+  }
+  return bannerValue;
+}

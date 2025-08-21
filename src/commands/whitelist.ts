@@ -33,6 +33,10 @@ const WhiteList: Command = {
     switch (subcommand) {
       case 'add': {
         const serverId = interaction.options.getString('server', true);
+        if (!serverId) {
+            const guildId = interaction.guildId;
+            if (!guildId) return await DiscordResponse.sendFailed(interaction, 'No guild ID found');
+        }
         const isWhitelisted = await checkWhiteList(serverId);
         if (isWhitelisted) return await DiscordResponse.sendFailed(interaction, 'Server is already whitelisted');
         await DiscordPrisma.t_discord_whitelist.create({

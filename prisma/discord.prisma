@@ -130,6 +130,7 @@ model t_discord_gacha_schedule {
   type      Int
   beginTime DateTime
   endTime   DateTime
+  enabled   Boolean  @default(true)
 
   @@index([beginTime, endTime])
 }

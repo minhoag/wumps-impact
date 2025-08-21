@@ -1,4 +1,4 @@
-import { ERROR_MESSAGE } from '@/constant/response';
+
 import { EmbedType, ResponseType } from '@/type';
 import {
   CommandInteraction,
@@ -76,30 +76,148 @@ export const DiscordResponse = {
     }
   },
 
-  sendSuccess: async (interaction: CommandInteraction, message: string) => {
+  sendSuccess: async (
+    interaction: CommandInteraction,
+    messageOrOptions: string | {
+      message?: string;
+      messageCode?: number;
+      placeholders?: Record<string, string>;
+      title?: string;
+      ephemeral?: boolean;
+      fields?: { name: string; value: string }[];
+      image?: string;
+    }
+  ) => {
+    const options = typeof messageOrOptions === 'string' 
+      ? { message: messageOrOptions } 
+      : messageOrOptions;
+
+    const {
+      message,
+      messageCode,
+      placeholders = {},
+      title = 'Success',
+      ephemeral = true,
+      fields,
+      image
+    } = options;
+
+    // Get message from code or use provided message
+    let description = message;
+    if (messageCode && !message) {
+      description = DiscordResponse.getMessageByCode('SUCCESS', messageCode, interaction.locale, placeholders);
+    } else if (message && Object.keys(placeholders).length > 0) {
+      description = DiscordResponse.replacePlaceholders(message, placeholders);
+    }
+
     const embed = DiscordResponse.createEmbed({
-      title: 'Success',
-      description: message,
+      title,
+      description,
       type: EmbedType.SUCCESS,
+      fields,
+      image,
     });
+
+    const responseTypes = [ResponseType.EMBED];
+    if (ephemeral) responseTypes.push(ResponseType.EPHEMERAL);
+
     await DiscordResponse.sendResponse({
       interaction,
-      types: [ResponseType.EMBED, ResponseType.EPHEMERAL],
+      types: responseTypes,
       embed,
     });
   },
 
-  sendFailed: async (interaction: CommandInteraction, message: string) => {
+  sendFailed: async (
+    interaction: CommandInteraction,
+    messageOrOptions: string | {
+      message?: string;
+      messageCode?: number;
+      placeholders?: Record<string, string>;
+      title?: string;
+      ephemeral?: boolean;
+      fields?: { name: string; value: string }[];
+      image?: string;
+    }
+  ) => {
+    const options = typeof messageOrOptions === 'string' 
+      ? { message: messageOrOptions } 
+      : messageOrOptions;
+
+    const {
+      message,
+      messageCode,
+      placeholders = {},
+      title = 'Failed',
+      ephemeral = true,
+      fields,
+      image
+    } = options;
+
+    // Get message from code or use provided message
+    let description = message;
+    if (messageCode && !message) {
+      description = DiscordResponse.getMessageByCode('ERROR', messageCode, interaction.locale, placeholders);
+    } else if (message && Object.keys(placeholders).length > 0) {
+      description = DiscordResponse.replacePlaceholders(message, placeholders);
+    }
+
     const embed = DiscordResponse.createEmbed({
-      title: 'Failed',
-      description: message,
+      title,
+      description,
       type: EmbedType.ERROR,
+      fields,
+      image,
     });
+
+    const responseTypes = [ResponseType.EMBED];
+    if (ephemeral) responseTypes.push(ResponseType.EPHEMERAL);
+
     await DiscordResponse.sendResponse({
       interaction,
-      types: [ResponseType.EMBED, ResponseType.EPHEMERAL],
+      types: responseTypes,
       embed,
     });
+  },
+
+  // Helper function to get message by code and category
+  getMessageByCode: (
+    category: 'SUCCESS' | 'ERROR' | 'API' | 'DICT',
+    code: number | string,
+    locale: string,
+    placeholders: Record<string, string> = {}
+  ): string => {
+    const { SUCCESS_MESSAGE, ERROR_MESSAGE, API_MESSAGE, DICT } = require('@/constant/response');
+    
+    let messageMap: any;
+    switch (category) {
+      case 'SUCCESS':
+        messageMap = SUCCESS_MESSAGE;
+        break;
+      case 'ERROR':
+        messageMap = ERROR_MESSAGE;
+        break;
+      case 'API':
+        messageMap = API_MESSAGE;
+        break;
+      case 'DICT':
+        messageMap = DICT;
+        break;
+      default:
+        return 'Unknown message category';
+    }
+
+    const message = messageMap[code]?.[locale] || messageMap[code]?.['en-US'] || 'Message not found';
+    return DiscordResponse.replacePlaceholders(message, placeholders);
+  },
+
+  // Helper function to replace placeholders in messages
+  replacePlaceholders: (message: string, placeholders: Record<string, string>): string => {
+    let result = message;
+    for (const [key, value] of Object.entries(placeholders)) {
+      result = result.replace(new RegExp(`\\{${key}\\}`, 'g'), value);
+    }
+    return result;
   },
 };
 
@@ -126,10 +244,10 @@ export const DiscordEvent = {
       const expiresAt = client.cooldowns.get(cooldownKey);
       if (expiresAt && now < expiresAt) {
         const timeLeft = ((expiresAt - now) / 1000).toFixed(1);
-        await DiscordResponse.sendFailed(
-          interaction,
-          ERROR_MESSAGE[101][interaction.locale]?.replace('{time}', timeLeft) || '',
-        );
+        await DiscordResponse.sendFailed(interaction, {
+          messageCode: 101, // MESSAGE_CODES.GENERAL.COOLDOWN_ACTIVE
+          placeholders: { time: timeLeft }
+        });
         return;
       }
       client.cooldowns.set(cooldownKey, now + command.cooldown * 1000);

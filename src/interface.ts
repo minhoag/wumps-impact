@@ -21,6 +21,22 @@ export interface GachaScheduleData {
   display_up4_item_list?: string;
 }
 
+export interface GachaCollection {
+  id: number;
+  value: string;
+  name: string;
+  gachaType: number;
+  bannerType: string;
+  rateUpItems4?: string;
+  rateUpItems5?: string;
+  prefabPath?: string;
+  previewprefabPath?: string;
+  titlePath?: string;
+  globalName?: string;
+  vietnameseName?: string;
+  image?: string;
+}
+
 export interface ArtifactOperation {
   uid: string;
   itemId: string;

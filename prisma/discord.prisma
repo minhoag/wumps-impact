@@ -1,21 +1,21 @@
-datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_DISCORD")
-}
-
 generator client {
   provider = "prisma-client-js"
   output   = "../node_modules/@prisma-discord"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_DISCORD")
 }
 
 model t_discord_user {
   id        Int                   @id @default(autoincrement())
   discordId String                @unique
   username  String
-  wallet    t_discord_wallet?
   purchases t_discord_purchase[]
-  inventory t_discord_user_item[]
   quota     t_discord_quota[]
+  inventory t_discord_user_item[]
+  wallet    t_discord_wallet?
 }
 
 model t_discord_wallet {
@@ -23,18 +23,6 @@ model t_discord_wallet {
   moraBalance BigInt         @default(0)
   updatedAt   DateTime       @updatedAt
   user        t_discord_user @relation(fields: [userId], references: [id])
-}
-
-enum t_discord_item_type {
-  COSMETIC
-  QOL
-  RESIN_REFILL
-  GACHA_TICKET
-  UPGRADE_BUNDLE
-  HOUSING
-  TITLE
-  BP_SKIP
-  MYSTERY_BAG
 }
 
 model t_discord_item {
@@ -49,60 +37,60 @@ model t_discord_item {
 }
 
 model t_discord_shop_listing {
-  id             Int      @id @default(autoincrement())
-  itemId         Int
-  priceMora      BigInt
-  startsAt       DateTime
-  endsAt         DateTime
-  initialStock   Int
-  remainingStock Int
-  isActive       Boolean  @default(true)
-
-  item            t_discord_item            @relation(fields: [itemId], references: [id])
+  id              Int                       @id @default(autoincrement())
+  itemId          Int
+  priceMora       BigInt
+  startsAt        DateTime
+  endsAt          DateTime
+  initialStock    Int
+  remainingStock  Int
+  isActive        Boolean                   @default(true)
   lines           t_discord_purchase_line[]
   t_discord_quota t_discord_quota[]
+  item            t_discord_item            @relation(fields: [itemId], references: [id])
 
   @@unique([itemId, startsAt])
   @@index([itemId, startsAt])
 }
 
 model t_discord_purchase {
-  id             Int      @id @default(autoincrement())
-  userId         Int
-  totalPriceMora BigInt
-  createdAt      DateTime @default(now())
-
+  id                  Int                       @id @default(autoincrement())
+  userId              Int
+  totalPriceMora      BigInt
+  createdAt           DateTime                  @default(now())
   user                t_discord_user            @relation(fields: [userId], references: [id])
   lines               t_discord_purchase_line[]
   t_discord_user_item t_discord_user_item[]
+
+  @@index([userId], map: "t_discord_purchase_userId_fkey")
 }
 
 model t_discord_purchase_line {
-  id            Int    @id @default(autoincrement())
+  id            Int                    @id @default(autoincrement())
   purchaseId    Int
   listingId     Int
   quantity      Int
   linePriceMora BigInt
+  listing       t_discord_shop_listing @relation(fields: [listingId], references: [id])
+  purchase      t_discord_purchase     @relation(fields: [purchaseId], references: [id])
 
-  purchase t_discord_purchase     @relation(fields: [purchaseId], references: [id])
-  listing  t_discord_shop_listing @relation(fields: [listingId], references: [id])
+  @@index([listingId], map: "t_discord_purchase_line_listingId_fkey")
+  @@index([purchaseId], map: "t_discord_purchase_line_purchaseId_fkey")
 }
 
 model t_discord_user_item {
-  id               Int @id @default(autoincrement())
+  id               Int                @id @default(autoincrement())
   userId           Int
   itemId           Int
   quantity         Int
   sourcePurchaseId Int
+  item             t_discord_item     @relation(fields: [itemId], references: [id])
+  sourcePurchase   t_discord_purchase @relation(fields: [sourcePurchaseId], references: [id])
+  user             t_discord_user     @relation(fields: [userId], references: [id])
 
-  user           t_discord_user     @relation(fields: [userId], references: [id])
-  item           t_discord_item     @relation(fields: [itemId], references: [id])
-  sourcePurchase t_discord_purchase @relation(fields: [sourcePurchaseId], references: [id])
-}
-
-enum t_discord_quota_period {
-  DAILY
-  WEEKLY
+  @@index([itemId], map: "t_discord_user_item_itemId_fkey")
+  @@index([sourcePurchaseId], map: "t_discord_user_item_sourcePurchaseId_fkey")
+  @@index([userId], map: "t_discord_user_item_userId_fkey")
 }
 
 model t_discord_quota {
@@ -111,47 +99,62 @@ model t_discord_quota {
   period    t_discord_quota_period
   qtyBought Int                    @default(0)
   resetAt   DateTime
-
-  user    t_discord_user         @relation(fields: [userId], references: [id])
-  listing t_discord_shop_listing @relation(fields: [listingId], references: [id])
+  listing   t_discord_shop_listing @relation(fields: [listingId], references: [id])
+  user      t_discord_user         @relation(fields: [userId], references: [id])
 
   @@id([userId, listingId, period])
+  @@index([listingId], map: "t_discord_quota_listingId_fkey")
 }
 
 /// Static master data for every limited-time gacha banner (imported from ref.schedule.ts)
 model t_discord_gacha_data {
-  id               Int                        @id @default(autoincrement())
-  value            String
-  name             String
-  scheduleId       Int
-  gachaType        Int
-  bannerType       String
-  sortId           Int?
-  rateUpItems4     String?
-  rateUpItems5     String?
-  prefabPath       String?
+  id                Int    @id @default(autoincrement())
+  value             String
+  name              String
+  gachaType         Int
+  bannerType        String
+  rateUpItems4      String?
+  rateUpItems5      String?
+  prefabPath        String?
   previewprefabPath String?
-  titlePath        String?
-  globalName       String?
-  vietnameseName   String?
-  type             String?
-  image            String?
+  titlePath         String?
+  globalName        String?
+  vietnameseName    String?
+  image             String?
 }
 
 model t_discord_gacha_schedule {
-  id           Int                   @id @default(autoincrement())
-  name         String
-  value        String
-  type         Int
-  beginTime    DateTime
-  endTime      DateTime
+  id        Int      @id @default(autoincrement())
+  name      String
+  value     String
+  type      Int
+  beginTime DateTime
+  endTime   DateTime
+
   @@index([beginTime, endTime])
 }
 
 model t_discord_whitelist {
-  id        Int    @id @default(autoincrement())
-  discordId String @unique
+  id        Int      @id @default(autoincrement())
+  discordId String   @unique
   createdAt DateTime @default(now())
 
   @@index([discordId])
+}
+
+enum t_discord_item_type {
+  COSMETIC
+  QOL
+  RESIN_REFILL
+  GACHA_TICKET
+  UPGRADE_BUNDLE
+  HOUSING
+  TITLE
+  BP_SKIP
+  MYSTERY_BAG
+}
+
+enum t_discord_quota_period {
+  DAILY
+  WEEKLY
 }

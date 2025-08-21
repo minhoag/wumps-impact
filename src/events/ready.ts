@@ -8,35 +8,21 @@ const ReadyEvent: Event = {
   execute: async (client: Client) => {
     console.log(`Logged in as ${client.user?.tag}`);
     try {
-      // migrate data from server to discord bot
-      const gacha_data = await DiscordPrisma.t_discord_gacha_data.findMany();
-      const server = await ConfigPrisma.t_gacha_schedule_config.findMany();
-      
-      // Option 1: Sequential updates with error handling
-      for (const data of server) {
-        if (!data) continue;
-        
-        try {
-          await DiscordPrisma.t_discord_gacha_schedule.update({
-            where: { id: data.schedule_id },
-            data: {
-              type: data.gacha_type,
-              beginTime: data.begin_time,
-              endTime: data.end_time,
-            },
-          });
-        } catch (error) {
-          console.warn(`Failed to update schedule ${data.schedule_id}`);
-        }
-      }
-
-      // Get updated data after all operations
-      const gacha_schedule = await DiscordPrisma.t_discord_gacha_schedule.findMany();
-      
-      client.gacha_data = gacha_data;
-      client.gacha_schedule = gacha_schedule;
-      console.log(`Cached ${gacha_data.length} gacha banner records.`);
-      console.log(`Cached ${gacha_schedule.length} gacha schedule records.`);
+      const data = await DiscordPrisma.t_discord_gacha_data.findMany();
+      const scheduleData = await DiscordPrisma.t_discord_gacha_schedule.findMany();
+      //--- Remove ended schedule ---
+      const endedSchedule = scheduleData.filter((schedule) => schedule.endTime < new Date());
+      const activeSchedule = scheduleData.filter((schedule) => schedule.endTime >= new Date());
+      await DiscordPrisma.t_discord_gacha_schedule.deleteMany({
+        where: { endTime: { lt: new Date() } },
+      });
+      //--- Cache data ---
+      client.gachaData = data;
+      client.gachaSchedule = activeSchedule;
+      console.log(`Cached ${data.length} gacha banner records.`);
+      console.log(
+        `Cached ${scheduleData.length} gacha schedule records. Deleted ${endedSchedule.length} ended schedules.`,
+      );
     } catch (err) {
       console.error('Failed to preload gacha data:', err);
       client.gacha_data = [];

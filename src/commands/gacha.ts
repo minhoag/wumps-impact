@@ -7,18 +7,13 @@ import {
   PermissionFlagsBits,
 } from 'discord.js';
 import { DiscordResponse } from '@/utils/discord-utils';
-import { DiscordPrisma } from '@/utils/prisma-utils';
 import { parseTimeRange } from '@/utils/utils';
-import { ERROR_MESSAGE, SUCCESS_MESSAGE } from '@/constant/response';
-import { GachaUtils } from '@/utils/gacha-utils';
-import type { GachaScheduleData } from '@/interface';
-import { format } from 'date-fns';
+import { MESSAGE_CODES } from '@/constant/response';
+import { Gacha, GachaType } from '@/utils/gacha-utils';
 import type { Command } from '@/type';
 import type { t_discord_gacha_schedule } from '@prisma-discord/client';
 
-const GACHA_TYPE = { WEAPON: [302, 202], EVENT: [301, 400] };
-
-const Gacha: Command = {
+const GachaCommand: Command = {
   command: new SlashCommandBuilder()
     .setName('gacha')
     .setDescription('Manage gacha schedules')
@@ -33,31 +28,71 @@ const Gacha: Command = {
         .setDescriptionLocalizations({
           [Locale.Vietnamese]: 'Tạo lịch trình gacha mới',
         })
-        .addStringOption((option) =>
+        .addNumberOption((option) =>
           option
-            .setName('value')
-            .setDescription('Event item value (e.g. 15509)')
+            .setName('id')
+            .setDescription('Gacha value (e.g. 15509)')
             .setRequired(true)
+            .setDescriptionLocalizations({
+              [Locale.Vietnamese]: 'Giá trị gacha (ví dụ: 15509)',
+            })
             .setAutocomplete(true),
+        )
+        .addNumberOption((option) =>
+          option
+            .setName('gacha_type')
+            .setDescription('Gacha type')
+            .setDescriptionLocalizations({
+              [Locale.Vietnamese]: 'Loại gacha',
+            })
+            .addChoices(
+              {
+                name: 'Character 1',
+                value: GachaType.CHARACTER_1,
+                name_localizations: { [Locale.Vietnamese]: 'Nhân vật 1' },
+              },
+              {
+                name: 'Character 2',
+                value: GachaType.CHARACTER_2,
+                name_localizations: { [Locale.Vietnamese]: 'Nhân vật 2' },
+              },
+              {
+                name: 'Weapon 1',
+                value: GachaType.WEAPON_1,
+                name_localizations: { [Locale.Vietnamese]: 'Vũ khí 1' },
+              },
+              {
+                name: 'Weapon 2',
+                value: GachaType.WEAPON_2,
+                name_localizations: { [Locale.Vietnamese]: 'Vũ khí 2' },
+              },
+            )
+            .setRequired(true),
         )
         .addStringOption((option) =>
           option
             .setName('start')
-            .setDescription('ISO start time, e.g. 2024-08-01T00:00:00Z')
+            .setDescription('Start time, e.g. 2024-08-01T00:00:00Z')
+            .setDescriptionLocalizations({
+              [Locale.Vietnamese]: 'Thời gian bắt đầu, ví dụ: 2024-08-01T00:00:00Z',
+            })
             .setRequired(false),
         )
         .addStringOption((option) =>
           option
             .setName('end')
-            .setDescription('ISO end time, e.g. 2024-08-15T00:00:00Z')
+            .setDescription('End time, e.g. 2024-08-15T00:00:00Z')
+            .setDescriptionLocalizations({
+              [Locale.Vietnamese]: 'Thời gian kết thúc, ví dụ: 2024-08-15T00:00:00Z',
+            })
             .setRequired(false),
         )
         .addNumberOption((option) =>
           option
             .setName('enabled')
-            .setDescription('Start the gacha now?')
+            .setDescription('Start the gacha now? (Yes/No)')
             .setDescriptionLocalizations({
-              [Locale.Vietnamese]: 'Bắt đầu sự kiện ngay?',
+              [Locale.Vietnamese]: 'Bắt đầu sự kiện ngay? (Có/Không)',
             })
             .addChoices(
               {
@@ -85,25 +120,71 @@ const Gacha: Command = {
           option
             .setName('schedule_id')
             .setDescription('Schedule ID to update')
+            .setDescriptionLocalizations({
+              [Locale.Vietnamese]: 'ID lịch trình gacha cần cập nhật',
+            })
             .setRequired(true)
             .setAutocomplete(true),
+        )
+        .addNumberOption((option) =>
+          option
+            .setName('gacha_type')
+            .setDescription('Gacha type')
+            .setDescriptionLocalizations({
+              [Locale.Vietnamese]: 'Loại gacha',
+            })
+            .addChoices(
+              {
+                name: 'Character 1',
+                value: GachaType.CHARACTER_1,
+                name_localizations: { [Locale.Vietnamese]: 'Nhân vật 1' },
+              },
+            )
+            .addChoices(
+              {
+                name: 'Character 2',
+                value: GachaType.CHARACTER_2,
+                name_localizations: { [Locale.Vietnamese]: 'Nhân vật 2' },
+              },
+            )
+            .addChoices(
+              {
+                name: 'Weapon 1',
+                value: GachaType.WEAPON_1,
+                name_localizations: { [Locale.Vietnamese]: 'Vũ khí 1' },
+              },
+            )
+            .addChoices(
+              {
+                name: 'Weapon 2',
+                value: GachaType.WEAPON_2,
+                name_localizations: { [Locale.Vietnamese]: 'Vũ khí 2' },
+              },
+            )
+            .setRequired(true),
         )
         .addStringOption((option) =>
           option
             .setName('start')
-            .setDescription('ISO start time, e.g. 2024-08-01T00:00:00Z')
+            .setDescription('Start time, e.g. 2024-08-01T00:00:00Z')
+            .setDescriptionLocalizations({
+              [Locale.Vietnamese]: 'Thời gian bắt đầu, ví dụ: 2024-08-01T00:00:00Z',
+            })
             .setRequired(false),
         )
         .addStringOption((option) =>
           option
             .setName('end')
-            .setDescription('ISO end time, e.g. 2024-08-15T00:00:00Z')
+            .setDescription('End time, e.g. 2024-08-15T00:00:00Z')
+            .setDescriptionLocalizations({
+              [Locale.Vietnamese]: 'Thời gian kết thúc, ví dụ: 2024-08-15T00:00:00Z',
+            })
             .setRequired(false),
         )
         .addNumberOption((option) =>
           option
             .setName('enabled')
-            .setDescription('Enable or disable the gacha')
+            .setDescription('Enable or disable the gacha (Yes/No)')
             .setDescriptionLocalizations({
               [Locale.Vietnamese]: 'Bật hoặc tắt gacha',
             })
@@ -145,30 +226,41 @@ const Gacha: Command = {
     const subcommand = interaction.options.getSubcommand();
     const focusedOption = interaction.options.getFocused(true);
 
-    // Autocomplete for 'value' option in 'create' subcommand
-    if (subcommand === 'create' && focusedOption.name === 'value') {
+    //--- Autocomplete for 'id' option in 'create' subcommand ---
+    if (subcommand === 'create' && focusedOption.name === 'id') {
       const search = (focusedOption.value as string) || '';
       const isVietnamese =
         interaction.locale === Locale.Vietnamese || interaction.locale.startsWith('vi');
-      const allBanners: any[] = interaction.client.gacha_data || [];
+      const allBanners: any[] = (interaction.client as any).gachaData || [];
+      
       const banners = allBanners
-        .filter((b) => {
+        .filter((banner) => {
+          const searchTerm = search.toLowerCase();
           return (
-            b.name.toLowerCase().includes(search.toLowerCase()) ||
-            b.vietnameseName?.toLowerCase().includes(search.toLowerCase())
+            banner.name.toLowerCase().includes(searchTerm) ||
+            banner.vietnameseName?.toLowerCase().includes(searchTerm) ||
+            banner.value.toString().includes(searchTerm) ||
+            banner.globalName?.toLowerCase().includes(searchTerm)
           );
         })
         .slice(0, 25);
-      const choices: ApplicationCommandOptionChoiceData[] = banners.map((b: any) => {
-        const name = isVietnamese && b.vietnameseName ? b.vietnameseName : b.name;
-        const choice = { name: name, value: String(b.value) };
-        return choice;
+        
+      const choices: ApplicationCommandOptionChoiceData[] = banners.map((banner: any) => {
+        const displayName = isVietnamese && banner.vietnameseName ? banner.vietnameseName : banner.name;
+        const bannerTypeText = banner.bannerType === 'CHARACTER' ? '🎭' : '⚔️';
+        const choiceName = `${bannerTypeText} ${displayName} (${banner.value})`;
+        
+        return {
+          name: choiceName.length > 100 ? choiceName.substring(0, 97) + '...' : choiceName,
+          value: banner.value
+        };
       });
+      
       await interaction.respond(choices);
       return choices;
     }
 
-    //--- Delete are update gacha schedule ---
+    //--- Delete and update gacha schedule ---
     if (
       (subcommand === 'update' || subcommand === 'delete') &&
       focusedOption.name === 'schedule_id'
@@ -176,38 +268,52 @@ const Gacha: Command = {
       const search = (focusedOption.value as string) || '';
       const isVietnamese =
         interaction.locale === Locale.Vietnamese || interaction.locale.startsWith('vi');
-      const gachaSchedules: t_discord_gacha_schedule[] = interaction.client.gacha_schedule || [];
+      const gachaSchedules: any[] = (interaction.client as any).gachaSchedule || [];
+      const gachaData: any[] = (interaction.client as any).gachaData || [];
+
       const filteredSchedules = gachaSchedules
         .filter((schedule: t_discord_gacha_schedule) => {
           // Find the corresponding gacha data to get the name
-          const gachaData = interaction.client.gacha_data?.find(
-            (data: any) => data.value === schedule.value,
+          const bannerData = gachaData.find(
+            (data: any) => data.value.toString() === schedule.gachaValue?.toString(),
           );
-          const name = gachaData
-            ? isVietnamese && gachaData.vietnameseName
-              ? gachaData.vietnameseName
-              : gachaData.name
-            : schedule.value;
-          const haystack = `${name} ${schedule.type} ${name}`.toLowerCase();
-          return haystack.includes(search.toLowerCase());
+          
+          if (!bannerData) return false;
+          
+          const displayName = isVietnamese && bannerData.vietnameseName 
+            ? bannerData.vietnameseName 
+            : bannerData.name;
+          
+          const searchTerm = search.toLowerCase();
+          const haystack = `${displayName} ${bannerData.bannerType} ${bannerData.value} ${schedule.id}`.toLowerCase();
+          return haystack.includes(searchTerm);
         })
         .slice(0, 25);
 
       const choices: ApplicationCommandOptionChoiceData[] = filteredSchedules.map(
-        (schedule: t_discord_gacha_schedule) => {
-          const gachaData = interaction.client.gacha_data?.find(
-            (data: any) => data.value === schedule.value,
+        (schedule: any) => {
+          const bannerData = gachaData.find(
+            (data: any) => data.value.toString() === schedule.gachaValue?.toString(),
           );
-          const name = gachaData
-            ? isVietnamese && gachaData.vietnameseName
-              ? gachaData.vietnameseName
-              : gachaData.name
-            : schedule.value;
-          const gachaTypeText =
-            schedule.type === 302 || schedule.type === 202 ? 'WEAPON' : 'EVENT';
+          
+          if (!bannerData) {
+            return {
+              name: `Unknown Banner (${schedule.gachaValue}) - Schedule #${schedule.id}`,
+              value: schedule.id,
+            };
+          }
+          
+          const displayName = isVietnamese && bannerData.vietnameseName 
+            ? bannerData.vietnameseName 
+            : bannerData.name;
+          
+          const bannerTypeIcon = bannerData.bannerType === 'CHARACTER' ? '🎭' : '⚔️';
+          const statusIcon = schedule.enabled ? '✅' : '❌';
+          
+          const choiceName = `${statusIcon} ${bannerTypeIcon} ${displayName} (ID: ${schedule.id})`;
 
           return {
-            name: `[${gachaTypeText}:${schedule.type}] ${name}`,
+            name: choiceName.length > 100 ? choiceName.substring(0, 97) + '...' : choiceName,
             value: schedule.id,
           };
         },
@@ -238,193 +344,119 @@ const Gacha: Command = {
   },
 };
 
+//--- Create Gacha ---
 async function executeCreateGacha(interaction: ChatInputCommandInteraction) {
-  const value = interaction.options.getString('value', true);
+  //--- Get options ---
+  const id = interaction.options.getNumber('id', true);
+  const gachaType = interaction.options.getNumber('gacha_type', true);
   const startTime = interaction.options.getString('start');
   const endTime = interaction.options.getString('end');
   const enabled = interaction.options.getNumber('enabled') ?? 1;
-
+  //--- Parse time ---
   const start = startTime ? parseTimeRange(startTime) || new Date() : new Date();
   const end = endTime
     ? parseTimeRange(endTime) || new Date(start.getTime() + 14 * 24 * 60 * 60 * 1000)
     : new Date(start.getTime() + 14 * 24 * 60 * 60 * 1000);
-
+  //--- Check time ---
   if (start >= end) {
-    await DiscordResponse.sendFailed(interaction, ERROR_MESSAGE[201][interaction.locale]);
+    await DiscordResponse.sendFailed(interaction, {
+      messageCode: MESSAGE_CODES.GACHA.START_BEFORE_END
+    });
     return;
   }
 
-  // Get gacha data
-  const gachaData = interaction.client.gacha_data.find((gacha) => gacha.value === value);
-  if (!gachaData) {
-    await DiscordResponse.sendFailed(
-      interaction,
-      ERROR_MESSAGE[204][interaction.locale].replace('{value}', value),
-    );
-    return;
-  }
-
-  // Determine gacha type
-  const eventGachaType = gachaData.bannerType;
-  const possibleGachaTypes = eventGachaType === 'WEAPON' ? GACHA_TYPE.WEAPON : GACHA_TYPE.EVENT;
-  let selectedGachaType = null;
-
-  // Find available gacha type that doesn't overlap with existing schedules
-  for (const gachaType of possibleGachaTypes) {
-    const hasOverlap = interaction.client.gacha_schedule.some(
-      (schedule) =>
-        schedule.type === gachaType && schedule.beginTime < end && schedule.endTime > start,
-    );
-
-    if (!hasOverlap) {
-      selectedGachaType = gachaType;
-      break;
-    }
-  }
-
-  if (!selectedGachaType) {
-    const typeList =
-      eventGachaType === 'WEAPON'
-        ? GACHA_TYPE.WEAPON.join(' and ')
-        : GACHA_TYPE.EVENT.join(' and ');
-    await DiscordResponse.sendFailed(
-      interaction,
-      `All ${eventGachaType.toLowerCase()} gacha types (${typeList}) are already scheduled during this time period`,
-    );
-    return;
-  }
-
-  // Check if this specific item is already scheduled during this time period
-  const itemAlreadyScheduled = interaction.client.gacha_schedule.some(
-    (schedule) =>
-      schedule.type === selectedGachaType && schedule.beginTime < end && schedule.endTime > start,
-  );
-
-  if (itemAlreadyScheduled) {
-    await DiscordResponse.sendFailed(
-      interaction,
-      ERROR_MESSAGE[202][interaction.locale].replace('{value}', value),
-    );
-    return;
-  }
-
-  const options: GachaScheduleData = {
-    schedule_id: gachaData.scheduleId,
+  //--- Create Gacha ---
+  const gacha = new Gacha({
+    id: id,
+    gacha_type: gachaType,
     begin_time: start,
     end_time: end,
-    gacha_type: selectedGachaType,
     enabled: enabled,
-  };
-  const gachaUtils = new GachaUtils(options, gachaData);
-  const result = await gachaUtils.create();
+    // pass in character database on client to class
+    data: interaction.client.gachaData,
+  });
 
-  if (result.schedule_id !== 0) {
-    const characterName = interaction.client.gacha_data.find((gacha) => gacha.value === value)?.name;
-    await DiscordResponse.sendSuccess(
-      interaction,
-      SUCCESS_MESSAGE[200][interaction.locale]
-        .replace('{characterName}', characterName ?? value)
-        .replace('{beginTime}', format(start, 'dd/MM/yyyy HH:mm'))
-        .replace('{endTime}', format(end, 'dd/MM/yyyy HH:mm')),
-    );
-    await DiscordPrisma.t_discord_gacha_schedule.create({
-      data: {
-        id: result.schedule_id,
-        name: gachaData.name,
-        value: gachaData.value,
-        type: selectedGachaType,
-        beginTime: start,
-        endTime: end,
-      },
-    });
-    interaction.client.gacha_schedule.push({
-      id: result.schedule_id,
-      name: gachaData.name,
-      value: gachaData.value,
-      type: selectedGachaType,
-      beginTime: start,
-      endTime: end,
+  const gachaCreate = await gacha.create();
+  if (gachaCreate.success) {
+    await DiscordResponse.sendSuccess(interaction, {
+      messageCode: MESSAGE_CODES.GACHA.SCHEDULE_SUCCESS,
+      placeholders: { characterName: gachaCreate.message },
+      title: 'Gacha Schedule Created'
     });
   } else {
-    await DiscordResponse.sendFailed(
-      interaction,
-      ERROR_MESSAGE[205][interaction.locale].replace('{reason}', result.schedule_id.toString()),
-    );
+    await DiscordResponse.sendFailed(interaction, {
+      messageCode: MESSAGE_CODES.GACHA.SCHEDULE_FAILED,
+      placeholders: { reason: gachaCreate.message }
+    });
   }
 }
 
+//--- Update Gacha ---
 async function executeUpdateGacha(interaction: ChatInputCommandInteraction) {
+  //--- Get options ---
   const scheduleId = interaction.options.getInteger('schedule_id', true);
   const startTime = interaction.options.getString('start');
+  const gachaType = interaction.options.getNumber('gacha_type', true);
   const endTime = interaction.options.getString('end');
-  const enabled = interaction.options.getNumber('enabled');
-
-  const start = startTime ? parseTimeRange(startTime) : null;
-  const end = endTime ? parseTimeRange(endTime) : null;
-
+  const enabled = interaction.options.getNumber('enabled') ?? 1;
+  //--- Update time ---
+  const start = startTime ? parseTimeRange(startTime) || new Date() : new Date();
+  const end = endTime
+    ? parseTimeRange(endTime) || new Date(start.getTime() + 14 * 24 * 60 * 60 * 1000)
+    : new Date(start.getTime() + 14 * 24 * 60 * 60 * 1000);
+  //--- Check time ---
   if (start && end && start >= end) {
-    await DiscordResponse.sendFailed(interaction, ERROR_MESSAGE[201][interaction.locale]);
+    await DiscordResponse.sendFailed(interaction, {
+      messageCode: MESSAGE_CODES.GACHA.START_BEFORE_END
+    });
     return;
   }
 
-  const options: GachaScheduleData = {
-    schedule_id: scheduleId,
-    begin_time: start || new Date(),
-    end_time: end || new Date(),
-    gacha_type: 0,
-    enabled: enabled ?? 1,
-  };
+  //--- Update Gacha ---
+  const gacha = new Gacha({
+    id: scheduleId,
+    gacha_type: gachaType,
+    begin_time: start,
+    end_time: end,
+    enabled: enabled,
+    // pass in database on client
+    data: interaction.client.gachaData,
+  });
 
-  const gachaUtils = new GachaUtils(options, {});
-  const result = await gachaUtils.update();
-
-  if (result.schedule_id !== 0) {
-    await DiscordResponse.sendSuccess(
-      interaction,
-      SUCCESS_MESSAGE[200][interaction.locale]
-        .replace('{characterName}', scheduleId.toString())
-        .replace('{beginTime}', format(start || new Date(), 'dd/MM/yyyy HH:mm'))
-        .replace('{endTime}', format(end || new Date(), 'dd/MM/yyyy HH:mm')),
-    );
+  const gachaUpdate = await gacha.update(scheduleId);
+  if (gachaUpdate.success) {
+    await DiscordResponse.sendSuccess(interaction, {
+      messageCode: MESSAGE_CODES.GACHA.SCHEDULE_SUCCESS,
+      placeholders: { characterName: gachaUpdate.message },
+      title: 'Gacha Schedule Updated'
+    });
   } else {
-    await DiscordResponse.sendFailed(
-      interaction,
-      ERROR_MESSAGE[205][interaction.locale].replace('{reason}', result.schedule_id.toString()),
-    );
+    await DiscordResponse.sendFailed(interaction, {
+      messageCode: MESSAGE_CODES.GACHA.SCHEDULE_FAILED,
+      placeholders: { reason: gachaUpdate.message }
+    });
   }
 }
 
+//--- Delete Gacha ---
 async function executeDeleteGacha(interaction: ChatInputCommandInteraction) {
+  //--- Get options ---
   const scheduleId = interaction.options.getInteger('schedule_id', true);
-
-  const options: GachaScheduleData = {
-    schedule_id: scheduleId,
-    begin_time: new Date(),
-    end_time: new Date(),
-    gacha_type: 0,
-    enabled: 0,
-  };
-
-  const gachaUtils = new GachaUtils(options, {});
-  const result = await gachaUtils.delete();
-
-  if (result) {
-    await DiscordResponse.sendSuccess(
-      interaction,
-      SUCCESS_MESSAGE[200][interaction.locale].replace('{characterName}', scheduleId.toString()),
-    );
-    const scheduleIndex = interaction.client.gacha_schedule.findIndex(
-      (schedule: any) => schedule.id === scheduleId,
-    );
-    if (scheduleIndex !== -1) {
-      interaction.client.gacha_schedule.splice(scheduleIndex, 1);
-    }
+  //--- Delete Gacha ---
+  const gacha = new Gacha({ id: scheduleId });
+  const gachaDelete = await gacha.delete(scheduleId);
+  if (gachaDelete.success) {
+    await DiscordResponse.sendSuccess(interaction, {
+      messageCode: MESSAGE_CODES.GACHA.SCHEDULE_SUCCESS,
+      placeholders: { characterName: gachaDelete.message },
+      title: 'Gacha Schedule Deleted'
+    });
   } else {
-    await DiscordResponse.sendFailed(
-      interaction,
-      ERROR_MESSAGE[205][interaction.locale].replace('{reason}', result),
-    );
+    await DiscordResponse.sendFailed(interaction, {
+      messageCode: MESSAGE_CODES.GACHA.SCHEDULE_FAILED,
+      placeholders: { reason: gachaDelete.message }
+    });
   }
 }
 
-export default Gacha;
+export default GachaCommand;

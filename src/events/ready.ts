@@ -17,8 +17,8 @@ const ReadyEvent: Event = {
         where: { endTime: { lt: new Date() } },
       });
       //--- Cache data ---
-      client.gachaData = data;
-      client.gachaSchedule = activeSchedule;
+      client.gacha_data = data;
+      client.gacha_schedule = activeSchedule;
       console.log(`Cached ${data.length} gacha banner records.`);
       console.log(
         `Cached ${scheduleData.length} gacha schedule records. Deleted ${endedSchedule.length} ended schedules.`,

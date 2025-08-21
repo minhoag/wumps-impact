@@ -275,7 +275,7 @@ const GachaCommand: Command = {
         .filter((schedule: t_discord_gacha_schedule) => {
           // Find the corresponding gacha data to get the name
           const bannerData = gachaData.find(
-            (data: any) => data.value.toString() === schedule.gachaValue?.toString(),
+            (data: any) => data.value.toString() === schedule.value?.toString(),
           );
           
           if (!bannerData) return false;
@@ -373,7 +373,7 @@ async function executeCreateGacha(interaction: ChatInputCommandInteraction) {
     end_time: end,
     enabled: enabled,
     // pass in character database on client to class
-    data: interaction.client.gachaData,
+    data: interaction.client.gacha_data,
   });
 
   const gachaCreate = await gacha.create();
@@ -420,7 +420,7 @@ async function executeUpdateGacha(interaction: ChatInputCommandInteraction) {
     end_time: end,
     enabled: enabled,
     // pass in database on client
-    data: interaction.client.gachaData,
+    data: interaction.client.gacha_data,
   });
 
   const gachaUpdate = await gacha.update(scheduleId);

@@ -17,6 +17,10 @@ const InteractionCreateEvent: Event = {
       await DiscordEvent.handleAutocomplete(interaction);
     } else if (interaction.isModalSubmit()) {
       await DiscordEvent.handleModalSubmit(interaction);
+    } else if (interaction.isButton()) {
+      await DiscordEvent.handleButtonInteraction(interaction);
+    } else if (interaction.isStringSelectMenu()) {
+      await DiscordEvent.handleSelectMenuInteraction(interaction);
     }
   },
 };

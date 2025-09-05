@@ -5,10 +5,6 @@ import {
   PermissionFlagsBits,
   SlashCommandBuilder,
   type ApplicationCommandOptionChoiceData,
-  ModalBuilder,
-  TextInputBuilder,
-  TextInputStyle,
-  ActionRowBuilder,
   MessageFlags,
 } from 'discord.js';
 
@@ -186,12 +182,6 @@ const command: Command = {
               { name: 'Energy Recharge', value: '501234' },
             ),
         ),
-    )
-    .addSubcommand((subcommand) =>
-      subcommand
-        .setName('send-mail')
-        .setDescription('Send mail to all players.')
-        .setDescriptionLocalization('vi', 'Gửi mail cho tất cả người chơi.'),
     ),
   cooldown: 1,
   defer: false,
@@ -340,55 +330,7 @@ const command: Command = {
           }
           break;
         }
-        case 'send-mail': {
-          const modal = new ModalBuilder().setCustomId('mailForm').setTitle('Soạn thư gửi');
-
-          const receiver = new TextInputBuilder()
-            .setCustomId('receiverInput')
-            .setLabel('Người nhận (UID hoặc "all" cho tất cả)')
-            .setStyle(TextInputStyle.Short)
-            .setPlaceholder('Nhập UID cụ thể hoặc "all" để gửi cho tất cả người chơi')
-            .setRequired(true);
-
-          const title = new TextInputBuilder()
-            .setCustomId('titleInput')
-            .setLabel('Tiêu đề thư')
-            .setStyle(TextInputStyle.Short)
-            .setPlaceholder('Nhập tiêu đề thư...')
-            .setRequired(true);
-
-          const content = new TextInputBuilder()
-            .setCustomId('contentInput')
-            .setLabel('Nội dung thư')
-            .setStyle(TextInputStyle.Paragraph)
-            .setPlaceholder('Nhập nội dung chi tiết của thư...')
-            .setRequired(true);
-
-          const expiry = new TextInputBuilder()
-            .setCustomId('expiryInput')
-            .setLabel('Thời hạn (ngày)')
-            .setStyle(TextInputStyle.Short)
-            .setPlaceholder('Số ngày hết hạn (mặc định: 30)')
-            .setValue('30')
-            .setRequired(false);
-
-          const item = new TextInputBuilder()
-            .setCustomId('itemInput')
-            .setLabel('Items đính kèm (tùy chọn)')
-            .setStyle(TextInputStyle.Short)
-            .setPlaceholder('VD: 201,100 hoặc để trống nếu không có')
-            .setRequired(false);
-
-          const firstRow = new ActionRowBuilder<TextInputBuilder>().addComponents(receiver);
-          const secondRow = new ActionRowBuilder<TextInputBuilder>().addComponents(title);
-          const thirdRow = new ActionRowBuilder<TextInputBuilder>().addComponents(content);
-          const fourthRow = new ActionRowBuilder<TextInputBuilder>().addComponents(expiry);
-          const fifthRow = new ActionRowBuilder<TextInputBuilder>().addComponents(item);
-
-          modal.addComponents(firstRow, secondRow, thirdRow, fourthRow, fifthRow);
-          await interaction.showModal(modal);
-          break;
-        }
+        
 
         default:
           await DiscordResponse.sendFailed(interaction, ERROR_MESSAGE[103][locale]);

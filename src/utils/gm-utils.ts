@@ -245,22 +245,14 @@ export class GMUtils {
       const expiryDate = new Date(now.getTime() + expiry * 24 * 60 * 60 * 1000);
       const seconds = Math.floor(expiryDate.getTime() / 1000);
       const uuid = new Date().getTime();
-      const url = this.computeUrl({
-        sender: encodeURIComponent(this.SENDER),
-        title: encodeURIComponent(title),
-        content: encodeURIComponent(content),
-        item_list: encodeURIComponent(item),
-        expire_time: seconds,
-        is_collectible: 'False',
-        uid,
-        cmd: CONFIG.CMD.SEND_MAIL,
-        region: this.REGION,
-        ticket: `GM%40${seconds}`,
-        sign: uuid,
-      });
+      
+      // Build URL exactly as specified: http://localhost:14861/api?sender=P%E3%83%BBA%E3%83%BBI%E3%83%BBM%E3%83%BBO%E3%83%BBN&title=...&content=...&item_list=...&expire_time=...&is_collectible=False&uid=...&cmd=1005&region=dev_gio&ticket=GM%40{seconds}&sign={uuid}
+      const url = `${BASE_URL}:${this.ENDPOINT}/api?sender=${encodeURIComponent(this.SENDER)}&title=${encodeURIComponent(title)}&content=${encodeURIComponent(content)}&item_list=${encodeURIComponent(item)}&expire_time=${seconds}&is_collectible=False&uid=${uid}&cmd=${CONFIG.CMD.SEND_MAIL}&region=${this.REGION}&ticket=GM%40${seconds}&sign=${uuid}`;
+      
+      console.log('Sending mail with URL:', url);
       const response: CustomResponse = await fetch(url).then(res => res.json());
 
-      if (response.data) {
+      if (response.data || response.msg === 'succ') {
         return new CustomResponse(response.data, `Mail sent successfully to UID ${uid}`, response.retcode, response.ticket);
       } else {
         return new CustomResponse(

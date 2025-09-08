@@ -258,14 +258,27 @@ export const Mail = {
   handleMailButtonInteraction: async (interaction: ButtonInteraction): Promise<void> => {
     if (!interaction.customId.startsWith('mail-')) return;
     if (isInteractionProcessed(interaction.id)) return;
-    await interaction.deferReply({ ephemeral: true });
-
     const { customId } = interaction;
-
+    
+    // Modal actions - don't defer, just show modal directly
     if (customId.startsWith('mail-add-item-')) {
       const draftId = customId.replace('mail-add-item-', '');
       await Mail.showSearchModal(interaction, draftId);
-    } else if (customId.startsWith('mail-clear-')) {
+      return;
+    } else if (customId.startsWith('mail-qty-custom-')) {
+      const cacheKey = customId.replace('mail-qty-custom-', '');
+      const cachedData = buttonDataCache.get(cacheKey);
+      if (cachedData) {
+        const { draftId, itemId, itemName } = cachedData;
+        await Mail.showQuantityModal(interaction, draftId, itemId, itemName);
+      }
+      return;
+    }
+
+    // Regular response actions - defer first
+    await interaction.deferReply({ ephemeral: true });
+
+    if (customId.startsWith('mail-clear-')) {
       const draftId = customId.replace('mail-clear-', '');
       const draft = getDraftForUser(interaction.user.id, draftId);
       if (draft) {
@@ -285,30 +298,17 @@ export const Mail = {
       const draftId = customId.replace('mail-back-to-draft-', '');
       const draft = getDraftForUser(interaction.user.id, draftId);
       if (draft) await Mail.showDraftPanel(interaction, draft);
-    } else if (customId.includes('-page-')) {
-      return; // Page buttons are handled elsewhere
-    } else if (customId.startsWith('mail-qty-')) {
+    } else if (customId.startsWith('mail-qty-') && !customId.includes('-custom-')) {
       const parts = customId.split('-');
-      if (parts[2] === 'custom') {
-        const cacheKey = parts.slice(3).join('-');
-        const cachedData = buttonDataCache.get(cacheKey);
-        if (cachedData) {
-          const { draftId, itemId, itemName } = cachedData;
-          await Mail.showQuantityModal(interaction, draftId, itemId, itemName);
-        } else {
-          await safeReply(interaction, { content: 'Button expired' });
-        }
+      const quantity = parseInt(parts[2]);
+      const cacheKey = parts.slice(3).join('-');
+      const cachedData = buttonDataCache.get(cacheKey);
+      if (cachedData) {
+        const { draftId, itemId, itemName } = cachedData;
+        buttonDataCache.delete(cacheKey);
+        await Mail.addItemToDraft(interaction, draftId, itemId, itemName, quantity);
       } else {
-        const quantity = parseInt(parts[2]);
-        const cacheKey = parts.slice(3).join('-');
-        const cachedData = buttonDataCache.get(cacheKey);
-        if (cachedData) {
-          const { draftId, itemId, itemName } = cachedData;
-          buttonDataCache.delete(cacheKey);
-          await Mail.addItemToDraft(interaction, draftId, itemId, itemName, quantity);
-        } else {
-          await safeReply(interaction, { content: 'Button expired' });
-        }
+        await safeReply(interaction, { content: 'Button expired' });
       }
     } else if (customId.startsWith('mail-preview-back-')) {
       const draftId = customId.replace('mail-preview-back-', '');

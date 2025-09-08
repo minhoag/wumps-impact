@@ -43,7 +43,9 @@ export const Mail = {
   mailDrafts,
   buttonDataCache,
 
+  //--- Modal Interactions ---//
   handleMailInitModal: async (interaction: ModalSubmitInteraction): Promise<void> => {
+    if (interaction.replied || interaction.deferred) return;
     const uid = interaction.fields.getTextInputValue('uidInput');
     const title = interaction.fields.getTextInputValue('titleInput');
     const content = interaction.fields.getTextInputValue('contentInput');
@@ -73,6 +75,7 @@ export const Mail = {
     await Mail.showDraftPanel(interaction, draft);
   },
 
+  //--- Show Modal Interactions ---//
   showDraftPanel: async (
     interaction: ModalSubmitInteraction | ButtonInteraction,
     draft: MailDraft,
@@ -106,13 +109,20 @@ export const Mail = {
     );
 
     if (interaction instanceof ModalSubmitInteraction) {
-      await interaction.reply({ embeds: [draftEmbed], components: [buttonRow], flags: MessageFlags.Ephemeral });
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.reply({ embeds: [draftEmbed], components: [buttonRow], flags: MessageFlags.Ephemeral });
+      }
     } else {
-      await interaction.update({ embeds: [draftEmbed], components: [buttonRow] });
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.update({ embeds: [draftEmbed], components: [buttonRow] });
+      }
     }
   },
 
+  //--- Handle Modal Interactions ---//
   handleMailSearchModal: async (interaction: ModalSubmitInteraction): Promise<void> => {
+    if (interaction.replied || interaction.deferred) return;
+
     const draftId = interaction.customId.replace('mail-search-', '');
     const draft = getDraftForUser(interaction.user.id, draftId);
     if (!draft) {
@@ -146,7 +156,8 @@ export const Mail = {
 
     await Mail.showItemSelectMenu(interaction, draft, searchResults, 0);
   },
-
+  
+  //--- Show Item Select Menu ---//
   showItemSelectMenu: async (
     interaction: ModalSubmitInteraction | ButtonInteraction,
     draft: MailDraft,
@@ -181,9 +192,13 @@ export const Mail = {
       ];
 
       if (interaction instanceof ModalSubmitInteraction) {
-        await interaction.reply({ embeds: [embed], components, flags: MessageFlags.Ephemeral });
+        if (!interaction.replied && !interaction.deferred) {
+          await interaction.reply({ embeds: [embed], components, flags: MessageFlags.Ephemeral });
+        }
       } else {
-        await interaction.update({ embeds: [embed], components });
+        if (!interaction.replied && !interaction.deferred) {
+          await interaction.update({ embeds: [embed], components });
+        }
       }
       return;
     }
@@ -230,13 +245,19 @@ export const Mail = {
     });
 
     if (interaction instanceof ModalSubmitInteraction) {
-      await interaction.reply({ embeds: [embed], components, flags: MessageFlags.Ephemeral });
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.reply({ embeds: [embed], components, flags: MessageFlags.Ephemeral });
+      }
     } else {
-      await interaction.update({ embeds: [embed], components });
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.update({ embeds: [embed], components });
+      }
     }
   },
 
   handleMailQuantityModal: async (interaction: ModalSubmitInteraction): Promise<void> => {
+    if (interaction.replied || interaction.deferred) return;
+
     const cacheKey = interaction.customId.replace('mail-quantity-', '');
     const cachedData = buttonDataCache.get(cacheKey);
     if (!cachedData) {
@@ -269,6 +290,7 @@ export const Mail = {
 
   handleMailButtonInteraction: async (interaction: ButtonInteraction): Promise<void> => {
     if (!interaction.customId.startsWith('mail-')) return;
+    if (interaction.replied || interaction.deferred) return;
 
     if (interaction.customId.startsWith('mail-add-item-')) {
       const draftId = interaction.customId.replace('mail-add-item-', '');
@@ -354,6 +376,8 @@ export const Mail = {
 
   handleMailSelectMenuInteraction: async (interaction: StringSelectMenuInteraction): Promise<void> => {
     if (!interaction.customId.startsWith('mail-item-select-')) return;
+    if (interaction.replied || interaction.deferred) return;
+
     const draftId = interaction.customId.replace('mail-item-select-', '');
     const draft = getDraftForUser(interaction.user.id, draftId);
     if (!draft) {
@@ -383,6 +407,8 @@ export const Mail = {
     itemId: string,
     itemName: string,
   ): Promise<void> => {
+    if (interaction.replied || interaction.deferred) return;
+
     const embed = DiscordResponse.createEmbed({
       title: '🔢 Select Quantity',
       description: `How many **${itemName}** to add?`,
@@ -444,6 +470,8 @@ export const Mail = {
   },
 
   showMailPreview: async (interaction: ButtonInteraction, draft: MailDraft): Promise<void> => {
+    if (interaction.replied || interaction.deferred) return;
+
     const itemsText =
       draft.items.length > 0 ? draft.items.map((i) => `• ${i.name} x${i.count}`).join('\n') : 'No items';
     const expiryDate = new Date(Date.now() + draft.expiry * 24 * 60 * 60 * 1000);
@@ -472,11 +500,15 @@ export const Mail = {
   sendMailFromDraft: async (interaction: ButtonInteraction, draftId: string): Promise<void> => {
     const draft = getDraftForUser(interaction.user.id, draftId);
     if (!draft) {
-      await interaction.reply({ content: 'Draft not found', flags: MessageFlags.Ephemeral });
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.reply({ content: 'Draft not found', flags: MessageFlags.Ephemeral });
+      }
       return;
     }
 
-    await interaction.deferUpdate();
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.deferUpdate();
+    }
 
     const itemList = draft.items.map((i) => `${i.id}:${i.count}`).join(',');
     try {

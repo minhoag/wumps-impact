@@ -77,15 +77,40 @@ export const DiscordResponse = {
     content?: string;
   }) => {
     const { interaction, types, embed, content } = options;
+    
+    if (!interaction.isRepliable()) {
+      console.warn('Attempted to respond to non-repliable interaction');
+      return;
+    }
+
     const response = {
       embeds: embed && types.includes(ResponseType.EMBED) ? [embed] : [],
       content: types.includes(ResponseType.STRING) ? content || '' : '',
       flags: types.includes(ResponseType.EPHEMERAL) ? MessageFlags.Ephemeral : 0,
     };
-    if (interaction.deferred) {
-      await interaction.editReply(response);
-    } else {
-      await interaction.reply(response);
+
+    try {
+      if (interaction.replied) {
+        console.warn('Interaction already replied to, skipping response');
+        return;
+      }
+      
+      if (interaction.deferred) {
+        await interaction.editReply(response);
+      } else {
+        await interaction.reply(response);
+      }
+    } catch (error: any) {
+      console.error('Failed to send response:', error);
+      
+      // If it's a 10008 error (Unknown Message), the interaction has expired
+      if (error.code === 10008) {
+        console.warn('Interaction has expired or is no longer valid');
+        return;
+      }
+      
+      // Re-throw other errors
+      throw error;
     }
   },
 
@@ -227,46 +252,80 @@ export const DiscordResponse = {
 
 export const DiscordEvent = {
   handleChatInput: async (interaction: CommandInteraction): Promise<void> => {
-    const { client, commandName, user } = interaction;
-    const command = client.commands.get(commandName);
-    if (!command) return;
+    try {
+      const { client, commandName, user } = interaction;
+      const command = client.commands.get(commandName);
+      if (!command) return;
 
-    if (command.defer) await interaction.deferReply();
+      if (command.defer) await interaction.deferReply();
 
-    if (command.cooldown) {
-      const cooldownKey = getCooldownKey(commandName, user.id);
-      const now = Date.now();
-      const expiresAt = client.cooldowns.get(cooldownKey);
-      if (expiresAt && now < expiresAt) {
-        const timeLeft = ((expiresAt - now) / 1000).toFixed(1);
-        await DiscordResponse.sendFailed(interaction, {
-          messageCode: 101,
-          placeholders: { time: timeLeft },
-        });
-        return;
+      if (command.cooldown) {
+        const cooldownKey = getCooldownKey(commandName, user.id);
+        const now = Date.now();
+        const expiresAt = client.cooldowns.get(cooldownKey);
+        if (expiresAt && now < expiresAt) {
+          const timeLeft = ((expiresAt - now) / 1000).toFixed(1);
+          await DiscordResponse.sendFailed(interaction, {
+            messageCode: 101,
+            placeholders: { time: timeLeft },
+          });
+          return;
+        }
+        client.cooldowns.set(cooldownKey, now + command.cooldown * 1000);
+        setTimeout(() => client.cooldowns.delete(cooldownKey), command.cooldown * 1000);
       }
-      client.cooldowns.set(cooldownKey, now + command.cooldown * 1000);
-      setTimeout(() => client.cooldowns.delete(cooldownKey), command.cooldown * 1000);
+      await command.execute(interaction);
+    } catch (error) {
+      console.error('Error in handleChatInput:', error);
+      
+      // Try to respond with an error message
+      try {
+        if (!interaction.replied && !interaction.deferred) {
+          await interaction.reply({
+            content: 'An error occurred while executing this command. Please try again.',
+            ephemeral: true
+          });
+        } else if (interaction.deferred && !interaction.replied) {
+          await interaction.editReply({
+            content: 'An error occurred while executing this command. Please try again.'
+          });
+        }
+      } catch (responseError) {
+        console.error('Failed to send error response for chat input:', responseError);
+      }
     }
-    await command.execute(interaction);
   },
 
   handleAutocomplete: async (interaction: AutocompleteInteraction): Promise<void> => {
-    const { client, commandName } = interaction;
-    const command = client.commands.get(commandName);
-    if (!command?.autocomplete) return;
-    await command.autocomplete(interaction, interaction.options.getFocused(true));
+    try {
+      const { client, commandName } = interaction;
+      const command = client.commands.get(commandName);
+      if (!command?.autocomplete) return;
+      await command.autocomplete(interaction, interaction.options.getFocused(true));
+    } catch (error) {
+      console.error('Error in handleAutocomplete:', error);
+      // Autocomplete errors are handled differently - we don't send error messages
+      // just log the error and let it fail silently
+    }
   },
 
   handleModalSubmit: async (interaction: ModalSubmitInteraction): Promise<void> => {
-    if (!interaction.isModalSubmit()) return;
+    try {
+      if (!interaction.isModalSubmit()) return;
 
-    if (interaction.customId === 'mail-init') {
-      await DiscordEvent.handleMailInitModal(interaction);
-    } else if (interaction.customId.startsWith('mail-search-')) {
-      await DiscordEvent.handleMailSearchModal(interaction);
-    } else if (interaction.customId.startsWith('mail-quantity-')) {
-      await DiscordEvent.handleMailQuantityModal(interaction);
+      if (interaction.customId === 'mail-init') {
+        await DiscordEvent.handleMailInitModal(interaction);
+      } else if (interaction.customId.startsWith('mail-search-')) {
+        await DiscordEvent.handleMailSearchModal(interaction);
+      } else if (interaction.customId.startsWith('mail-quantity-')) {
+        await DiscordEvent.handleMailQuantityModal(interaction);
+      }
+    } catch (error) {
+      console.error('Error in handleModalSubmit:', error);
+      await DiscordEvent.safeReply(interaction, { 
+        content: 'An error occurred while processing your request. Please try again.', 
+        ephemeral: true 
+      });
     }
   },
 
@@ -450,100 +509,171 @@ export const DiscordEvent = {
   },
 
   handleButtonInteraction: async (interaction: ButtonInteraction): Promise<void> => {
-    if (!interaction.customId.startsWith('mail-')) return;
+    try {
+      if (!interaction.customId.startsWith('mail-')) return;
 
-    if (interaction.customId.startsWith('mail-add-item-')) {
-      const draftId = interaction.customId.replace('mail-add-item-', '');
-      await DiscordEvent.showSearchModal(interaction, draftId);
-      return;
-    }
-
-    if (interaction.customId.startsWith('mail-clear-')) {
-      const draftId = interaction.customId.replace('mail-clear-', '');
-      const draft = getDraftForUser(interaction.user.id, draftId);
-      if (!draft) return;
-      draft.items = [];
-      mailDrafts.set(draftId, draft);
-      await DiscordEvent.showDraftPanel(interaction, draft);
-      return;
-    }
-
-    if (interaction.customId.startsWith('mail-cancel-draft-')) {
-      const draftId = interaction.customId.replace('mail-cancel-draft-', '');
-      mailDrafts.delete(draftId);
-      await interaction.update({ content: 'Draft cancelled.', embeds: [], components: [] });
-      return;
-    }
-
-    if (interaction.customId.startsWith('mail-done-')) {
-      const draftId = interaction.customId.replace('mail-done-', '');
-      const draft = getDraftForUser(interaction.user.id, draftId);
-      if (!draft) return;
-      await DiscordEvent.showMailPreview(interaction, draft);
-      return;
-    }
-
-    if (interaction.customId.startsWith('mail-back-to-draft-')) {
-      const draftId = interaction.customId.replace('mail-back-to-draft-', '');
-      const draft = getDraftForUser(interaction.user.id, draftId);
-      if (!draft) return;
-      await DiscordEvent.showDraftPanel(interaction, draft);
-      return;
-    }
-
-    if (interaction.customId.includes('-page-')) return;
-
-    if (interaction.customId.startsWith('mail-qty-')) {
-      const parts = interaction.customId.split('-');
-      if (parts[2] === 'custom') {
-        const cacheKey = parts.slice(3).join('-');
-        const cachedData = buttonDataCache.get(cacheKey);
-        if (!cachedData) {
-          await interaction.reply({ content: 'Button expired', flags: MessageFlags.Ephemeral });
-          return;
-        }
-        const { draftId, itemId, itemName } = cachedData;
-        await DiscordEvent.showQuantityModal(interaction, draftId, itemId, itemName);
-      } else {
-        const quantity = parseInt(parts[2]);
-        const cacheKey = parts.slice(3).join('-');
-        const cachedData = buttonDataCache.get(cacheKey);
-        if (!cachedData) {
-          await interaction.reply({ content: 'Button expired', flags: MessageFlags.Ephemeral });
-          return;
-        }
-        const { draftId, itemId, itemName } = cachedData;
-        buttonDataCache.delete(cacheKey);
-        await DiscordEvent.addItemToDraft(interaction, draftId, itemId, itemName, quantity);
+      if (interaction.customId.startsWith('mail-add-item-')) {
+        const draftId = interaction.customId.replace('mail-add-item-', '');
+        await DiscordEvent.showSearchModal(interaction, draftId);
+        return;
       }
-      return;
-    }
 
-    if (interaction.customId.startsWith('mail-preview-back-')) {
-      const draftId = interaction.customId.replace('mail-preview-back-', '');
-      const draft = getDraftForUser(interaction.user.id, draftId);
-      if (!draft) return;
-      await DiscordEvent.showDraftPanel(interaction, draft);
-      return;
-    }
+      if (interaction.customId.startsWith('mail-clear-')) {
+        const draftId = interaction.customId.replace('mail-clear-', '');
+        const draft = getDraftForUser(interaction.user.id, draftId);
+        if (!draft) {
+          await DiscordEvent.safeReply(interaction, { content: 'Draft not found.', ephemeral: true });
+          return;
+        }
+        draft.items = [];
+        mailDrafts.set(draftId, draft);
+        await DiscordEvent.showDraftPanel(interaction, draft);
+        return;
+      }
 
-    if (interaction.customId.startsWith('mail-preview-confirm-')) {
-      const draftId = interaction.customId.replace('mail-preview-confirm-', '');
-      await DiscordEvent.sendMailFromDraft(interaction, draftId);
-      return;
+      if (interaction.customId.startsWith('mail-cancel-draft-')) {
+        const draftId = interaction.customId.replace('mail-cancel-draft-', '');
+        mailDrafts.delete(draftId);
+        await DiscordEvent.safeUpdate(interaction, { content: 'Draft cancelled.', embeds: [], components: [] });
+        return;
+      }
+
+      if (interaction.customId.startsWith('mail-done-')) {
+        const draftId = interaction.customId.replace('mail-done-', '');
+        const draft = getDraftForUser(interaction.user.id, draftId);
+        if (!draft) {
+          await DiscordEvent.safeReply(interaction, { content: 'Draft not found.', ephemeral: true });
+          return;
+        }
+        await DiscordEvent.showMailPreview(interaction, draft);
+        return;
+      }
+
+      if (interaction.customId.startsWith('mail-back-to-draft-')) {
+        const draftId = interaction.customId.replace('mail-back-to-draft-', '');
+        const draft = getDraftForUser(interaction.user.id, draftId);
+        if (!draft) {
+          await DiscordEvent.safeReply(interaction, { content: 'Draft not found.', ephemeral: true });
+          return;
+        }
+        await DiscordEvent.showDraftPanel(interaction, draft);
+        return;
+      }
+
+      if (interaction.customId.includes('-page-')) return;
+
+      if (interaction.customId.startsWith('mail-qty-')) {
+        const parts = interaction.customId.split('-');
+        if (parts[2] === 'custom') {
+          const cacheKey = parts.slice(3).join('-');
+          const cachedData = buttonDataCache.get(cacheKey);
+          if (!cachedData) {
+            await DiscordEvent.safeReply(interaction, { content: 'Button expired', ephemeral: true });
+            return;
+          }
+          const { draftId, itemId, itemName } = cachedData;
+          await DiscordEvent.showQuantityModal(interaction, draftId, itemId, itemName);
+        } else {
+          const quantity = parseInt(parts[2]);
+          const cacheKey = parts.slice(3).join('-');
+          const cachedData = buttonDataCache.get(cacheKey);
+          if (!cachedData) {
+            await DiscordEvent.safeReply(interaction, { content: 'Button expired', ephemeral: true });
+            return;
+          }
+          const { draftId, itemId, itemName } = cachedData;
+          buttonDataCache.delete(cacheKey);
+          await DiscordEvent.addItemToDraft(interaction, draftId, itemId, itemName, quantity);
+        }
+        return;
+      }
+
+      if (interaction.customId.startsWith('mail-preview-back-')) {
+        const draftId = interaction.customId.replace('mail-preview-back-', '');
+        const draft = getDraftForUser(interaction.user.id, draftId);
+        if (!draft) {
+          await DiscordEvent.safeReply(interaction, { content: 'Draft not found.', ephemeral: true });
+          return;
+        }
+        await DiscordEvent.showDraftPanel(interaction, draft);
+        return;
+      }
+
+      if (interaction.customId.startsWith('mail-preview-confirm-')) {
+        const draftId = interaction.customId.replace('mail-preview-confirm-', '');
+        await DiscordEvent.sendMailFromDraft(interaction, draftId);
+        return;
+      }
+    } catch (error) {
+      console.error('Error in handleButtonInteraction:', error);
+      await DiscordEvent.safeReply(interaction, { 
+        content: 'An error occurred while processing your request. Please try again.', 
+        ephemeral: true 
+      });
     }
   },
 
   handleSelectMenuInteraction: async (interaction: StringSelectMenuInteraction): Promise<void> => {
-    if (!interaction.customId.startsWith('mail-item-select-')) return;
-    const draftId = interaction.customId.replace('mail-item-select-', '');
-    const draft = getDraftForUser(interaction.user.id, draftId);
-    if (!draft) {
-      await interaction.reply({ content: 'Draft not found', flags: MessageFlags.Ephemeral });
-      return;
+    try {
+      if (!interaction.customId.startsWith('mail-item-select-')) return;
+      const draftId = interaction.customId.replace('mail-item-select-', '');
+      const draft = getDraftForUser(interaction.user.id, draftId);
+      if (!draft) {
+        await DiscordEvent.safeReply(interaction, { content: 'Draft not found', ephemeral: true });
+        return;
+      }
+      const [itemId, itemName] = interaction.values[0].split('|');
+      await DiscordEvent.showQuantityPicker(interaction, draftId, itemId, itemName);
+    } catch (error) {
+      console.error('Error in handleSelectMenuInteraction:', error);
+      await DiscordEvent.safeReply(interaction, { 
+        content: 'An error occurred while processing your request. Please try again.', 
+        ephemeral: true 
+      });
     }
-    const [itemId, itemName] = interaction.values[0].split('|');
-    await DiscordEvent.showQuantityPicker(interaction, draftId, itemId, itemName);
+  },
+
+  // Safe reply method that handles expired interactions
+  safeReply: async (interaction: any, options: any): Promise<void> => {
+    try {
+      if (!interaction.isRepliable()) {
+        console.warn('Interaction is not repliable');
+        return;
+      }
+      
+      if (interaction.replied) {
+        console.warn('Interaction already replied to');
+        return;
+      }
+      
+      if (interaction.deferred) {
+        await interaction.editReply(options);
+      } else {
+        await interaction.reply(options);
+      }
+    } catch (error: any) {
+      console.error('Failed to send safe reply:', error);
+      if (error.code === 10008) {
+        console.warn('Interaction has expired');
+      }
+    }
+  },
+
+  // Safe update method that handles expired interactions
+  safeUpdate: async (interaction: any, options: any): Promise<void> => {
+    try {
+      if (!interaction.isRepliable()) {
+        console.warn('Interaction is not repliable');
+        return;
+      }
+      
+      await interaction.update(options);
+    } catch (error: any) {
+      console.error('Failed to send safe update:', error);
+      if (error.code === 10008) {
+        console.warn('Interaction has expired');
+      }
+    }
   },
 
   showSearchModal: async (interaction: ButtonInteraction, draftId: string): Promise<void> => {

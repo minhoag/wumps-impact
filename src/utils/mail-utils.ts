@@ -1,7 +1,6 @@
 import { EmbedType } from '@/type';
 import {
   CommandInteraction,
-  MessageFlags,
   ChannelType,
   TextChannel,
   ModalSubmitInteraction,
@@ -19,7 +18,15 @@ import {
 import { GMUtils } from './gm-utils';
 import { Item, type ItemProps } from '@/data/item';
 import { DiscordResponse } from './discord-utils';
+import {
+  mailDrafts,
+  buttonDataCache,
+  getDraftForUser,
+  isInteractionProcessed,
+  safeReply
+} from './helper-utils';
 
+// Define MailDraft interface locally for type safety
 interface MailDraft {
   id: string;
   userId: string;
@@ -31,19 +38,14 @@ interface MailDraft {
   createdAt: number;
 }
 
-const mailDrafts = new Map<string, MailDraft>();
-const buttonDataCache = new Map<string, { draftId: string; itemId: string; itemName: string }>();
-
-const getDraftForUser = (userId: string, draftId: string) => {
-  const d = mailDrafts.get(draftId);
-  return d && d.userId === userId ? d : undefined;
-};
-
 export const Mail = {
   mailDrafts,
   buttonDataCache,
 
   handleMailInitModal: async (interaction: ModalSubmitInteraction): Promise<void> => {
+    if (isInteractionProcessed(interaction.id)) return;
+    await interaction.deferReply({ ephemeral: true });
+
     const uid = interaction.fields.getTextInputValue('uidInput');
     const title = interaction.fields.getTextInputValue('titleInput');
     const content = interaction.fields.getTextInputValue('contentInput');
@@ -51,9 +53,8 @@ export const Mail = {
 
     const expiry = parseInt(expiryInput);
     if (!Number.isFinite(expiry) || expiry <= 0) {
-      await interaction.reply({
-        content: 'Expiry must be a valid number of days (> 0)',
-        flags: MessageFlags.Ephemeral,
+      await safeReply(interaction, {
+        content: 'Expiry must be a valid number of days (> 0)'
       });
       return;
     }
@@ -77,10 +78,9 @@ export const Mail = {
     interaction: ModalSubmitInteraction | ButtonInteraction,
     draft: MailDraft,
   ): Promise<void> => {
-    const itemsText =
-      draft.items.length > 0
-        ? draft.items.map((item) => `• ${item.name} x${item.count}`).join('\n')
-        : 'No items added yet';
+    const itemsText = draft.items.length > 0
+      ? draft.items.map((item) => `• ${item.name} x${item.count}`).join('\n')
+      : 'No items added yet';
 
     const draftEmbed = DiscordResponse.createEmbed({
       title: 'Mail Draft',
@@ -105,42 +105,36 @@ export const Mail = {
       new ButtonBuilder().setCustomId(`mail-cancel-draft-${draft.id}`).setLabel('❌ Cancel').setStyle(ButtonStyle.Danger),
     );
 
-    if (interaction instanceof ModalSubmitInteraction) {
-      await interaction.reply({ embeds: [draftEmbed], components: [buttonRow], flags: MessageFlags.Ephemeral });
-    } else {
-      await interaction.update({ embeds: [draftEmbed], components: [buttonRow] });
-    }
+    await safeReply(interaction, {
+      embeds: [draftEmbed],
+      components: [buttonRow]
+    });
   },
 
   handleMailSearchModal: async (interaction: ModalSubmitInteraction): Promise<void> => {
+    if (isInteractionProcessed(interaction.id)) return;
+    await interaction.deferReply({ ephemeral: true });
+
     const draftId = interaction.customId.replace('mail-search-', '');
     const draft = getDraftForUser(interaction.user.id, draftId);
     if (!draft) {
-      await interaction.reply({ content: 'Draft not found', flags: MessageFlags.Ephemeral });
+      await safeReply(interaction, { content: 'Draft not found' });
       return;
     }
 
     const searchTerm = interaction.fields.getTextInputValue('searchInput').trim();
-
-    // Handle empty search term
     if (!searchTerm) {
-      await interaction.reply({
-        content: 'Please enter a search term to find items.',
-        flags: MessageFlags.Ephemeral
-      });
+      await safeReply(interaction, { content: 'Please enter a search term to find items.' });
       return;
     }
 
     const searchTermLower = searchTerm.toLowerCase();
     const searchResults = Item.filter(
       (item) => item.name.toLowerCase().includes(searchTermLower) || item.value.includes(searchTerm),
-    ).slice(0, 100); // allow more; paginated below
+    ).slice(0, 100);
 
     if (searchResults.length === 0) {
-      await interaction.reply({
-        content: `No items found for "${searchTerm}". Try a different search term.`,
-        flags: MessageFlags.Ephemeral
-      });
+      await safeReply(interaction, { content: `No items found for "${searchTerm}". Try a different search term.` });
       return;
     }
 
@@ -158,7 +152,6 @@ export const Mail = {
     const endIndex = startIndex + itemsPerPage;
     const pageItems = items.slice(startIndex, endIndex);
 
-    // Handle case when no items are available for the current page
     if (pageItems.length === 0) {
       const embed = DiscordResponse.createEmbed({
         title: '🔍 No Items Found',
@@ -180,11 +173,7 @@ export const Mail = {
         ),
       ];
 
-      if (interaction instanceof ModalSubmitInteraction) {
-        await interaction.reply({ embeds: [embed], components, flags: MessageFlags.Ephemeral });
-      } else {
-        await interaction.update({ embeds: [embed], components });
-      }
+      await safeReply(interaction, { embeds: [embed], components });
       return;
     }
 
@@ -229,18 +218,17 @@ export const Mail = {
       type: EmbedType.INFO,
     });
 
-    if (interaction instanceof ModalSubmitInteraction) {
-      await interaction.reply({ embeds: [embed], components, flags: MessageFlags.Ephemeral });
-    } else {
-      await interaction.update({ embeds: [embed], components });
-    }
+    await safeReply(interaction, { embeds: [embed], components });
   },
 
   handleMailQuantityModal: async (interaction: ModalSubmitInteraction): Promise<void> => {
+    if (isInteractionProcessed(interaction.id)) return;
+    await interaction.deferReply({ ephemeral: true });
+
     const cacheKey = interaction.customId.replace('mail-quantity-', '');
     const cachedData = buttonDataCache.get(cacheKey);
     if (!cachedData) {
-      await interaction.reply({ content: 'Modal expired', flags: MessageFlags.Ephemeral });
+      await safeReply(interaction, { content: 'Modal expired' });
       return;
     }
 
@@ -249,13 +237,13 @@ export const Mail = {
 
     const draft = getDraftForUser(interaction.user.id, draftId);
     if (!draft) {
-      await interaction.reply({ content: 'Draft not found', flags: MessageFlags.Ephemeral });
+      await safeReply(interaction, { content: 'Draft not found' });
       return;
     }
 
     const quantity = parseInt(interaction.fields.getTextInputValue('quantityInput'));
     if (!Number.isFinite(quantity) || quantity <= 0) {
-      await interaction.reply({ content: 'Quantity must be a positive number', flags: MessageFlags.Ephemeral });
+      await safeReply(interaction, { content: 'Quantity must be a positive number' });
       return;
     }
 
@@ -269,95 +257,78 @@ export const Mail = {
 
   handleMailButtonInteraction: async (interaction: ButtonInteraction): Promise<void> => {
     if (!interaction.customId.startsWith('mail-')) return;
+    if (isInteractionProcessed(interaction.id)) return;
+    await interaction.deferReply({ ephemeral: true });
 
-    if (interaction.customId.startsWith('mail-add-item-')) {
-      const draftId = interaction.customId.replace('mail-add-item-', '');
+    const { customId } = interaction;
+
+    if (customId.startsWith('mail-add-item-')) {
+      const draftId = customId.replace('mail-add-item-', '');
       await Mail.showSearchModal(interaction, draftId);
-      return;
-    }
-
-    if (interaction.customId.startsWith('mail-clear-')) {
-      const draftId = interaction.customId.replace('mail-clear-', '');
+    } else if (customId.startsWith('mail-clear-')) {
+      const draftId = customId.replace('mail-clear-', '');
       const draft = getDraftForUser(interaction.user.id, draftId);
-      if (!draft) return;
-      draft.items = [];
-      mailDrafts.set(draftId, draft);
-      await Mail.showDraftPanel(interaction, draft);
-      return;
-    }
-
-    if (interaction.customId.startsWith('mail-cancel-draft-')) {
-      const draftId = interaction.customId.replace('mail-cancel-draft-', '');
+      if (draft) {
+        draft.items = [];
+        mailDrafts.set(draftId, draft);
+        await Mail.showDraftPanel(interaction, draft);
+      }
+    } else if (customId.startsWith('mail-cancel-draft-')) {
+      const draftId = customId.replace('mail-cancel-draft-', '');
       mailDrafts.delete(draftId);
-      await interaction.update({ content: 'Draft cancelled.', embeds: [], components: [] });
-      return;
-    }
-
-    if (interaction.customId.startsWith('mail-done-')) {
-      const draftId = interaction.customId.replace('mail-done-', '');
+      await safeReply(interaction, { content: 'Draft cancelled.', embeds: [], components: [] });
+    } else if (customId.startsWith('mail-done-')) {
+      const draftId = customId.replace('mail-done-', '');
       const draft = getDraftForUser(interaction.user.id, draftId);
-      if (!draft) return;
-      await Mail.showMailPreview(interaction, draft);
-      return;
-    }
-
-    if (interaction.customId.startsWith('mail-back-to-draft-')) {
-      const draftId = interaction.customId.replace('mail-back-to-draft-', '');
+      if (draft) await Mail.showMailPreview(interaction, draft);
+    } else if (customId.startsWith('mail-back-to-draft-')) {
+      const draftId = customId.replace('mail-back-to-draft-', '');
       const draft = getDraftForUser(interaction.user.id, draftId);
-      if (!draft) return;
-      await Mail.showDraftPanel(interaction, draft);
-      return;
-    }
-
-    if (interaction.customId.includes('-page-')) return;
-
-    if (interaction.customId.startsWith('mail-qty-')) {
-      const parts = interaction.customId.split('-');
+      if (draft) await Mail.showDraftPanel(interaction, draft);
+    } else if (customId.includes('-page-')) {
+      return; // Page buttons are handled elsewhere
+    } else if (customId.startsWith('mail-qty-')) {
+      const parts = customId.split('-');
       if (parts[2] === 'custom') {
         const cacheKey = parts.slice(3).join('-');
         const cachedData = buttonDataCache.get(cacheKey);
-        if (!cachedData) {
-          await interaction.reply({ content: 'Button expired', flags: MessageFlags.Ephemeral });
-          return;
+        if (cachedData) {
+          const { draftId, itemId, itemName } = cachedData;
+          await Mail.showQuantityModal(interaction, draftId, itemId, itemName);
+        } else {
+          await safeReply(interaction, { content: 'Button expired' });
         }
-        const { draftId, itemId, itemName } = cachedData;
-        await Mail.showQuantityModal(interaction, draftId, itemId, itemName);
       } else {
         const quantity = parseInt(parts[2]);
         const cacheKey = parts.slice(3).join('-');
         const cachedData = buttonDataCache.get(cacheKey);
-        if (!cachedData) {
-          await interaction.reply({ content: 'Button expired', flags: MessageFlags.Ephemeral });
-          return;
+        if (cachedData) {
+          const { draftId, itemId, itemName } = cachedData;
+          buttonDataCache.delete(cacheKey);
+          await Mail.addItemToDraft(interaction, draftId, itemId, itemName, quantity);
+        } else {
+          await safeReply(interaction, { content: 'Button expired' });
         }
-        const { draftId, itemId, itemName } = cachedData;
-        buttonDataCache.delete(cacheKey);
-        await Mail.addItemToDraft(interaction, draftId, itemId, itemName, quantity);
       }
-      return;
-    }
-
-    if (interaction.customId.startsWith('mail-preview-back-')) {
-      const draftId = interaction.customId.replace('mail-preview-back-', '');
+    } else if (customId.startsWith('mail-preview-back-')) {
+      const draftId = customId.replace('mail-preview-back-', '');
       const draft = getDraftForUser(interaction.user.id, draftId);
-      if (!draft) return;
-      await Mail.showDraftPanel(interaction, draft);
-      return;
-    }
-
-    if (interaction.customId.startsWith('mail-preview-confirm-')) {
-      const draftId = interaction.customId.replace('mail-preview-confirm-', '');
+      if (draft) await Mail.showDraftPanel(interaction, draft);
+    } else if (customId.startsWith('mail-preview-confirm-')) {
+      const draftId = customId.replace('mail-preview-confirm-', '');
       await Mail.sendMailFromDraft(interaction, draftId);
-      return;
     }
   },
 
   handleMailSelectMenuInteraction: async (interaction: StringSelectMenuInteraction): Promise<void> => {
     if (!interaction.customId.startsWith('mail-item-select-')) return;
+    if (isInteractionProcessed(interaction.id)) return;
+    await interaction.deferReply({ ephemeral: true });
+
     const draftId = interaction.customId.replace('mail-item-select-', '');
     const draft = getDraftForUser(interaction.user.id, draftId);
     if (!draft) {
-      await interaction.reply({ content: 'Draft not found', flags: MessageFlags.Ephemeral });
+      await safeReply(interaction, { content: 'Draft not found' });
       return;
     }
     const [itemId, itemName] = interaction.values[0].split('|');
@@ -400,7 +371,7 @@ export const Mail = {
       new ButtonBuilder().setCustomId(`mail-back-to-draft-${draftId}`).setLabel('🔙 Back').setStyle(ButtonStyle.Danger),
     );
 
-    await interaction.update({ embeds: [embed], components: [row] });
+    await safeReply(interaction, { embeds: [embed], components: [row] });
   },
 
   showQuantityModal: async (
@@ -433,7 +404,7 @@ export const Mail = {
   ): Promise<void> => {
     const draft = getDraftForUser(interaction.user.id, draftId);
     if (!draft) {
-      await interaction.reply({ content: 'Draft not found', flags: MessageFlags.Ephemeral });
+      await safeReply(interaction, { content: 'Draft not found' });
       return;
     }
     const idx = draft.items.findIndex((i) => i.id === itemId);
@@ -444,8 +415,7 @@ export const Mail = {
   },
 
   showMailPreview: async (interaction: ButtonInteraction, draft: MailDraft): Promise<void> => {
-    const itemsText =
-      draft.items.length > 0 ? draft.items.map((i) => `• ${i.name} x${i.count}`).join('\n') : 'No items';
+    const itemsText = draft.items.length > 0 ? draft.items.map((i) => `• ${i.name} x${i.count}`).join('\n') : 'No items';
     const expiryDate = new Date(Date.now() + draft.expiry * 24 * 60 * 60 * 1000);
 
     const previewEmbed = DiscordResponse.createEmbed({
@@ -466,17 +436,15 @@ export const Mail = {
       new ButtonBuilder().setCustomId(`mail-preview-back-${draft.id}`).setLabel('🔙 Back to Draft').setStyle(ButtonStyle.Secondary),
     );
 
-    await interaction.update({ embeds: [previewEmbed], components: [row] });
+    await safeReply(interaction, { embeds: [previewEmbed], components: [row] });
   },
 
   sendMailFromDraft: async (interaction: ButtonInteraction, draftId: string): Promise<void> => {
     const draft = getDraftForUser(interaction.user.id, draftId);
     if (!draft) {
-      await interaction.reply({ content: 'Draft not found', flags: MessageFlags.Ephemeral });
+      await safeReply(interaction, { content: 'Draft not found' });
       return;
     }
-
-    await interaction.deferUpdate();
 
     const itemList = draft.items.map((i) => `${i.id}:${i.count}`).join(',');
     try {
@@ -496,7 +464,7 @@ export const Mail = {
         type: ok ? EmbedType.SUCCESS : EmbedType.ERROR,
       });
 
-      await interaction.editReply({ embeds: [embed], components: [] });
+      await safeReply(interaction, { embeds: [embed], components: [] });
 
       await Mail.recordMailLog(interaction, {
         title: draft.title,
@@ -512,7 +480,7 @@ export const Mail = {
         description: `Error sending mail.`,
         type: EmbedType.ERROR,
       });
-      await interaction.editReply({ embeds: [embed], components: [] });
+      await safeReply(interaction, { embeds: [embed], components: [] });
     }
   },
 
@@ -527,12 +495,14 @@ export const Mail = {
       success: boolean;
     },
   ) => {
-    let channel = interaction.guild?.channels.cache.find((c) => c.name === 'gm-mail-log') as TextChannel;
+    if (!interaction.guild) return;
+
+    let channel = interaction.guild.channels.cache.find((c) => c.name === 'gm-mail-log') as TextChannel;
     if (!channel) {
-      channel = (await interaction.guild?.channels.create({
+      channel = await interaction.guild.channels.create({
         name: 'gm-mail-log',
         type: ChannelType.GuildText,
-      })) as TextChannel;
+      }) as TextChannel;
     }
 
     const logEmbed = DiscordResponse.createEmbed({
@@ -553,6 +523,6 @@ export const Mail = {
       ],
     });
 
-    await channel?.send({ embeds: [logEmbed] });
+    await channel.send({ embeds: [logEmbed] });
   },
 };

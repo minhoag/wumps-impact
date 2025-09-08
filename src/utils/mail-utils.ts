@@ -227,11 +227,11 @@ export const Mail = {
       .setCustomId(`mail-item-select-${draft.id}`)
       .setPlaceholder('Choose an item...')
       .addOptions(
-        pageItems.map((item) =>
+        pageItems.map((item, index) =>
           new StringSelectMenuOptionBuilder()
             .setLabel(item.name.length > 100 ? item.name.substring(0, 97) + '...' : item.name)
             .setDescription(`ID: ${item.value}`)
-            .setValue(`${item.value}|${item.name}`),
+            .setValue(`${item.value}|${item.name}|${startIndex + index}`),
         ),
       );
 
@@ -403,7 +403,7 @@ export const Mail = {
       await safeReply(interaction, { content: 'Draft not found' });
       return;
     }
-    const [itemId, itemName] = interaction.values[0].split('|');
+    const [itemId, itemName] = interaction.values[0].split('|').slice(0, 2);
     await Mail.showQuantityPicker(interaction, draftId, itemId, itemName);
   },
 

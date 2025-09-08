@@ -38,9 +38,38 @@ interface MailDraft {
   createdAt: number;
 }
 
+// Item limitations object - add more items with their max quantities here
+// When quantity exceeds the limit, the item will be split into multiple entries
+const ITEM_LIMITATIONS: Record<string, number> = {
+  '201': 900, // Primogems - maximum 900 per item
+  // Examples of other items you can add:
+  // '102': 1000, // Adventure EXP
+  // '103': 500,  // Stardust
+  // '104': 300,  // Starglitter
+  // Add more items here as needed
+  // 'item_id': max_quantity,
+};
+
 export const Mail = {
   mailDrafts,
   buttonDataCache,
+
+  addItemsToDraft: (draft: MailDraft, itemId: string, itemName: string, quantity: number): void => {
+    const limit = ITEM_LIMITATIONS[itemId];
+    if (!limit || quantity <= limit) {
+      const existing = draft.items.find(item => item.id === itemId);
+      if (existing) existing.count += quantity;
+      else draft.items.push({ id: itemId, name: itemName, count: quantity });
+      return;
+    }
+
+    let remaining = quantity;
+    while (remaining > 0) {
+      const chunk = Math.min(remaining, limit);
+      draft.items.push({ id: itemId, name: itemName, count: chunk });
+      remaining -= chunk;
+    }
+  },
 
   handleMailInitModal: async (interaction: ModalSubmitInteraction): Promise<void> => {
     if (isInteractionProcessed(interaction.id)) return;
@@ -247,9 +276,7 @@ export const Mail = {
       return;
     }
 
-    const idx = draft.items.findIndex((i) => i.id === itemId);
-    if (idx >= 0) draft.items[idx].count += quantity;
-    else draft.items.push({ id: itemId, name: itemName, count: quantity });
+    Mail.addItemsToDraft(draft, itemId, itemName, quantity);
 
     mailDrafts.set(draftId, draft);
     await Mail.showDraftPanel(interaction, draft);
@@ -260,7 +287,6 @@ export const Mail = {
     if (isInteractionProcessed(interaction.id)) return;
     const { customId } = interaction;
     
-    // Modal actions - don't defer, just show modal directly
     if (customId.startsWith('mail-add-item-')) {
       const draftId = customId.replace('mail-add-item-', '');
       await Mail.showSearchModal(interaction, draftId);
@@ -407,9 +433,7 @@ export const Mail = {
       await safeReply(interaction, { content: 'Draft not found' });
       return;
     }
-    const idx = draft.items.findIndex((i) => i.id === itemId);
-    if (idx >= 0) draft.items[idx].count += quantity;
-    else draft.items.push({ id: itemId, name: itemName, count: quantity });
+    Mail.addItemsToDraft(draft, itemId, itemName, quantity);
     mailDrafts.set(draftId, draft);
     await Mail.showDraftPanel(interaction, draft);
   },

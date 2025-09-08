@@ -333,6 +333,10 @@ export const Mail = {
         await Mail.showQuantityModal(interaction, draftId, itemId, itemName);
       }
       return;
+    } else if (customId.startsWith('mail-new-search-')) {
+      const draftId = customId.replace('mail-new-search-', '');
+      await Mail.showSearchModal(interaction, draftId);
+      return;
     }
 
     // Regular response actions - defer first
@@ -366,9 +370,6 @@ export const Mail = {
       } else {
         await Mail.showSearchModal(interaction, draftId);
       }
-    } else if (customId.startsWith('mail-new-search-')) {
-      const draftId = customId.replace('mail-new-search-', '');
-      await Mail.showSearchModal(interaction, draftId);
     } else if (customId.startsWith('mail-qty-') && !customId.includes('-custom-')) {
       const parts = customId.split('-');
       const quantity = parseInt(parts[2]);

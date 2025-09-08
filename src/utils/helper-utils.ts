@@ -9,6 +9,9 @@ interface MailDraft {
   expiry: number;
   items: { id: string; name: string; count: number }[];
   createdAt: number;
+  lastSearchTerm?: string;
+  lastSearchResults?: any[];
+  lastSearchPage?: number;
 }
 
 // Mail-related constants and maps

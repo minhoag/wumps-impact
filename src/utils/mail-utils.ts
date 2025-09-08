@@ -36,6 +36,9 @@ interface MailDraft {
   expiry: number;
   items: { id: string; name: string; count: number }[];
   createdAt: number;
+  lastSearchTerm?: string;
+  lastSearchResults?: any[];
+  lastSearchPage?: number;
 }
 
 // Item limitations object - add more items with their max quantities here
@@ -167,6 +170,12 @@ export const Mail = {
       return;
     }
 
+    // Store search state for navigation
+    draft.lastSearchTerm = searchTerm;
+    draft.lastSearchResults = searchResults;
+    draft.lastSearchPage = 0;
+    mailDrafts.set(draftId, draft);
+
     await Mail.showItemSelectMenu(interaction, draft, searchResults, 0);
   },
 
@@ -176,6 +185,10 @@ export const Mail = {
     items: ItemProps[],
     page: number,
   ): Promise<void> => {
+    // Update stored page for navigation
+    draft.lastSearchPage = page;
+    mailDrafts.set(draft.id, draft);
+
     const itemsPerPage = 25;
     const startIndex = page * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
@@ -196,9 +209,13 @@ export const Mail = {
             .setStyle(ButtonStyle.Secondary)
             .setDisabled(page === 0),
           new ButtonBuilder()
-            .setCustomId(`mail-back-to-draft-${draft.id}`)
-            .setLabel('🔙 Back to Draft')
+            .setCustomId(`mail-new-search-${draft.id}`)
+            .setLabel('🔍 New Search')
             .setStyle(ButtonStyle.Primary),
+          new ButtonBuilder()
+            .setCustomId(`mail-back-to-draft-${draft.id}`)
+            .setLabel('📧 Back to Draft')
+            .setStyle(ButtonStyle.Secondary),
         ),
       ];
 
@@ -234,9 +251,26 @@ export const Mail = {
             .setStyle(ButtonStyle.Secondary)
             .setDisabled(endIndex >= items.length),
           new ButtonBuilder()
-            .setCustomId(`mail-back-to-draft-${draft.id}`)
-            .setLabel('🔙 Back to Draft')
+            .setCustomId(`mail-new-search-${draft.id}`)
+            .setLabel('🔍 New Search')
             .setStyle(ButtonStyle.Primary),
+          new ButtonBuilder()
+            .setCustomId(`mail-back-to-draft-${draft.id}`)
+            .setLabel('📧 Back to Draft')
+            .setStyle(ButtonStyle.Secondary),
+        ),
+      );
+    } else {
+      components.push(
+        new ActionRowBuilder<ButtonBuilder>().addComponents(
+          new ButtonBuilder()
+            .setCustomId(`mail-new-search-${draft.id}`)
+            .setLabel('🔍 New Search')
+            .setStyle(ButtonStyle.Primary),
+          new ButtonBuilder()
+            .setCustomId(`mail-back-to-draft-${draft.id}`)
+            .setLabel('📧 Back to Draft')
+            .setStyle(ButtonStyle.Secondary),
         ) as any,
       );
     }
@@ -324,6 +358,17 @@ export const Mail = {
       const draftId = customId.replace('mail-back-to-draft-', '');
       const draft = getDraftForUser(interaction.user.id, draftId);
       if (draft) await Mail.showDraftPanel(interaction, draft);
+    } else if (customId.startsWith('mail-back-to-items-')) {
+      const draftId = customId.replace('mail-back-to-items-', '');
+      const draft = getDraftForUser(interaction.user.id, draftId);
+      if (draft && draft.lastSearchResults) {
+        await Mail.showItemSelectMenu(interaction, draft, draft.lastSearchResults, draft.lastSearchPage || 0);
+      } else {
+        await Mail.showSearchModal(interaction, draftId);
+      }
+    } else if (customId.startsWith('mail-new-search-')) {
+      const draftId = customId.replace('mail-new-search-', '');
+      await Mail.showSearchModal(interaction, draftId);
     } else if (customId.startsWith('mail-qty-') && !customId.includes('-custom-')) {
       const parts = customId.split('-');
       const quantity = parseInt(parts[2]);
@@ -394,7 +439,7 @@ export const Mail = {
       new ButtonBuilder().setCustomId(`mail-qty-5-${cacheKey}`).setLabel('5').setStyle(ButtonStyle.Secondary),
       new ButtonBuilder().setCustomId(`mail-qty-10-${cacheKey}`).setLabel('10').setStyle(ButtonStyle.Secondary),
       new ButtonBuilder().setCustomId(`mail-qty-custom-${cacheKey}`).setLabel('Custom').setStyle(ButtonStyle.Primary),
-      new ButtonBuilder().setCustomId(`mail-back-to-draft-${draftId}`).setLabel('🔙 Back').setStyle(ButtonStyle.Danger),
+      new ButtonBuilder().setCustomId(`mail-back-to-items-${draftId}`).setLabel('🔙 Back to Items').setStyle(ButtonStyle.Secondary),
     );
 
     await safeReply(interaction, { embeds: [embed], components: [row] });

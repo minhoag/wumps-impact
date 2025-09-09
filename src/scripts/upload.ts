@@ -16,8 +16,6 @@ import { schedule as gachaSchedule } from '@/data/schedule';
 
 async function main() {
   console.log(`⬆️  Uploading ${gachaSchedule.length} gacha banners to MySQL…`);
-
-  // Clear existing data first
   await DiscordPrisma.t_discord_gacha_data.deleteMany({});
   console.log('🗑️  Cleared existing gacha data');
 

@@ -55,7 +55,6 @@ export class GMUtils {
       item_id: id,
       item_num: amount,
     });
-    console.log(url);
     const response: CustomResponse = await fetch(url).then(res => res.json());
     if (response.msg === 'succ' && response.retcode === RETCODE.SUCCESS) {
       DiscordEvent.recordEventLog(
@@ -197,9 +196,7 @@ export class GMUtils {
       region: this.REGION,
       ticket: encodeURIComponent(this.generateTicket()),
     });
-    console.log(url);
     const response: CustomResponse = await fetch(url).then(res => res.json());
-    console.log(response);
     return response.msg === 'succ' && response.retcode === RETCODE.SUCCESS;
   }
 }

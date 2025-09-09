@@ -185,6 +185,7 @@ const command: Command = {
     ),
   cooldown: 1,
   defer: false,
+  permission: PermissionFlagsBits.Administrator,
   autocomplete: async (
     interaction: AutocompleteInteraction,
   ): Promise<ApplicationCommandOptionChoiceData[]> => {

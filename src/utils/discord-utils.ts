@@ -43,10 +43,11 @@ export const DiscordResponse = {
   },
 
   sendResponse: async (options: {
-    interaction: CommandInteraction;
+    interaction: any;
     types: ResponseType[];
     embed?: EmbedBuilder;
     content?: string;
+    components?: any[];
   }) => {
     const { interaction, types, embed, content } = options;
     const response = {
@@ -116,7 +117,7 @@ export const DiscordResponse = {
   },
 
   sendFailed: async (
-    interaction: CommandInteraction,
+    interaction: any,
     messageOrOptions:
       | string
       | {

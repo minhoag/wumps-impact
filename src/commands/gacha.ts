@@ -221,6 +221,7 @@ const GachaCommand: Command = {
     ),
   cooldown: 5,
   defer: true,
+  permission: PermissionFlagsBits.Administrator,
   autocomplete: async (
     interaction: AutocompleteInteraction,
   ): Promise<ApplicationCommandOptionChoiceData[]> => {

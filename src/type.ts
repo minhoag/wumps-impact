@@ -5,7 +5,7 @@ import {
   SlashCommandBuilder,
   type SlashCommandSubcommandsOnlyBuilder,
   type ApplicationCommandOptionChoiceData,
-  type AutocompleteFocusedOption,
+  type AutocompleteFocusedOption
 } from 'discord.js';
 import type { t_discord_gacha_data, t_discord_gacha_schedule } from '@prisma-discord/client';
 
@@ -26,6 +26,7 @@ export type Command = {
   command: SlashCommandBuilder | SlashCommandSubcommandsOnlyBuilder;
   cooldown: number;
   defer?: boolean;
+  permission?: BigInt;
   autocomplete?(
     interaction: AutocompleteInteraction,
     option?: AutocompleteFocusedOption,

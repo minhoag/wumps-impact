@@ -1,6 +1,5 @@
-import { EmbedType } from '@/type';
+import { EmbedType, ResponseType } from '@/type';
 import {
-  CommandInteraction,
   ChannelType,
   TextChannel,
   ModalSubmitInteraction,
@@ -21,12 +20,10 @@ import { DiscordResponse } from './discord-utils';
 import {
   mailDrafts,
   buttonDataCache,
-  getDraftForUser,
-  isInteractionProcessed,
-  safeReply
+  getDraft
 } from './helper-utils';
+import { UserPrisma } from './prisma-utils';
 
-// Define MailDraft interface locally for type safety
 interface MailDraft {
   id: string;
   userId: string;
@@ -41,23 +38,55 @@ interface MailDraft {
   lastSearchPage?: number;
 }
 
-// Item limitations object - add more items with their max quantities here
-// When quantity exceeds the limit, the item will be split into multiple entries
 const ITEM_LIMITATIONS: Record<string, number> = {
   '201': 900, // Primogems - maximum 900 per item
-  // Examples of other items you can add:
-  // '102': 1000, // Adventure EXP
-  // '103': 500,  // Stardust
-  // '104': 300,  // Starglitter
-  // Add more items here as needed
-  // 'item_id': max_quantity,
 };
 
 export const Mail = {
   mailDrafts,
   buttonDataCache,
 
-  addItemsToDraft: (draft: MailDraft, itemId: string, itemName: string, quantity: number): void => {
+  sendMailToPlayer: async (
+    uid: string,
+    title: string,
+    content: string,
+    item: string,
+    expiry: number
+  ) => {
+    return await GMUtils.sendMail(uid, title, content, item, expiry);
+  },
+
+  sendMailToAll: async (
+    title: string,
+    content: string,
+    item: string,
+    expiry: number,
+  ) => {
+    const users = await UserPrisma.t_player_uid.findMany();
+    const failedSent: string[] = [];
+    let successCount = 0;
+    for (const user of users) {
+      const response = await GMUtils.sendMail(
+        user.uid.toString(),
+        title,
+        content,
+        item,
+        expiry
+      );
+      if (response.data) {
+        successCount++;
+      } else {
+        failedSent.push(user.uid.toString());
+      }
+    }
+    return DiscordResponse.createEmbed({
+      title: 'Send mail to all',
+      description: successCount > 0 ? `Some mails failed to send` : '',
+      type: EmbedType.INFO,
+    });
+  },
+
+  addItemsToDraft: (draft: MailDraft, itemId: string, itemName: string, quantity: number) => {
     const limit = ITEM_LIMITATIONS[itemId];
     if (!limit || quantity <= limit) {
       const existing = draft.items.find(item => item.id === itemId);
@@ -75,9 +104,7 @@ export const Mail = {
   },
 
   handleMailInitModal: async (interaction: ModalSubmitInteraction): Promise<void> => {
-    if (isInteractionProcessed(interaction.id)) return;
     await interaction.deferReply({ ephemeral: true });
-
     const uid = interaction.fields.getTextInputValue('uidInput');
     const title = interaction.fields.getTextInputValue('titleInput');
     const content = interaction.fields.getTextInputValue('contentInput');
@@ -85,10 +112,7 @@ export const Mail = {
 
     const expiry = parseInt(expiryInput);
     if (!Number.isFinite(expiry) || expiry <= 0) {
-      await safeReply(interaction, {
-        content: 'Expiry must be a valid number of days (> 0)'
-      });
-      return;
+      await DiscordResponse.sendFailed(interaction, 'Expiry must be a valid number of days (> 0)');
     }
 
     const draftId = `draft-${interaction.user.id}-${Date.now()}`;
@@ -137,26 +161,21 @@ export const Mail = {
       new ButtonBuilder().setCustomId(`mail-cancel-draft-${draft.id}`).setLabel('❌ Cancel').setStyle(ButtonStyle.Danger),
     );
 
-    await safeReply(interaction, {
-      embeds: [draftEmbed],
-      components: [buttonRow]
+    await DiscordResponse.sendResponse({
+      interaction,
+      types: [ResponseType.EMBED, ResponseType.EPHEMERAL],
+      embed: draftEmbed,
+      components: [buttonRow],
     });
   },
 
   handleMailSearchModal: async (interaction: ModalSubmitInteraction): Promise<void> => {
-    if (isInteractionProcessed(interaction.id)) return;
     await interaction.deferReply({ ephemeral: true });
-
     const draftId = interaction.customId.replace('mail-search-', '');
-    const draft = getDraftForUser(interaction.user.id, draftId);
-    if (!draft) {
-      await safeReply(interaction, { content: 'Draft not found' });
-      return;
-    }
-
+    const draft = getDraft(interaction.user.id, draftId);
     const searchTerm = interaction.fields.getTextInputValue('searchInput').trim();
     if (!searchTerm) {
-      await safeReply(interaction, { content: 'Please enter a search term to find items.' });
+      await DiscordResponse.sendFailed(interaction, 'Please enter a search term to find items.');
       return;
     }
 
@@ -166,11 +185,13 @@ export const Mail = {
     ).slice(0, 100);
 
     if (searchResults.length === 0) {
-      await safeReply(interaction, { content: `No items found for "${searchTerm}". Try a different search term.` });
+      await DiscordResponse.sendFailed(interaction, `No items found for "${searchTerm}". Try a different search term.`);
+      return;
+    } else if (!draft) {
+      await DiscordResponse.sendFailed(interaction, 'Draft not found');
       return;
     }
 
-    // Store search state for navigation
     draft.lastSearchTerm = searchTerm;
     draft.lastSearchResults = searchResults;
     draft.lastSearchPage = 0;
@@ -185,7 +206,6 @@ export const Mail = {
     items: ItemProps[],
     page: number,
   ): Promise<void> => {
-    // Update stored page for navigation
     draft.lastSearchPage = page;
     mailDrafts.set(draft.id, draft);
 
@@ -219,7 +239,12 @@ export const Mail = {
         ),
       ];
 
-      await safeReply(interaction, { embeds: [embed], components });
+      await DiscordResponse.sendResponse({
+        interaction,
+        types: [ResponseType.EMBED, ResponseType.EPHEMERAL],
+        embed: embed,
+        components: components,
+      });
       return;
     }
 
@@ -281,32 +306,35 @@ export const Mail = {
       type: EmbedType.INFO,
     });
 
-    await safeReply(interaction, { embeds: [embed], components });
+    await DiscordResponse.sendResponse({
+      interaction,
+      types: [ResponseType.EMBED, ResponseType.EPHEMERAL],
+      embed: embed,
+      components: components,
+    });
   },
 
   handleMailQuantityModal: async (interaction: ModalSubmitInteraction): Promise<void> => {
-    if (isInteractionProcessed(interaction.id)) return;
     await interaction.deferReply({ ephemeral: true });
-
     const cacheKey = interaction.customId.replace('mail-quantity-', '');
     const cachedData = buttonDataCache.get(cacheKey);
     if (!cachedData) {
-      await safeReply(interaction, { content: 'Modal expired' });
+      await DiscordResponse.sendFailed(interaction, 'Modal expired');
       return;
     }
 
     const { draftId, itemId, itemName } = cachedData;
     buttonDataCache.delete(cacheKey);
 
-    const draft = getDraftForUser(interaction.user.id, draftId);
+    const draft = getDraft(interaction.user.id, draftId);
     if (!draft) {
-      await safeReply(interaction, { content: 'Draft not found' });
+      await DiscordResponse.sendFailed(interaction, 'Draft not found');
       return;
     }
 
     const quantity = parseInt(interaction.fields.getTextInputValue('quantityInput'));
     if (!Number.isFinite(quantity) || quantity <= 0) {
-      await safeReply(interaction, { content: 'Quantity must be a positive number' });
+      await DiscordResponse.sendFailed(interaction, 'Quantity must be a positive number');
       return;
     }
 
@@ -318,7 +346,6 @@ export const Mail = {
 
   handleMailButtonInteraction: async (interaction: ButtonInteraction): Promise<void> => {
     if (!interaction.customId.startsWith('mail-')) return;
-    if (isInteractionProcessed(interaction.id)) return;
     const { customId } = interaction;
     
     if (customId.startsWith('mail-add-item-')) {
@@ -339,12 +366,11 @@ export const Mail = {
       return;
     }
 
-    // Regular response actions - defer first
     await interaction.deferReply({ ephemeral: true });
 
     if (customId.startsWith('mail-clear-')) {
       const draftId = customId.replace('mail-clear-', '');
-      const draft = getDraftForUser(interaction.user.id, draftId);
+      const draft = getDraft(interaction.user.id, draftId);
       if (draft) {
         draft.items = [];
         mailDrafts.set(draftId, draft);
@@ -353,18 +379,17 @@ export const Mail = {
     } else if (customId.startsWith('mail-cancel-draft-')) {
       const draftId = customId.replace('mail-cancel-draft-', '');
       mailDrafts.delete(draftId);
-      await safeReply(interaction, { content: 'Draft cancelled.', embeds: [], components: [] });
     } else if (customId.startsWith('mail-done-')) {
       const draftId = customId.replace('mail-done-', '');
-      const draft = getDraftForUser(interaction.user.id, draftId);
+      const draft = getDraft(interaction.user.id, draftId);
       if (draft) await Mail.showMailPreview(interaction, draft);
     } else if (customId.startsWith('mail-back-to-draft-')) {
       const draftId = customId.replace('mail-back-to-draft-', '');
-      const draft = getDraftForUser(interaction.user.id, draftId);
+      const draft = getDraft(interaction.user.id, draftId);
       if (draft) await Mail.showDraftPanel(interaction, draft);
     } else if (customId.startsWith('mail-back-to-items-')) {
       const draftId = customId.replace('mail-back-to-items-', '');
-      const draft = getDraftForUser(interaction.user.id, draftId);
+      const draft = getDraft(interaction.user.id, draftId);
       if (draft && draft.lastSearchResults) {
         await Mail.showItemSelectMenu(interaction, draft, draft.lastSearchResults, draft.lastSearchPage || 0);
       } else {
@@ -380,11 +405,11 @@ export const Mail = {
         buttonDataCache.delete(cacheKey);
         await Mail.addItemToDraft(interaction, draftId, itemId, itemName, quantity);
       } else {
-        await safeReply(interaction, { content: 'Button expired' });
+        await DiscordResponse.sendFailed(interaction, 'Button expired');
       }
     } else if (customId.startsWith('mail-preview-back-')) {
       const draftId = customId.replace('mail-preview-back-', '');
-      const draft = getDraftForUser(interaction.user.id, draftId);
+      const draft = getDraft(interaction.user.id, draftId);
       if (draft) await Mail.showDraftPanel(interaction, draft);
     } else if (customId.startsWith('mail-preview-confirm-')) {
       const draftId = customId.replace('mail-preview-confirm-', '');
@@ -394,13 +419,11 @@ export const Mail = {
 
   handleMailSelectMenuInteraction: async (interaction: StringSelectMenuInteraction): Promise<void> => {
     if (!interaction.customId.startsWith('mail-item-select-')) return;
-    if (isInteractionProcessed(interaction.id)) return;
     await interaction.deferReply({ ephemeral: true });
-
     const draftId = interaction.customId.replace('mail-item-select-', '');
-    const draft = getDraftForUser(interaction.user.id, draftId);
+    const draft = getDraft(interaction.user.id, draftId);
     if (!draft) {
-      await safeReply(interaction, { content: 'Draft not found' });
+      await DiscordResponse.sendFailed(interaction, 'Draft not found');
       return;
     }
     const [itemId, itemName] = interaction.values[0].split('|').slice(0, 2);
@@ -443,7 +466,12 @@ export const Mail = {
       new ButtonBuilder().setCustomId(`mail-back-to-items-${draftId}`).setLabel('🔙 Back to Items').setStyle(ButtonStyle.Secondary),
     );
 
-    await safeReply(interaction, { embeds: [embed], components: [row] });
+    await DiscordResponse.sendResponse({
+      interaction,
+      types: [ResponseType.EMBED, ResponseType.EPHEMERAL],
+      embed: embed,
+      components: [row],
+    });
   },
 
   showQuantityModal: async (
@@ -474,9 +502,9 @@ export const Mail = {
     itemName: string,
     quantity: number,
   ): Promise<void> => {
-    const draft = getDraftForUser(interaction.user.id, draftId);
+    const draft = getDraft(interaction.user.id, draftId);
     if (!draft) {
-      await safeReply(interaction, { content: 'Draft not found' });
+      await DiscordResponse.sendFailed(interaction, 'Draft not found');
       return;
     }
     Mail.addItemsToDraft(draft, itemId, itemName, quantity);
@@ -506,56 +534,30 @@ export const Mail = {
       new ButtonBuilder().setCustomId(`mail-preview-back-${draft.id}`).setLabel('🔙 Back to Draft').setStyle(ButtonStyle.Secondary),
     );
 
-    await safeReply(interaction, { embeds: [previewEmbed], components: [row] });
+    await DiscordResponse.sendResponse({
+      interaction,
+      types: [ResponseType.EMBED, ResponseType.EPHEMERAL],
+      embed: previewEmbed,
+      components: [row],
+    });
   },
 
   sendMailFromDraft: async (interaction: ButtonInteraction, draftId: string): Promise<void> => {
-    const draft = getDraftForUser(interaction.user.id, draftId);
+    const draft = getDraft(interaction.user.id, draftId);
     if (!draft) {
-      await safeReply(interaction, { content: 'Draft not found' });
+      await DiscordResponse.sendFailed(interaction, 'Draft not found');
       return;
     }
 
     const itemList = draft.items.map((i) => `${i.id}:${i.count}`).join(',');
-    try {
-      const result =
-        draft.uid.toLowerCase() === 'all'
-          ? await GMUtils.sendMailToAll(draft.title, draft.content, itemList, draft.expiry)
-          : await GMUtils.sendMailToPlayer(draft.uid, draft.title, draft.content, itemList, draft.expiry);
-
-      mailDrafts.delete(draftId);
-
-      const ok: boolean = result.msg === 'succ';
-      const embed = DiscordResponse.createEmbed({
-        title: ok ? '✅ Mail Sent Successfully' : '❌ Mail Send Failed',
-        description: ok
-          ? `Mail "${draft.title}" sent to ${draft.uid.toLowerCase() === 'all' ? 'all players' : `UID ${draft.uid}`}`
-          : `Failed to send: ${result.msg || 'Unknown error'}`,
-        type: ok ? EmbedType.SUCCESS : EmbedType.ERROR,
-      });
-
-      await safeReply(interaction, { embeds: [embed], components: [] });
-
-      await Mail.recordMailLog(interaction, {
-        title: draft.title,
-        content: draft.content,
-        recipient: draft.uid.toLowerCase() === 'all' ? 'All Players' : `UID: ${draft.uid}`,
-        items: JSON.stringify(draft.items),
-        expiry: draft.expiry,
-        success: ok,
-      });
-    } catch (e) {
-      const embed = DiscordResponse.createEmbed({
-        title: '❌ Mail Send Error',
-        description: `Error sending mail.`,
-        type: EmbedType.ERROR,
-      });
-      await safeReply(interaction, { embeds: [embed], components: [] });
-    }
+    draft.uid.toLowerCase() === 'all'
+        ? await Mail.sendMailToAll(draft.title, draft.content, itemList, draft.expiry)
+        : await Mail.sendMailToPlayer(draft.uid, draft.title, draft.content, itemList, draft.expiry);
+    
   },
 
   recordMailLog: async (
-    interaction: CommandInteraction | ButtonInteraction,
+    interaction: any,
     mailDetails: {
       title: string;
       content: string;
@@ -567,7 +569,7 @@ export const Mail = {
   ) => {
     if (!interaction.guild) return;
 
-    let channel = interaction.guild.channels.cache.find((c) => c.name === 'gm-mail-log') as TextChannel;
+    let channel = interaction.guild.channels.cache.find((c: any) => c.name === 'gm-mail-log') as TextChannel;
     if (!channel) {
       channel = await interaction.guild.channels.create({
         name: 'gm-mail-log',

@@ -12,12 +12,14 @@ const client = new Client({
 
 async function initialize() {
   try {
-    console.log('Loading Discord bot...');
     await Handlers(client);
-    console.log('Handlers loaded successfully!');
-
     await client.login(process.env['DISCORD_TOKEN']);
-    console.log('Bot logged in successfully!');
+    process.on('unhandledRejection', (error) => {
+      console.error('Unhandled promise rejection:', error);
+    });
+    process.on('uncaughtException', (error) => {
+      console.error('Uncaught exception:', error);
+    });
   } catch (error) {
     console.error('Error initializing bot:', error);
   }

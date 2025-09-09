@@ -2,7 +2,7 @@ import { EmbedType, ResponseType, type Command } from "@/type";
 import { DiscordResponse } from "@/utils/discord-utils";
 import { DiscordPrisma } from "@/utils/prisma-utils";
 import { checkWhiteList } from "@/utils/utils";
-import { CommandInteraction, SlashCommandBuilder } from "discord.js";
+import { CommandInteraction, PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
 
 const WhiteList: Command = {
     command: new SlashCommandBuilder()
@@ -26,6 +26,7 @@ const WhiteList: Command = {
         .setDescription('List all servers in the whitelist')
     ),
   defer: true,
+  permission: PermissionFlagsBits.Administrator,
   cooldown: 5,
   execute: async (interaction: CommandInteraction) => {
     if (!interaction.isChatInputCommand()) return;

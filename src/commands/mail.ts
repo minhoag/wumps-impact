@@ -7,7 +7,8 @@ import {
   ModalBuilder, 
   TextInputBuilder, 
   TextInputStyle, 
-  ActionRowBuilder 
+  ActionRowBuilder,
+  PermissionFlagsBits
 } from "discord.js";
 
 const Mail: Command = {
@@ -16,6 +17,7 @@ const Mail: Command = {
     .setDescription('Send mail to players'),
   defer: false,
   cooldown: 5,
+  permission: PermissionFlagsBits.Administrator,
   execute: async (interaction: CommandInteraction) => {
     if (!interaction.isChatInputCommand()) return;
     

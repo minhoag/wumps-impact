@@ -50,13 +50,14 @@ export const DiscordResponse = {
     content?: string;
     components?: any[];
   }) => {
-    const { interaction, types, embed, content } = options;
+    const { interaction, types, embed, content, components } = options;
     const response = {
       embeds: embed && types.includes(ResponseType.EMBED) ? [embed] : [],
       content: types.includes(ResponseType.STRING) ? content || '' : '',
+      components: components || [],
       flags: types.includes(ResponseType.EPHEMERAL) ? MessageFlags.Ephemeral : 0,
     };
-    if (interaction.deferred) {
+    if (interaction.deferred || interaction.replied) {
       await interaction.editReply(response);
     } else {
       await interaction.reply(response);

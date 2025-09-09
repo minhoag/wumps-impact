@@ -1,4 +1,4 @@
-import { EmbedType, ResponseType } from '@/type';
+import { EmbedType } from '@/type';
 import {
   ChannelType,
   TextChannel,
@@ -42,9 +42,13 @@ const ITEM_LIMITATIONS: Record<string, number> = {
   '201': 900, // Primogems - maximum 900 per item
 };
 
+const SENDER = 'P・A・I・M・O・N';
+
 export const Mail = {
   mailDrafts,
   buttonDataCache,
+
+  
 
   sendMailToPlayer: async (
     uid: string,
@@ -160,11 +164,8 @@ export const Mail = {
         .setDisabled(draft.items.length === 0),
       new ButtonBuilder().setCustomId(`mail-cancel-draft-${draft.id}`).setLabel('❌ Cancel').setStyle(ButtonStyle.Danger),
     );
-
-    await DiscordResponse.sendResponse({
-      interaction,
-      types: [ResponseType.EMBED, ResponseType.EPHEMERAL],
-      embed: draftEmbed,
+    await interaction.editReply({
+      embeds: [draftEmbed],
       components: [buttonRow],
     });
   },
@@ -239,10 +240,8 @@ export const Mail = {
         ),
       ];
 
-      await DiscordResponse.sendResponse({
-        interaction,
-        types: [ResponseType.EMBED, ResponseType.EPHEMERAL],
-        embed: embed,
+      await interaction.editReply({
+        embeds: [embed],
         components: components,
       });
       return;
@@ -306,10 +305,8 @@ export const Mail = {
       type: EmbedType.INFO,
     });
 
-    await DiscordResponse.sendResponse({
-      interaction,
-      types: [ResponseType.EMBED, ResponseType.EPHEMERAL],
-      embed: embed,
+    await interaction.editReply({
+      embeds: [embed],
       components: components,
     });
   },
@@ -466,10 +463,8 @@ export const Mail = {
       new ButtonBuilder().setCustomId(`mail-back-to-items-${draftId}`).setLabel('🔙 Back to Items').setStyle(ButtonStyle.Secondary),
     );
 
-    await DiscordResponse.sendResponse({
-      interaction,
-      types: [ResponseType.EMBED, ResponseType.EPHEMERAL],
-      embed: embed,
+    await interaction.editReply({
+      embeds: [embed],
       components: [row],
     });
   },
@@ -520,7 +515,7 @@ export const Mail = {
       title: '📧 Mail Preview - Final Check',
       type: EmbedType.INFO,
       fields: [
-        { name: 'Sender', value: 'P・A・I・M・O・N' },
+        { name: 'Sender', value: SENDER },
         { name: 'Recipient', value: draft.uid.toLowerCase() === 'all' ? 'All Players' : `UID: ${draft.uid}` },
         { name: 'Title', value: draft.title },
         { name: 'Content', value: draft.content },
@@ -534,10 +529,8 @@ export const Mail = {
       new ButtonBuilder().setCustomId(`mail-preview-back-${draft.id}`).setLabel('🔙 Back to Draft').setStyle(ButtonStyle.Secondary),
     );
 
-    await DiscordResponse.sendResponse({
-      interaction,
-      types: [ResponseType.EMBED, ResponseType.EPHEMERAL],
-      embed: previewEmbed,
+    await interaction.editReply({
+      embeds: [previewEmbed],
       components: [row],
     });
   },
@@ -582,7 +575,7 @@ export const Mail = {
       type: mailDetails.success ? EmbedType.SUCCESS : EmbedType.ERROR,
       fields: [
         { name: 'Sender (Discord)', value: `${interaction.user.username} (${interaction.user.id})` },
-        { name: 'Sender (Game)', value: 'P・A・I・M・O・N' },
+        { name: 'Sender (Game)', value: SENDER },
         { name: 'Title', value: mailDetails.title },
         {
           name: 'Content',

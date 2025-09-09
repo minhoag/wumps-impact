@@ -10,7 +10,6 @@ import { MAIN_STAT_IDS, SUB_STAT_IDS, SUBSTAT_VALUES, SUBSTAT_NAMES, SUBSTAT_IS_
 export class GMUtils {
   private static readonly REGION = CONFIG.REGION.DEV_GIO;
   private static readonly ENDPOINT = ENDPOINT.GM;
-  private static readonly SENDER = 'P・A・I・M・O・N';
 
   //--- Give item ---
   public static async giveItem(

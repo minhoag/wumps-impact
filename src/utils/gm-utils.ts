@@ -10,6 +10,7 @@ import { MAIN_STAT_IDS, SUB_STAT_IDS, SUBSTAT_VALUES, SUBSTAT_NAMES, SUBSTAT_IS_
 export class GMUtils {
   private static readonly REGION = CONFIG.REGION.DEV_GIO;
   private static readonly ENDPOINT = ENDPOINT.GM;
+  private static readonly SENDER = 'P・A・I・M・O・N';
 
   //--- Give item ---
   public static async giveItem(
@@ -182,28 +183,23 @@ export class GMUtils {
     content: string,
     item: string,
     expiry: number
-  ) {
+  ): Promise<boolean> {
+    const expiryDate = new Date(Date.now() + expiry * 86400000);
     const url = this.computeUrl({
-      region: this.REGION,
-      ticket: encodeURIComponent(this.generateTicket()),
-      cmd: CONFIG.CMD.SEND_MAIL,
-      uid,
+      sender: this.SENDER,
       title,
       content,
-      item,
-      expiry,
+      item_list: item,
+      expire_time: expiryDate.getTime() / 1000,
+      is_collectible: 'False',
+      uid,
+      cmd: CONFIG.CMD.SEND_MAIL,
+      region: this.REGION,
+      ticket: encodeURIComponent(this.generateTicket()),
     });
+    console.log(url);
     const response: CustomResponse = await fetch(url).then(res => res.json());
-
-    if (response.data || response.msg === 'succ') {
-      return new CustomResponse(response.data, `Mail sent successfully to UID ${uid}`, response.retcode, response.ticket);
-    } else {
-      return new CustomResponse(
-        response.data,
-        `Failed to send mail: ${response.msg ?? 'Unknown error'}`,
-        response.retcode,
-        response.ticket,
-      );
-    }
+    console.log(response);
+    return response.msg === 'succ' && response.retcode === RETCODE.SUCCESS;
   }
 }

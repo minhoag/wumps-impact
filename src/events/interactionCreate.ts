@@ -1,4 +1,4 @@
-import type { Interaction } from 'discord.js';
+import { type Interaction } from 'discord.js';
 import type { Event } from '@/type';
 import { DiscordEvent } from '@/utils/discord-utils';
 import { checkWhiteList } from '@/utils/utils';
@@ -10,6 +10,8 @@ const InteractionCreateEvent: Event = {
     //--- Guard server whitelist ----
     const isWhitelisted = await checkWhiteList(interaction.guildId as string);
     if (!isWhitelisted) return;
+    //--- Guard Permission ----
+
     //--- Handle interaction ----
     if (interaction.isChatInputCommand()) {
       await DiscordEvent.handleChatInput(interaction);

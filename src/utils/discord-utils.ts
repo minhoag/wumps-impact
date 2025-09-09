@@ -10,6 +10,7 @@ import {
   ModalSubmitInteraction,
   ButtonInteraction,
   StringSelectMenuInteraction,
+  type PermissionResolvable,
 } from 'discord.js';
 import { Mail } from './mail-utils';
 
@@ -203,9 +204,10 @@ export const DiscordEvent = {
     const { client, commandName, user } = interaction;
     const command = client.commands.get(commandName);
     if (!command) return;
-
     if (command.defer) await interaction.deferReply();
-
+    //--- Guard Permission ----
+    const permission = command.permission as PermissionResolvable;
+    if (!interaction.memberPermissions?.has(permission)) return;
     if (command.cooldown) {
       const cooldownKey = getCooldownKey(commandName, user.id);
       const now = Date.now();
@@ -227,6 +229,10 @@ export const DiscordEvent = {
   handleAutocomplete: async (interaction: AutocompleteInteraction): Promise<void> => {
     const { client, commandName } = interaction;
     const command = client.commands.get(commandName);
+    if (!command) return;
+    //--- Guard Permission ----
+    const permission = command.permission as PermissionResolvable;
+    if (!interaction.memberPermissions?.has(permission)) return;
     if (!command?.autocomplete) return;
     await command.autocomplete(interaction, interaction.options.getFocused(true));
   },
@@ -245,6 +251,7 @@ export const DiscordEvent = {
 
 
   handleButtonInteraction: async (interaction: ButtonInteraction): Promise<void> => {
+    //--- Guard Permission ----
     await Mail.handleMailButtonInteraction(interaction);
   },
 

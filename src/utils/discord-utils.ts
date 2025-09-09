@@ -251,7 +251,6 @@ export const DiscordEvent = {
 
 
   handleButtonInteraction: async (interaction: ButtonInteraction): Promise<void> => {
-    //--- Guard Permission ----
     await Mail.handleMailButtonInteraction(interaction);
   },
 

@@ -184,11 +184,16 @@ export class GMUtils {
     item: string,
     expiry: number
   ) {
-    const now = new Date();
-    const expiryDate = new Date(now.getTime() + expiry * 24 * 60 * 60 * 1000);
-    const seconds = Math.floor(expiryDate.getTime() / 1000);
-    const uuid = new Date().getTime();
-    const url = `${BASE_URL}:${this.ENDPOINT}/api?sender=${encodeURIComponent(this.SENDER)}&title=${encodeURIComponent(title)}&content=${encodeURIComponent(content)}&item_list=${encodeURIComponent(item)}&expire_time=${seconds}&is_collectible=False&uid=${uid}&cmd=${CONFIG.CMD.SEND_MAIL}&region=${this.REGION}&ticket=GM%40${seconds}&sign=${uuid}`;
+    const url = this.computeUrl({
+      region: this.REGION,
+      ticket: encodeURIComponent(this.generateTicket()),
+      cmd: CONFIG.CMD.SEND_MAIL,
+      uid,
+      title,
+      content,
+      item,
+      expiry,
+    });
     const response: CustomResponse = await fetch(url).then(res => res.json());
 
     if (response.data || response.msg === 'succ') {

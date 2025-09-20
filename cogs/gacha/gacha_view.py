@@ -1,137 +1,12 @@
 # ui/gacha_views.py
-from utils.db import create_gacha_record, get_db_hk4e_config_gio
 import discord
 import time
 from datetime import datetime, timedelta
 from typing import Optional, List, Dict, Callable, Any
-from .gacha_embed import GachaEmbed, DraftGachaEmbed, get_display_up4_item_list, get_item_name
-from utils.constants import BANNERS
+from .gacha_embed import GachaEmbed, DraftGachaEmbed
+from .gacha_action import GachaActions
+from ..components import SearchModal, TimeModal, ItemSelectionView, ItemSelect
 
-def create_gacha_type_options(current_gacha_type: int) -> List[discord.SelectOption]:
-    """Create gacha type select options with correct defaults."""
-    return [
-        discord.SelectOption(
-            label="Banner nhân vật 1",
-            value="301",
-            description="Tạo banner nhân vật 1",
-            default=(current_gacha_type == 301)
-        ),
-        discord.SelectOption(
-            label="Banner nhân vật 2",
-            value="201",
-            description="Tạo banner nhân vật 2",
-            default=(current_gacha_type == 201)
-        ),
-        discord.SelectOption(
-            label="Banner vũ khí",
-            value="302",
-            description="Tạo banner vũ khí",
-            default=(current_gacha_type == 302)
-        )
-    ]
-
-def set_default_time(start: Optional[str], end: Optional[str]):
-    """
-    Set default start and end times for gacha events.
-    Returns a tuple of (start_time_str, end_time_str).
-    Always ensures valid datetime strings are returned.
-    """
-    now = datetime.now()
-
-    if start is None and end is None:
-        # Both None: Set start to now, end to 2 weeks later
-        start = now.strftime("%Y-%m-%d %H:%M:%S")
-        end = (now + timedelta(weeks=2)).strftime("%Y-%m-%d %H:%M:%S")
-        return start, end
-
-    elif start is not None and end is None:
-        # Only start provided: Set end to 2 weeks after start
-        try:
-            start_dt = datetime.strptime(start, "%Y-%m-%d %H:%M:%S")
-            end = (start_dt + timedelta(weeks=2)).strftime("%Y-%m-%d %H:%M:%S")
-            return start, end
-        except ValueError:
-            # Invalid start format, fall back to defaults
-            start = now.strftime("%Y-%m-%d %H:%M:%S")
-            end = (now + timedelta(weeks=2)).strftime("%Y-%m-%d %H:%M:%S")
-            return start, end
-
-    elif start is None and end is not None:
-        print("Warning: Only end time provided. Using default start time to prevent potential data overlap.")
-        start = now.strftime("%Y-%m-%d %H:%M:%S")
-        end = (now + timedelta(weeks=2)).strftime("%Y-%m-%d %H:%M:%S")
-        return start, end
-
-    else:
-        return start, end
-
-
-def update_gacha_type_select_options(view: discord.ui.View, current_gacha_type: int):
-    """Update existing GachaTypeSelect options with correct defaults."""
-    for child in view.children:
-        if isinstance(child, GachaTypeSelect):
-            child.options = create_gacha_type_options(current_gacha_type)
-            break
-
-
-def update_button_labels(view: discord.ui.View):
-    """Update button labels to reflect current state."""
-    gacha_type = getattr(view, 'gacha_type', 301)
-    item1 = getattr(view, 'item1', None)
-    item2 = getattr(view, 'item2', None)
-
-    for child in view.children:
-        if isinstance(child, discord.ui.Button):
-            if child.custom_id == "add":
-                if gacha_type == 302:
-                    item_count = sum([1 for item in [item1, item2] if item is not None])
-                    if item_count == 0:
-                        child.label = "Thêm vũ khí (0/2)"
-                    elif item_count == 1:
-                        child.label = "Thêm vũ khí (1/2)"
-                    else:
-                        child.label = "Thêm vũ khí (2/2)"
-                else:
-                    child.label = "Thêm nhân vật"
-
-
-class SearchModal(discord.ui.Modal, title="Trình tìm kiếm"):
-    name = discord.ui.TextInput(
-        label="Tên",
-        placeholder="Nhập tên",
-        required=True,
-        max_length=100
-    )
-
-    def __init__(self, on_submit_cb):
-        super().__init__()
-        self._on_submit_cb = on_submit_cb
-
-    async def on_submit(self, interaction: discord.Interaction):
-        await self._on_submit_cb(str(self.name.value).strip(), interaction)
-
-class TimeModal(discord.ui.Modal, title="Thời gian"):
-    start_time = discord.ui.TextInput(
-        label="Thời gian bắt đầu",
-        placeholder="YYYY-MM-DD HH:MM",
-        required=False,
-        max_length=64
-    )
-    end_time = discord.ui.TextInput(
-        label="Thời gian kết thúc",
-        placeholder="YYYY-MM-DD HH:MM",
-        required=False,
-        max_length=64
-    )
-
-    def __init__(self, on_submit_cb):
-        super().__init__()
-        self._on_submit_cb = on_submit_cb
-
-    async def on_submit(self, interaction: discord.Interaction):
-        await self._on_submit_cb(str(self.start_time.value).strip() or None,
-                                 str(self.end_time.value).strip() or None,
-                                 interaction)
 
 class GachaView(discord.ui.View):
     def __init__(self, *, base_id: Optional[int] = None, gacha_type: Optional[int] = None,
@@ -143,10 +18,10 @@ class GachaView(discord.ui.View):
         self.item1 = None
         self.item2 = None
         if id1:
-            self.item1 = next((item for item in BANNERS if str(item.get('value')) == str(id1)), None)
+            self.item1 = GachaActions.get_banner_from_id(id1)
         if id2:
-            self.item2 = next((item for item in BANNERS if str(item.get('value')) == str(id2)), None)
-        self.start, self.end = set_default_time(start, end)
+            self.item2 = GachaActions.get_banner_from_id(id2)
+        self.start, self.end = GachaActions.set_default_time(start, end)
         self.enabled = enabled
         self._create_gacha_type_select()
 
@@ -176,13 +51,13 @@ class GachaView(discord.ui.View):
 
     def _update_button_labels(self):
         """Update button labels to reflect current state."""
-        update_button_labels(self)
+        GachaActions.update_button_labels(self)
 
     def _create_gacha_type_select(self):
         """Add gacha type selection dropdown to the view."""
         self.children[:] = [child for child in self.children if not isinstance(child, GachaTypeSelect)]
 
-        gacha_types = create_gacha_type_options(self.gacha_type)
+        gacha_types = GachaActions.create_gacha_type_options(self.gacha_type)
         select = GachaTypeSelect(gacha_types, self._on_gacha_type_selected)
         self.add_item(select)
 
@@ -190,38 +65,30 @@ class GachaView(discord.ui.View):
         """Handle gacha type selection and update the embed."""
         old_gacha_type = self.gacha_type
         self.gacha_type = int(selected_value)
-        if (old_gacha_type == 302 and self.gacha_type != 302) or (old_gacha_type != 302 and self.gacha_type == 302):
+        if GachaActions.handle_gacha_type_change(old_gacha_type, self.gacha_type):
             self.item1 = None
             self.item2 = None
-        self._update_button_labels()
+        GachaActions.update_button_labels(self)
 
-        update_gacha_type_select_options(self, self.gacha_type)
+        GachaActions.update_gacha_type_select_options(self, self.gacha_type)
 
         await interaction.response.edit_message(embed=self._render_embed(), view=self)
 
     async def refresh_message(self, interaction: discord.Interaction):
         await interaction.response.edit_message(embed=self._render_embed(), view=self)
 
-    @discord.ui.button(label="Thêm", style=discord.ButtonStyle.primary, custom_id="add")
+    @discord.ui.button(label="Thêm Vật Phẩm", style=discord.ButtonStyle.success, custom_id="add")
     async def add(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Handle open modal to search for items."""
         current_item_count = sum([1 for item in [self.item1, self.item2] if item is not None])
 
-        if self.gacha_type in [301, 201] and current_item_count >= 1:
-            await interaction.response.send_message(
-                "Banner nhân vật chỉ được phép thêm 1 item.",
-                ephemeral=True
-            )
-            return
-        elif self.gacha_type == 302 and current_item_count >= 2:
-            await interaction.response.send_message(
-                "Banner vũ khí chỉ được phép thêm tối đa 2 item.",
-                ephemeral=True
-            )
+        can_add, error_message = GachaActions.can_add_item(current_item_count, self.gacha_type)
+        if not can_add:
+            await interaction.response.send_message(error_message, ephemeral=True)
             return
 
         async def on_submit_cb(search_query: str, inter: discord.Interaction):
-            matching_items = self._search_items(search_query)
+            matching_items = GachaActions.search_items(search_query)
             if not matching_items:
                 await inter.response.send_message(
                     f"Không tìm thấy item nào với từ khóa: `{search_query}`.",
@@ -238,7 +105,7 @@ class GachaView(discord.ui.View):
 
         await interaction.response.send_modal(SearchModal(on_submit_cb))
     
-    @discord.ui.button(label="Xóa", style=discord.ButtonStyle.secondary, custom_id="delete")
+    @discord.ui.button(label="Xóa Vật phẩm", style=discord.ButtonStyle.danger, custom_id="delete")
     async def delete(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Handle create selection view to delete item."""
         selected_items = [item for item in [self.item1, self.item2] if item is not None]
@@ -264,18 +131,20 @@ class GachaView(discord.ui.View):
             await inter.response.edit_message(embed=self._render_embed(), view=self)
         await interaction.response.send_modal(TimeModal(on_submit_cb))
 
-    @discord.ui.button(label="Xác nhận", style=discord.ButtonStyle.success, custom_id="confirm")
+    @discord.ui.button(label="Xác nhận", style=discord.ButtonStyle.primary, custom_id="confirm")
     async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Handle confirm button -> go to final confirmation view."""
+        is_valid, error_message = GachaActions.validate_items_for_gacha_type(
+            self.item1, self.item2, self.gacha_type
+        )
+        if not is_valid:
+            await interaction.response.send_message(error_message, ephemeral=True)
+            return
+
         item1_id = int(self.item1['value']) if self.item1 else None
         item2_id = int(self.item2['value']) if self.item2 else None
-        if self.gacha_type == 302 and (not item1_id or not item2_id or item1_id == item2_id):
-            await interaction.response.send_message("Vui lòng chọn đủ 2 vũ khí 5★ khác nhau cho banner vũ khí.", ephemeral=True)
-            return
-        if self.gacha_type in (201, 301) and not item1_id:
-            await interaction.response.send_message("Vui lòng chọn nhân vật.", ephemeral=True)
-            return
-        draft_view = DraftView(
+
+        draft_view = DraftGachaView(
             base_id=self.base_id,
             gacha_type=self.gacha_type,
             id1=item1_id,
@@ -301,52 +170,14 @@ class GachaView(discord.ui.View):
 
         await interaction.response.edit_message(embed=draft_embed, view=draft_view)
     
-    def _search_items(self, query: str) -> List[Dict]:
-        """Search for items matching the query in the BANNERS data. Return at most 25 items."""
-        if not query or not query.strip():
-            return []
-
-        search_term = query.strip().lower()
-        matches = []
-
-        for item in BANNERS:
-            item_name = item.get('name', '').lower()
-            vietnamese_name = item.get('vietnameseName', '').lower()
-            if search_term in item_name or search_term in vietnamese_name:
-                matches.append(item)
-
-        matches = matches[:25]
-
-        def sort_key(item):
-            name = item.get('name', '').lower()
-            viet_name = item.get('vietnameseName', '').lower()
-            if name == search_term or viet_name == search_term:
-                return 0
-            elif name.startswith(search_term) or viet_name.startswith(search_term):
-                return 1
-            else:
-                return 2
-
-        matches.sort(key=sort_key)
-        return matches
 
     async def _on_item_selected(self, selected_item: Dict, interaction: discord.Interaction):
         """Handle item selection from the dropdown."""
         current_item_count = sum([1 for item in [self.item1, self.item2] if item is not None])
-        if self.gacha_type in [301, 201]:
-            if current_item_count >= 1:
-                await interaction.response.send_message(
-                    "Banner nhân vật chỉ được phép thêm 1 item.",
-                    ephemeral=True
-                )
-                return
-        elif self.gacha_type == 302:
-            if current_item_count >= 2:
-                await interaction.response.send_message(
-                    "Banner vũ khí chỉ được phép thêm tối đa 2 item.",
-                    ephemeral=True
-                )
-                return
+        can_add, error_message = GachaActions.can_add_item(current_item_count, self.gacha_type)
+        if not can_add:
+            await interaction.response.send_message(error_message, ephemeral=True)
+            return
 
         if not self.item1:
             self.item1 = selected_item
@@ -354,7 +185,7 @@ class GachaView(discord.ui.View):
             self.item2 = selected_item
         else:
             self.item1 = selected_item
-        self._update_button_labels()
+        GachaActions.update_button_labels(self)
         await interaction.response.edit_message(embed=self._render_embed(), view=self)
     
     async def _on_item_deleted(self, deleted_item: Dict, interaction: discord.Interaction):
@@ -362,11 +193,11 @@ class GachaView(discord.ui.View):
             self.item1 = None
         elif self.item2 and self.item2['value'] == deleted_item['value']:
             self.item2 = None
-        self._update_button_labels()
+        GachaActions.update_button_labels(self)
         await interaction.response.edit_message(embed=self._render_embed(), view=self)
 
 
-class DraftView(discord.ui.View):
+class DraftGachaView(discord.ui.View):
     def __init__(self, *, base_id: Optional[int] = None, gacha_type: Optional[int] = None,
                  id1: Optional[int] = None, id2: Optional[int] = None,
                  start: Optional[str] = None, end: Optional[str] = None, enabled: int = 1):
@@ -376,14 +207,14 @@ class DraftView(discord.ui.View):
         self.item1 = None
         self.item2 = None
         if id1:
-            self.item1 = next((item for item in BANNERS if str(item.get('value')) == str(id1)), None)
+            self.item1 = GachaActions.get_banner_from_id(id1)
         if id2:
-            self.item2 = next((item for item in BANNERS if str(item.get('value')) == str(id2)), None)
+            self.item2 = GachaActions.get_banner_from_id(id2)
 
-        self.start, self.end = set_default_time(start, end)
+        self.start, self.end = GachaActions.set_default_time(start, end)
 
         self.enabled = enabled
-        self._update_button_labels()
+        GachaActions.update_button_labels(self)
         self._create_gacha_type_select()
 
     @property
@@ -394,37 +225,16 @@ class DraftView(discord.ui.View):
     def id2(self):
         return int(self.item2['value']) if self.item2 else None
     
-    async def _submit_to_server(self) -> bool:
-        """Submit the event data to the server. Returns True if successful."""
-        item_1 = self.item1['value']
-        item_2 = self.item2['value'] if self.item2 and self.gacha_type == 302 else None
-        display_up4_item_list = get_display_up4_item_list(self.item1, self.item2)
-
-        event_data = {
-            "item_1": item_1,
-            "item_2": item_2,
-            "gacha_type": self.gacha_type,
-            "display_up4_item_list": display_up4_item_list,
-            "start": self.start,
-            "end": self.end,
-            "enabled": self.enabled
-        }
-        try:
-            return create_gacha_record(**event_data)
-            
-        except Exception as e:
-            print(f"Error submitting gacha event: {e}")
-            return False
 
     def _update_button_labels(self):
         """Update button labels to reflect current state."""
-        update_button_labels(self)
+        GachaActions.update_button_labels(self)
 
     def _create_gacha_type_select(self):
         """Add gacha type selection dropdown to the view."""
         self.children[:] = [child for child in self.children if not isinstance(child, GachaTypeSelect)]
 
-        gacha_types = create_gacha_type_options(self.gacha_type)
+        gacha_types = GachaActions.create_gacha_type_options(self.gacha_type)
         select = GachaTypeSelect(gacha_types, self._on_gacha_type_selected)
         self.add_item(select)
 
@@ -449,12 +259,12 @@ class DraftView(discord.ui.View):
         """Handle gacha type selection and update the embed."""
         old_gacha_type = self.gacha_type
         self.gacha_type = int(selected_value)
-        if (old_gacha_type == 302 and self.gacha_type != 302) or (old_gacha_type != 302 and self.gacha_type == 302):
+        if GachaActions.handle_gacha_type_change(old_gacha_type, self.gacha_type):
             self.item1 = None
             self.item2 = None
-        self._update_button_labels()
+        GachaActions.update_button_labels(self)
 
-        update_gacha_type_select_options(self, self.gacha_type)
+        GachaActions.update_gacha_type_select_options(self, self.gacha_type)
 
         await interaction.response.edit_message(embed=self._render_embed(), view=self)
 
@@ -491,22 +301,28 @@ class DraftView(discord.ui.View):
     @discord.ui.button(label="Xác nhận", style=discord.ButtonStyle.success, custom_id="final_confirm")
     async def final_confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Handle final confirm button -> submit to server."""
+        is_valid, error_message = GachaActions.validate_items_for_gacha_type(
+            self.item1, self.item2, self.gacha_type
+        )
+        if not is_valid:
+            await interaction.response.send_message(error_message, ephemeral=True)
+            return
+
         item1_id = int(self.item1['value']) if self.item1 else None
         item2_id = int(self.item2['value']) if self.item2 else None
-        if not item1_id:
-            await interaction.response.send_message("Vui lòng chọn nhân vật.", ephemeral=True)
-            return
         loading_embed = discord.Embed(
             title="Đang xử lý...",
             description="Đang gửi yêu cầu tạo sự kiện đến server...",
             color=0xffa500
         )
         await interaction.response.edit_message(embed=loading_embed, view=None)
-        success = await self._submit_to_server()
+        success = await GachaActions.submit_to_server(
+            self.item1, self.item2, self.gacha_type, self.start, self.end, self.enabled
+        )
 
         if success:
-            item1_name = get_item_name(item1_id) if item1_id else 'N/A'
-            item2_name = get_item_name(item2_id) if item2_id else 'N/A'
+            item1_name = GachaActions.get_item_display_name(self.item1) if self.item1 else 'N/A'
+            item2_name = GachaActions.get_item_display_name(self.item2) if self.item2 else 'N/A'
 
             success_embed = discord.Embed(
                 title="Sự kiện đã được tạo thành công!",
@@ -525,79 +341,6 @@ class DraftView(discord.ui.View):
                 color=0xff0000
             )
         await interaction.edit_original_response(embed=success_embed, view=self)
-
-class ItemSelectionView(discord.ui.View):
-    """View for selecting items from search results."""
-
-    def __init__(self, items: List[Dict], callback: Callable[[Dict, discord.Interaction], Any]):
-        super().__init__(timeout=300)
-        self.items = items
-        self.callback = callback
-
-        options = []
-        values = set()
-
-        for i, item in enumerate(items[:25]):
-            item_name = item.get('vietnameseName', '') or item.get('name', 'Unknown')
-            item_value = str(item.get('value', '0'))
-            unique_value = f"{i}_{item_value}"
-
-            if item_value in values:
-                unique_value = f"{i}_{item_value}_{len(values)}"
-            else:
-                values.add(item_value)
-
-            display_name = item_name[:97] + "..." if len(item_name) > 100 else item_name
-            final_value = unique_value[:97] + "..." if len(unique_value) > 100 else unique_value
-
-            options.append(discord.SelectOption(
-                label=display_name,
-                value=final_value,
-                description=f"ID: {item_value}"
-            ))
-
-        self.add_item(ItemSelect(options, self.items, self.callback))
-
-
-class ItemSelect(discord.ui.Select):
-    """Select menu for choosing items. Show at most 25 items."""
-
-    def __init__(self, options: List[discord.SelectOption], items: List[Dict], callback: Callable[[Dict, discord.Interaction], Any]):
-        super().__init__(
-            placeholder="Chọn item từ danh sách...",
-            min_values=1,
-            max_values=1,
-            options=options
-        )
-        self.items = items
-        self._callback = callback
-
-    async def callback(self, interaction: discord.Interaction):
-        selected_value = self.values[0]
-        parts = selected_value.split('_', 1)
-
-        if len(parts) >= 2:
-            index = int(parts[0])
-            if 0 <= index < len(self.items):
-                selected_item = self.items[index]
-                await self._callback(selected_item, interaction)
-                return
-
-        item_value_part = selected_value.split('_')[-1]
-        selected_item = None
-        for item in self.items:
-            if str(item.get('value', '')) == item_value_part:
-                selected_item = item
-                break
-
-        if selected_item:
-            await self._callback(selected_item, interaction)
-        else:
-            await interaction.response.send_message(
-                "Có lỗi xảy ra khi chọn item. Vui lòng thử lại.",
-                ephemeral=True
-            )
-
 
 class GachaTypeSelect(discord.ui.Select):
     """Select menu for choosing gacha type"""

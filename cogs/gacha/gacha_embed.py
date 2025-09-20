@@ -1,38 +1,9 @@
-import discord
-from typing import Optional, Dict
-from utils.embed import Embed
+from typing import Optional
+from cogs.embed import Embed, COLORS
 from utils.constants import BANNERS, INTERTWINED_FATE
 from datetime import datetime
+from .gacha_action import GachaActions
 
-def get_item_name(item_id: Optional[int]) -> str: 
-    """Get item name from BANNERS data by ID."""
-    if not item_id:
-        return "Chưa chọn"
-
-    for item in BANNERS:
-        if item.get('value') == item_id:
-            vietnamese_name = item.get('vietnameseName', '').strip()
-            english_name = item.get('name', '').strip()
-            return vietnamese_name or english_name or f"ID: {item_id}"
-
-    return f"ID: {item_id}"
-
-
-def get_display_up4_item_list(banner1=None, banner2=None) -> list:
-    """Get list of 4-star rate-up item names from selected banner objects."""
-    up4_items = set()
-    selected_banners = [banner1, banner2]
-    for selected_banner in selected_banners:
-        if selected_banner:
-            rate_up_4 = selected_banner.get('rateUpItems4', '')
-            if rate_up_4 and rate_up_4.strip():
-                for item_id in rate_up_4.split(','):
-                    item_id = item_id.strip()
-                    if item_id and item_id.isdigit():
-                        up4_items.add(int(item_id))
-    if not up4_items:
-        return []
-    return [str(item_id) for item_id in sorted(up4_items)]
 
 class GachaEmbed(Embed):
     def __init__(self, id: int, gacha_type: int, id1: Optional[int], id2: Optional[int], start: Optional[str], end: Optional[str], enabled: int, banner1=None, banner2=None):
@@ -57,7 +28,7 @@ class GachaEmbed(Embed):
                     banner2 = banner
                     break
 
-        self.display_up4_item_list = get_display_up4_item_list(banner1, banner2)
+        self.display_up4_item_list = GachaActions.get_display_up4_item_list(banner1, banner2)
         self.gacha_type_name = {
             201: "Banner nhân vật 2",
             301: "Banner nhân vật 1",
@@ -68,22 +39,23 @@ class GachaEmbed(Embed):
     def build_embed(self):
         embed = Embed(
             title="Thêm sự kiện",
-            color=0x3498db
+            color=COLORS["primary"]
         )
-        embed.set_thumbnail(INTERTWINED_FATE)
+        embed.set_author(name="Tạo sự kiện giới hạn", icon_url=INTERTWINED_FATE)
+        embed.set_thumbnail(url=INTERTWINED_FATE)
         embed.add_field(name="Session", value=self.id, inline=True)
         embed.add_field(name="Loại sự kiện", value=self.gacha_type_name[self.gacha_type], inline=True)
 
         # Display selected items with names
         items_text = ""
         if self.id1:
-            item_name = get_item_name(self.id1)
+            item_name = GachaActions.get_item_name(self.id1)
             items_text += f"• {item_name}"
         if self.id2:
-            item_name = get_item_name(self.id2)
+            item_name = GachaActions.get_item_name(self.id2)
             items_text += f"\n• {item_name}"
         if not items_text:
-            items_text = "Chưa chọn item nào"
+            items_text = "Chưa chọn vật phẩm nào"
 
         embed.add_field(name="5 sao", value=items_text, inline=False)
 
@@ -91,7 +63,7 @@ class GachaEmbed(Embed):
         if self.display_up4_item_list:
             display_text = " • " + "\n • ".join(self.display_up4_item_list)
         else:
-            display_text = "Không có"
+            display_text = "Chưa chọn vật phẩm nào"
 
         embed.add_field(name="4 sao", value=display_text, inline=False)
         embed.add_field(name="Thời gian bắt đầu", value=self.start or "Chưa thiết lập", inline=True)
@@ -123,7 +95,7 @@ class DraftGachaEmbed(Embed):
                     banner2 = banner
                     break
 
-        self.display_up4_item_list = get_display_up4_item_list(banner1, banner2)
+        self.display_up4_item_list = GachaActions.get_display_up4_item_list(banner1, banner2)
         self.gacha_type_name = {
             201: "Banner nhân vật 2",
             301: "Banner nhân vật 1",
@@ -134,28 +106,30 @@ class DraftGachaEmbed(Embed):
         embed = Embed(
             title="Xác nhận sự kiện",
             description="Đây là bản nháp của sự kiện sẽ được tạo. Hãy kiểm tra kỹ trước khi xác nhận.",
-            color=0xffa500
+            color=COLORS["warning"]
         )
+        embed.set_author(name="Tạo sự kiện giới hạn", icon_url=INTERTWINED_FATE)
+        embed.set_thumbnail(url=INTERTWINED_FATE)
         embed.add_field(name="Session", value=self.id, inline=True)
         embed.add_field(name="Loại sự kiện", value=self.gacha_type_name[self.gacha_type], inline=True)
 
         # Display selected items with names
         items_text = ""
         if self.id1:
-            item_name = get_item_name(self.id1)
+            item_name = GachaActions.get_item_name(self.id1)
             items_text += f"• {item_name}"
         if self.id2:
-            item_name = get_item_name(self.id2)
+            item_name = GachaActions.get_item_name(self.id2)
             items_text += f"\n• {item_name}"
         if not items_text:
-            items_text = "Không có item nào được chọn"
+            items_text = "Không có vật phẩm nào được chọn"
 
-        embed.add_field(name="Items được chọn", value=items_text, inline=False)
+        embed.add_field(name="Vật phẩm được chọn", value=items_text, inline=False)
 
         if self.display_up4_item_list:
             display_text = " • " + "\n • ".join(self.display_up4_item_list)
         else:
-            display_text = "Không có vật phẩm 4 sao đi kèm"
+            display_text = "Không tìm thấy vật phẩm 4 sao đi kèm"
 
         embed.add_field(name="Vật phẩm 4 sao đi kèm", value=display_text, inline=True)
         embed.add_field(name="Thời gian bắt đầu", value=self.start or "Chưa thiết lập", inline=True)

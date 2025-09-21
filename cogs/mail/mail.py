@@ -8,7 +8,7 @@ from cogs.mail.mail_embed import MailEmbed
 from cogs.mail.mail_view import MailView
 import time
 from utils.logger import logger
-from cogs.check import check_allow_guild
+from cogs.check import is_whitelist
 
 class Mail(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -17,8 +17,8 @@ class Mail(commands.Cog):
         self.session_timeout = 30
     
     @app_commands.command(name="mail", description="Create and send mail to users")
-    @app_commands.checks.has_permissions(administrator=True)
-    @check_allow_guild
+    @is_whitelist
+
     async def create(self, interaction: Interaction):
         """Create a mail with attachments"""
         has_permission, error_message = self._check_administrator_permissions(interaction)

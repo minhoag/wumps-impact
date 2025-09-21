@@ -35,6 +35,22 @@ def get_db_hk4e_discord_gio():
     )
     return db
 
+def get_whitelist_server():
+    db = get_db_hk4e_discord_gio()
+    cursor = db.cursor()
+    cursor.execute(f"SELECT id FROM {T_WHITELIST} WHERE type = 'GUILD'")
+    results = cursor.fetchall()
+    db.close()
+    return [row[0] for row in results]
+
+def get_whitelist_user():
+    db = get_db_hk4e_discord_gio()
+    cursor = db.cursor()
+    cursor.execute(f"SELECT id FROM {T_WHITELIST} WHERE type = 'USER'")
+    results = cursor.fetchall()
+    db.close()
+    return [row[0] for row in results]
+
 def create_gacha_record(
     item_1: str, 
     item_2: str, 

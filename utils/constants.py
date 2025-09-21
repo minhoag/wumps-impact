@@ -14,14 +14,18 @@ SERVER_URL = f"http://{URL}:{PORT}"
 # endpoints
 GACHA_INFO = "/gacha/info"
 GACHA_RECORD = "/gacha/record"
+
 # schemas
 DB_HK4E_CONFIG_GIO = "db_hk4e_config_gio"
 DB_HK4E_USER_GIO = "db_hk4e_user_gio"
 DB_HK4E_DISCORD_GIO = "db_hk4e_discord_gio"
+
 # tables
 GACHA_CONFIG = "t_gacha_schedule_config"
 T_LOG = "t_log"
 T_EMAIL_LOG = "t_email_log"
+T_WHITELIST = "t_whitelist"
+
 # Parse host and port from MYSQL_HOST environment variable
 mysql_host = os.getenv('MYSQL_HOST')
 mysql_port = os.getenv('MYSQL_PORT')

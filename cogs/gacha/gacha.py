@@ -4,7 +4,7 @@ from discord.ext import commands
 
 from cogs.gacha.gacha_view import GachaView
 from cogs.gacha.gacha_embed import GachaEmbed
-from cogs.check import check_allow_guild
+from cogs.check import is_whitelist
 
 class Gacha(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -13,8 +13,7 @@ class Gacha(commands.Cog):
     group = app_commands.Group(name="gacha", description="Gacha command")
 
     @group.command(name="create", description="Create new gacha")
-    @app_commands.checks.has_permissions(administrator=True)
-    @check_allow_guild
+    @is_whitelist
     async def create(self, interaction: Interaction):
         view = GachaView()
         embed_instance = GachaEmbed(

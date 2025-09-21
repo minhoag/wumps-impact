@@ -2,9 +2,6 @@ import os
 import logging
 import time
 
-if not os.path.exists('logs'):
-    os.mkdir('logs')
-
 start_time = time.time()
 
 def get_runtime() -> float:
@@ -20,10 +17,10 @@ class RuntimeFilter(logging.Filter):
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-console_hander = logging.StreamHandler()
-console_hander.setLevel(logging.DEBUG)
-
-console_hander.setFormatter(formatter)
+# Console handler
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.DEBUG)
+console_handler.setFormatter(formatter)
 
 logger.addFilter(RuntimeFilter())
-logger.addHandler(console_hander)
+logger.addHandler(console_handler)

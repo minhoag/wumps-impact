@@ -1,6 +1,8 @@
+from typing import Literal
 import pymysql
 import json
-from utils.constants import MYSQL_CONFIG, DB_HK4E_CONFIG_GIO, DB_HK4E_USER_GIO, GACHA_CONFIG, BANNERS, SERVER_URL, GACHA_RECORD, GACHA_INFO
+from utils.logger import logger
+from utils.constants import *
 
 def get_db_hk4e_config_gio():
     db = pymysql.connect(
@@ -21,6 +23,15 @@ def get_db_hk4e_user_gio():
         database=DB_HK4E_USER_GIO,
         cursorclass=pymysql.cursors.DictCursor,
         autocommit=True
+    )
+    return db
+
+def get_db_hk4e_discord_gio():
+    db = pymysql.connect(
+        host=MYSQL_CONFIG['host'],
+        user=MYSQL_CONFIG['user'],
+        password=MYSQL_CONFIG['password'],
+        database=DB_HK4E_DISCORD_GIO,
     )
     return db
 
@@ -84,7 +95,6 @@ def create_gacha_record(
     try:
         db = get_db_hk4e_config_gio()
         cursor = db.cursor()
-        # Use string formatting for table name since %s treats it as a string literal
         query = f"""
         INSERT INTO {GACHA_CONFIG} (gacha_type, begin_time, end_time, cost_item_id, cost_item_num, gacha_pool_id, gacha_prob_rule_id, gacha_up_config, gacha_rule_config, gacha_prefab_path, gacha_preview_prefab_path, gacha_prob_url, gacha_record_url, gacha_prob_url_oversea, gacha_record_url_oversea, gacha_sort_id, enabled, title_textmap, display_up4_item_list) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
@@ -92,6 +102,96 @@ def create_gacha_record(
         db.commit()
         db.close()
     except Exception as e:
-        print(f"Error creating gacha record: {e}")
+        logger.info(f"Error creating gacha record: {e}")
         return False
     return True
+
+def create_mail_record(
+    sender_discord_id: str,
+    recipients: list,
+    title: str,
+    content: str,
+    attachments: list = None
+) -> bool:
+    data = {
+        "sender_discord_id": sender_discord_id,
+        "recipients": recipients,
+        "title": title,
+        "content": content,
+        "attachments": attachments
+    }
+    try:
+        db = get_db_hk4e_discord_gio()
+        cursor = db.cursor()
+        query = f"""
+        INSERT INTO {T_EMAIL_LOG} (sender_discord_id, recipients, title, content, attachments) VALUES (%s, %s, %s, %s, %s)
+        """
+        cursor.execute(query, (data['sender_discord_id'], data['recipients'], data['title'], data['content'], data['attachments']))
+        db.commit()
+        db.close()
+    except Exception as e:
+        logger.info(f"Error creating mail record: {e}")
+        return False
+    return True
+
+def create_log_record(
+    type: str,
+    message: str
+) -> int:
+    """Create a log record and return the generated ID"""
+    data = {
+        "type": type,
+        "message": message
+    }
+    try:
+        db = get_db_hk4e_discord_gio()
+        cursor = db.cursor()
+        query = f"""
+        INSERT INTO {T_LOG} (type, message) VALUES (%s, %s)
+        """
+        cursor.execute(query, (data['type'], data['message']))
+        log_id = cursor.lastrowid
+        db.commit()
+        db.close()
+        return log_id
+    except Exception as e:
+        logger.info(f"Error creating log record: {e}")
+        return -1
+
+def create_email_log_record(
+    log_id: int,
+    subject: str,
+    body: str,
+    sender: str,
+    recipient: str,
+    delivery_status: Literal["SENT", "WARN", "FAILED"],
+    message: str = ""
+) -> bool:
+    """Create an email log record linked to a log entry"""
+    try:
+        db = get_db_hk4e_discord_gio()
+        cursor = db.cursor()
+        query = f"""
+        INSERT INTO {T_EMAIL_LOG} (log_id, subject, body, sender, recipient, delivery_status, message)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """
+        cursor.execute(query, (log_id, subject, body, sender, recipient, delivery_status, message))
+        db.commit()
+        db.close()
+        return True
+    except Exception as e:
+        logger.info(f"Error creating email log record: {e}")
+        return False
+
+def get_all_uid() -> list:
+    """Get all user IDs from the database"""
+    try:
+        db = get_db_hk4e_user_gio()
+        cursor = db.cursor()
+        cursor.execute("SELECT uid FROM t_user_data")
+        results = cursor.fetchall()
+        db.close()
+        return [str(row['uid']) for row in results]
+    except Exception as e:
+        logger.info(f"Error getting all UIDs: {e}")
+        return []

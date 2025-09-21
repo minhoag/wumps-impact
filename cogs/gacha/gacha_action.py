@@ -1,16 +1,25 @@
 from typing import Optional, List, Dict, Callable, Any, Tuple
 from datetime import datetime, timedelta
 import discord
-from utils.db import create_gacha_record
-from utils.constants import BANNERS
+from utils.db import create_gacha_record, create_log_record
+from utils.constants import BANNERS, ITEMS
 from utils.utils import Utils
-
+from utils.logger import logger
 
 class GachaActions:
     """Gacha operate logic"""
 
     @staticmethod
-    async def submit_to_server(item1: Dict, item2: Optional[Dict], gacha_type: int, start: str, end: str, enabled: int) -> bool:
+    async def submit_to_server(
+        user_id: int,
+        user_name: str,
+        item1: Dict, 
+        item2: Optional[Dict], 
+        gacha_type: int, 
+        start: str, 
+        end: str, 
+        enabled: int
+    ) -> bool:
         """Submit the event data to the server. Returns True if successful."""
         try:
             item_1 = item1['value'] if item1 else None
@@ -31,31 +40,51 @@ class GachaActions:
                 "enabled": enabled
             }
 
+            # create log
+            create_log_record(
+                user_id=user_id,
+                user_name=user_name,
+                action="GACHA_CREATE",
+                data=event_data,
+                type="gacha"
+            )
+
+            # create gacha record
             return create_gacha_record(**event_data)
 
         except Exception as e:
-            print(f"Error submitting gacha event: {e}")
+            logger.info(f"Error submitting gacha event: {e}")
             return False
 
     @staticmethod
-    def search_items(query: str) -> List[Dict]:
-        """Search for items matching the query in the BANNERS data. Return at most 25 items."""
-        return Utils.search_items(query, BANNERS, ['name', 'vietnameseName'], 25)
-
-    @staticmethod
-    def validate_items_for_gacha_type(item1: Optional[Dict], item2: Optional[Dict], gacha_type: int) -> tuple[bool, str]:
+    def validate_data(item1: Optional[Dict], item2: Optional[Dict], gacha_type: int) -> tuple[bool, str]:
         """Validate items based on gacha type requirements."""
         item1_id = item1['value'] if item1 else None
         item2_id = item2['value'] if item2 else None
 
-        if gacha_type == 302:  # Weapon banner
+        # Weapon banner -> check if it is weapon and have 2 different weapons
+        if gacha_type == 302:
             if not item1_id or not item2_id:
                 return False, "Vui lòng chọn đủ 2 vũ khí 5★ khác nhau cho banner vũ khí."
             if item1_id == item2_id:
                 return False, "Vui lòng chọn đủ 2 vũ khí 5★ khác nhau cho banner vũ khí."
-        elif gacha_type in (201, 301):  # Character banners
+            if not Utils.is_weapon(item1_id) or not Utils.is_weapon(item2_id):
+                msg = ""
+                if not Utils.is_weapon(item1_id):
+                    msg = f"{Utils.get_item_name(item1_id)} không phải là vũ khí."
+                if not Utils.is_weapon(item2_id):
+                    msg = f"{Utils.get_item_name(item2_id)} không phải là vũ khí."
+                else:
+                    msg = f"{Utils.get_item_name(item1_id)} và {Utils.get_item_name(item2_id)} đều không phải là vũ khí."
+                return False, msg
+
+        # Character banners -> check if it is character and have 1 character
+        elif gacha_type in (201, 301):
             if not item1_id:
                 return False, "Vui lòng chọn nhân vật."
+            if not Utils.is_character(item1_id):
+                msg = f"{Utils.get_item_name(item1_id)} không phải là nhân vật."
+                return False, msg
 
         return True, ""
 
@@ -109,7 +138,7 @@ class GachaActions:
                 return start, end
 
         elif start is None and end is not None:
-            print("Warning: Only end time provided. Using default start time to prevent potential data overlap.")
+            logger.info("Warning: Only end time provided. Using default start time to prevent potential data overlap.")
             start = now.strftime("%Y-%m-%d %H:%M:%S")
             end = (now + timedelta(weeks=2)).strftime("%Y-%m-%d %H:%M:%S")
             return start, end
@@ -174,19 +203,6 @@ class GachaActions:
     def handle_gacha_type_change(old_gacha_type: int, new_gacha_type: int) -> bool:
         """Handle gacha type change logic. Returns True if items should be reset."""
         return (old_gacha_type == 302 and new_gacha_type != 302) or (old_gacha_type != 302 and new_gacha_type == 302)
-
-    @staticmethod
-    def get_item_name(item_id: Optional[int]) -> str:
-        """Get item name from BANNERS data by ID."""
-        if not item_id:
-            return "Chưa chọn"
-
-        # Find the item by ID using Utils
-        matching_items = Utils.filter_by_field(BANNERS, 'value', item_id)
-        if matching_items:
-            return Utils.get_item_name(matching_items[0], ['vietnameseName', 'name'])
-
-        return f"ID: {item_id}"
 
     @staticmethod
     def get_display_up4_item_list(banner1=None, banner2=None) -> list:

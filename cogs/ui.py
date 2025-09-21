@@ -1,34 +1,52 @@
 import discord
 from typing import Optional, Callable, Any, List, Dict
+from utils.logger import logger
 
 
 class SearchModal(discord.ui.Modal, title="Trình tìm kiếm"):
     """Reusable search modal for finding items or content."""
-
-    name = discord.ui.TextInput(
-        label="Tên",
-        placeholder="Nhập tên",
-        required=True,
-        max_length=100
-    )
-
-    def __init__(self, on_submit_cb: Callable[[str, discord.Interaction], Any]):
+    def __init__(self, name: bool, quantity: bool, on_submit_cb: Callable[[str, discord.Interaction, Optional[str]], Any]):
         super().__init__()
-        self._on_submit_cb = on_submit_cb
+        self.name = name
+        self.quantity = quantity
+        if name:
+            name_input = discord.ui.TextInput(
+                label="Tên item",
+                placeholder="Tên item",
+                required=True,
+                max_length=64
+            )
+            self.add_item(name_input)
+        if quantity:
+            quantity_input = discord.ui.TextInput(
+                label="Số lượng",
+                placeholder="Số lượng",
+                required=True,
+                max_length=64
+            )
+            self.add_item(quantity_input)
+        self.on_submit_cb = on_submit_cb
+    
+    def add_item(self, item: discord.ui.TextInput):
+        super().add_item(item)
 
     async def on_submit(self, interaction: discord.Interaction):
-        # Get values from the interaction data with proper error handling
+        """Handle the submission of the search modal."""
         components = interaction.data.get('components', [])
-
         name = ""
-        try:
-            if len(components) > 0:
-                name = components[0].get('components', [{}])[0].get('value', '').strip()
-        except (IndexError, KeyError, AttributeError) as e:
-            print(f"Error extracting search modal data: {e}")
-            print(f"Interaction data: {interaction.data}")
 
-        await self._on_submit_cb(name, interaction)
+        if len(components) > 0:
+            name = components[0].get('components', [{}])[0].get('value', '').strip()
+
+        if self.quantity:
+            quantity = "1"
+            if len(components) > 1:
+                quantity_value = components[1].get('components', [{}])[0].get('value', '').strip()
+                if quantity_value:
+                    quantity = quantity_value
+            await self.on_submit_cb(name, interaction, quantity)
+        else:
+            await self.on_submit_cb(name, interaction)
 
 
 class TimeModal(discord.ui.Modal, title="Thời gian"):
@@ -68,8 +86,8 @@ class TimeModal(discord.ui.Modal, title="Thời gian"):
                 if end_time_value:
                     end_time = end_time_value
         except (IndexError, KeyError, AttributeError) as e:
-            print(f"Error extracting time modal data: {e}")
-            print(f"Interaction data: {interaction.data}")
+            logger.info(f"Error extracting time modal data: {e}")
+            logger.info(f"Interaction data: {interaction.data}")
 
         await self._on_submit_cb(start_time, end_time, interaction)
 
@@ -138,7 +156,7 @@ class ItemSelectionView(discord.ui.View):
             options.append(discord.SelectOption(
                 label=display_name,
                 value=final_value,
-                description=f"ID: {item_value}"
+                description=f"{item_value}"
             ))
 
         self.add_item(ItemSelect(options, self.items, self.callback))

@@ -1,11 +1,12 @@
 # ui/gacha_views.py
 import discord
 import time
-from datetime import datetime, timedelta
 from typing import Optional, List, Dict, Callable, Any
-from .gacha_embed import GachaEmbed, DraftGachaEmbed
-from .gacha_action import GachaActions
-from ..components import SearchModal, TimeModal, ItemSelectionView, ItemSelect
+from cogs.gacha.gacha_embed import GachaEmbed, DraftGachaEmbed
+from cogs.gacha.gacha_action import GachaActions
+from cogs.ui import SearchModal, TimeModal, ItemSelectionView
+from utils.constants import BANNERS
+from utils.utils import Utils
 
 
 class GachaView(discord.ui.View):
@@ -88,7 +89,7 @@ class GachaView(discord.ui.View):
             return
 
         async def on_submit_cb(search_query: str, inter: discord.Interaction):
-            matching_items = GachaActions.search_items(search_query)
+            matching_items = Utils.search_items(search_query, BANNERS, ['name', 'vietnameseName'], 25)
             if not matching_items:
                 await inter.response.send_message(
                     f"Không tìm thấy item nào với từ khóa: `{search_query}`.",
@@ -103,7 +104,7 @@ class GachaView(discord.ui.View):
             )
             await inter.response.send_message(embed=selection_embed, view=selection_view, ephemeral=True)
 
-        await interaction.response.send_modal(SearchModal(on_submit_cb))
+        await interaction.response.send_modal(SearchModal(name=True, quantity=False, on_submit_cb=on_submit_cb))
     
     @discord.ui.button(label="Xóa Vật phẩm", style=discord.ButtonStyle.danger, custom_id="delete")
     async def delete(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -134,7 +135,7 @@ class GachaView(discord.ui.View):
     @discord.ui.button(label="Xác nhận", style=discord.ButtonStyle.primary, custom_id="confirm")
     async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Handle confirm button -> go to final confirmation view."""
-        is_valid, error_message = GachaActions.validate_items_for_gacha_type(
+        is_valid, error_message = GachaActions.validate_data(
             self.item1, self.item2, self.gacha_type
         )
         if not is_valid:
@@ -301,7 +302,7 @@ class DraftGachaView(discord.ui.View):
     @discord.ui.button(label="Xác nhận", style=discord.ButtonStyle.success, custom_id="final_confirm")
     async def final_confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Handle final confirm button -> submit to server."""
-        is_valid, error_message = GachaActions.validate_items_for_gacha_type(
+        is_valid, error_message = GachaActions.validate_data(
             self.item1, self.item2, self.gacha_type
         )
         if not is_valid:
@@ -316,8 +317,16 @@ class DraftGachaView(discord.ui.View):
             color=0xffa500
         )
         await interaction.response.edit_message(embed=loading_embed, view=None)
+        # pass in user id and name to create log
         success = await GachaActions.submit_to_server(
-            self.item1, self.item2, self.gacha_type, self.start, self.end, self.enabled
+            interaction.user.id,
+            interaction.user.name,
+            self.item1, 
+            self.item2, 
+            self.gacha_type, 
+            self.start, 
+            self.end, 
+            self.enabled
         )
 
         if success:

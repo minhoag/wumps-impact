@@ -1,4 +1,5 @@
 import re
+import asyncio
 from typing import List, Dict, Tuple
 from utils.db import create_log_record, create_email_log_record, get_all_uid
 from utils.utils import Utils
@@ -29,7 +30,7 @@ class MailActions:
     
     @staticmethod
     def search_items(query: str) -> List[Dict]:
-        return Utils.search_items(query, ITEMS, ['name'], max_results=25)
+        return Utils.search_items(query, ITEMS, ['vietnameseName', 'globalName'], max_results=25)
     
     @staticmethod
     def split_item_by_limit(item: Dict, quantity: int) -> List[Dict]:
@@ -114,7 +115,7 @@ class MailActions:
                 if not isinstance(item, dict):
                     return False, f"Thông tin item thứ {i+1} không hợp lệ"
                 
-                if not item.get('name') or not str(item.get('name')).strip():
+                if not item.get('globalName') and not item.get('vietnameseName'):
                     return False, f"Vật phẩm thứ {i+1} thiếu tên"
                 try:
                     quantity = int(attachment['quantity'])
@@ -140,7 +141,7 @@ class MailActions:
         return True, "Validation passed"
     
     @staticmethod
-    async def resolve_recipients(send_to: str) -> Tuple[bool, List[str], int, str]:
+    async def validate_recipients(send_to: str) -> Tuple[bool, List[str], int, str]:
         is_valid, parsed_recipients, error_msg = MailActions.parse_recipients(send_to)
         if not is_valid:
             return False, [], 0, error_msg
@@ -153,9 +154,9 @@ class MailActions:
 
     @staticmethod
     async def send(mail_data: Dict, sender_discord_id: str) -> Tuple[bool, str]:
-        success, recipient_list, count, error_msg = await MailActions.resolve_recipients(mail_data['send_to'])
+        success, recipient_list, count, error_msg = await MailActions.validate_recipients(mail_data['send_to'])
         if not success:
-            return False, f"Recipient resolution error: {error_msg}"
+            return False, f"Recipient validation error: {error_msg}"
         if count == 0:
             return False, "No valid recipients found"
 
@@ -195,9 +196,11 @@ class MailActions:
                     success_count += 1
                 else:
                     failed_uids.append(uid)
-
             except Exception as e:
                 failed_uids.append(uid)
+            finally:
+                await asyncio.sleep(1)
+                
         if success_count == count:
             attachment_count = len(attachments)
             total_items = sum(att.get('quantity', 1) for att in attachments)

@@ -36,7 +36,7 @@ class MailEmbed(Embed):
         )
         self.add_field(
             name="Người nhận",
-            value=recipient_display,
+            value=", ".join(recipient_display),
             inline=True
         )
         
@@ -60,8 +60,7 @@ class MailEmbed(Embed):
             return "Không xác định", ""
         send_to_clean = send_to.strip().lower()
         if send_to_clean == "all":
-            return "Tất cả người chơi", "Tất cả người chơi"
-        recipients = [r.strip() for r in send_to.split(',') if r.strip()]
+            return "Tất cả người chơi", ""
     
     def _format_attachments(self, attachments: List[Dict]) -> str:
         """Format attachment list for comprehensive display, grouped by item type."""
@@ -74,15 +73,13 @@ class MailEmbed(Embed):
             item = attachment.get('item', {})
             quantity = attachment.get('quantity', 1)
             item_id = item.get('value', 'unknown')
-            item_name = item.get('name', 'Unknown Item')
-            item_rarity = item.get('rarity', '')
+            item_name = item.get('globalName', None) or item.get('vietnameseName', None) or 'Unknown Item'
             
             if item_id in item_groups:
                 item_groups[item_id]['total_quantity'] += quantity
             else:
                 item_groups[item_id] = {
                     'name': item_name,
-                    'rarity': item_rarity,
                     'total_quantity': quantity,
                     'item': item
                 }
@@ -95,7 +92,6 @@ class MailEmbed(Embed):
         for i, (item_id, group_data) in enumerate(list(item_groups.items())[:display_limit]):
             item_name = group_data['name']
             total_quantity = group_data['total_quantity']
-            item_rarity = group_data['rarity']
             
             if len(item_name) > 35:
                 item_name = item_name[:32] + "..."

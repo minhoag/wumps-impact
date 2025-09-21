@@ -89,7 +89,7 @@ class GachaView(discord.ui.View):
             return
 
         async def on_submit_cb(search_query: str, inter: discord.Interaction):
-            matching_items = Utils.search_items(search_query, BANNERS, ['name', 'vietnameseName'], 25)
+            matching_items = Utils.search_items(search_query, BANNERS, ['vietnameseName', 'globalName'], 25)
             if not matching_items:
                 await inter.response.send_message(
                     f"Không tìm thấy item nào với từ khóa: `{search_query}`.",

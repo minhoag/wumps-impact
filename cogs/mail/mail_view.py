@@ -47,8 +47,9 @@ class MailView(discord.ui.View):
         for i, attachment in enumerate(attachments):
             item = attachment.get('item', {})
             quantity = attachment.get('quantity', 1)
+            item_name = item.get('globalName', None) or item.get('vietnameseName', None) or 'Unknown Item'
             removal_item = {
-                'name': f"{item.get('name', 'Unknown Item')} x{quantity}",
+                'name': f"**{item_name}** x {quantity}",
                 'value': str(i),
                 'attachment_index': i,
                 'original_item': item
@@ -75,7 +76,7 @@ class MailView(discord.ui.View):
         is_valid, error_message = MailActions.validate(self.mail_data)    
         if not is_valid:
             await interaction.response.send_message(
-                f"Lỗi: ** {error_message}",
+                f"Lỗi: ** {error_message} **",
                 ephemeral=True
             )
             return
@@ -164,7 +165,7 @@ class MailView(discord.ui.View):
             return
 
         item_quantity = int(quantity) if quantity and quantity.strip() else 1
-        search_results = Utils.search_items(query, ITEMS, ['name'], 25)
+        search_results = Utils.search_items(query, ITEMS, ['vietnameseName', 'globalName'], 25)
         
         if not search_results:
             await interaction.response.send_message(

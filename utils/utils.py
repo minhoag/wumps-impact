@@ -96,11 +96,6 @@ class Utils:
         return [item for item, _ in matches_with_scores[:max_results]]
 
     @staticmethod
-    def search_items_by_name_only(query: str, data, max_results: int = 25) -> List[Dict]:
-        """Search items by name fields only (vietnameseName and globalName)."""
-        return Utils.search_items(query, data, ['vietnameseName', 'globalName'], max_results)
-
-    @staticmethod
     def get_image_file(filename: str) -> discord.File:
         """Get a discord.File object for an image file in data/img/ directory."""
         img_dir = os.path.join(os.path.dirname(__file__), '..', 'data', 'img')

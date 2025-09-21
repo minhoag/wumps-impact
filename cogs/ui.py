@@ -141,7 +141,7 @@ class ItemSelectionView(discord.ui.View):
         values = set()
 
         for i, item in enumerate(items[:25]):
-            item_name = item.get('name', 'Unknown')
+            item_name = item.get('globalName', None) or item.get('vietnameseName', None) or 'Unknown'
             item_value = str(item.get('value', '0'))
             unique_value = f"{i}_{item_value}"
 

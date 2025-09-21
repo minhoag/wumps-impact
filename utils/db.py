@@ -204,7 +204,7 @@ def get_all_uid() -> list:
     try:
         db = get_db_hk4e_user_gio()
         cursor = db.cursor()
-        cursor.execute("SELECT uid FROM t_user_data")
+        cursor.execute(f"SELECT uid FROM {T_PLAYER_UID}")
         results = cursor.fetchall()
         db.close()
         return [str(row['uid']) for row in results]

@@ -21,6 +21,7 @@ DB_HK4E_USER_GIO = "db_hk4e_user_gio"
 DB_HK4E_DISCORD_GIO = "db_hk4e_discord_gio"
 
 # tables
+T_PLAYER_UID = "t_player_uid"
 GACHA_CONFIG = "t_gacha_schedule_config"
 T_LOG = "t_log"
 T_EMAIL_LOG = "t_email_log"

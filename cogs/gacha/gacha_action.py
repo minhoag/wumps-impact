@@ -88,8 +88,9 @@ class GachaActions:
                 return False, msg
         
         # Check if already have this gacha on server
-        if validate_gacha_record(gacha_type, item1, item2):
-            return False, "Sự kiện thêm thất bại. Lý do: Sự kiện đã tồn tại."
+        is_valid, msg = validate_gacha_record(gacha_type, item1, item2)
+        if not is_valid:
+            return False, msg
 
         return True, ""
 

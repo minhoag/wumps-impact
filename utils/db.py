@@ -53,7 +53,7 @@ def get_whitelist_user():
     db.close()
     return [row[0] for row in results]
 
-def validate_gacha_record(gacha_type: int, item1: Optional[Dict], item2: Optional[Dict]) -> bool:
+def validate_gacha_record(gacha_type: int, item1: Optional[Dict], item2: Optional[Dict]) -> tuple[bool, str]:
     """Check if a gacha prompt is valid"""
     items5Array = []
     if item1 is not None:

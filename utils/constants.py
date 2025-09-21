@@ -7,6 +7,8 @@ with open(os.path.join(os.path.dirname(__file__), '../data/event.json'), 'r', en
     BANNERS = json.load(f)
 ITEMS = json.load(open(os.path.join(os.path.dirname(__file__), '../data/item.json'), 'r', encoding='utf-8'))
 
+SENDER = "P・A・I・M・O・N"
+
 URL="103.195.188.90"
 PORT="2888"
 MUIP="14861"

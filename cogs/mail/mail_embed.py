@@ -1,7 +1,9 @@
 from typing import List, Dict, Union
 from cogs.embed import Embed, COLORS
 from utils.utils import Utils
-from utils.logger import logger
+from utils.constants import SENDER
+from datetime import datetime
+from cogs.mail.mail_action import MailActions
 
 class MailEmbed(Embed):
     """Enhanced embed for displaying mail information with recipient and attachment details."""
@@ -12,39 +14,59 @@ class MailEmbed(Embed):
             content = mail_data.get('content', 'Không có nội dung')
             send_to = mail_data.get('send_to', 'Không xác định')
             attachments = mail_data.get('attachments', [])
-            sender = mail_data.get('sender', 'Admin')
         else:
             title = kwargs.get('title', 'Không có tiêu đề')
             content = kwargs.get('content', 'Không có nội dung')
             send_to = kwargs.get('send_to', 'Không xác định')
             attachments = kwargs.get('attachments', [])
-            sender = kwargs.get('sender', 'Admin')
 
-        recipient_display = self._format_recipients(send_to)
+        recipient_display = MailActions.format_recipients_display(send_to, for_embed=True)
         mail_icon = Utils.get_image_file("mail.png")
 
         super().__init__(
-            title=f"Tiêu đề: {title}",
-            description=self._format_content(content),
-            color=COLORS["primary"],
+            title="Soạn thư",
+            description="Nội dung thư khi gửi đi sẽ có thông tin như sau:",
             thumbnail_file=mail_icon
         )
+        
+        self.add_field(
+            name="Tiêu đề thư",
+            value=title,
+            inline=False
+        )
+
+        self.add_field(
+            name="Nội dung",
+            value=self._format_content(content),
+            inline=False
+        )
+
         self.add_field(
             name="Người gửi",
-            value=sender,
+            value=SENDER,
             inline=True
         )
         self.add_field(
             name="Người nhận",
-            value=", ".join(recipient_display),
+            value=recipient_display[0],
+            inline=True
+        )
+        self.add_field(
+            name="Thời hạn nhận thư",
+            value="30 ngày",
             inline=True
         )
         
         attachment_display = self._format_attachments(attachments)
         self.add_field(
-            name="Vật phẩm được gửi đi: ",
+            name="Vật phẩm đính kèm",
             value=attachment_display,
-            inline=False
+            inline=True
+        )
+        self.add_field(
+            name="Thời gian gửi",
+            value=datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+            inline=True
         )
     
     def _format_content(self, content: str) -> str:
@@ -54,14 +76,7 @@ class MailEmbed(Embed):
         if len(content) > 1000:
             return content[:997] + "..."
         return content
-    
-    def _format_recipients(self, send_to: str) -> tuple[str, str]:
-        if not send_to or not send_to.strip():
-            return "Không xác định", ""
-        send_to_clean = send_to.strip().lower()
-        if send_to_clean == "all":
-            return "Tất cả người chơi", ""
-    
+
     def _format_attachments(self, attachments: List[Dict]) -> str:
         """Format attachment list for comprehensive display, grouped by item type."""
         if not attachments or len(attachments) == 0:
@@ -113,9 +128,9 @@ class MailEmbed(Embed):
         """Update embed with mail status information."""
         status_colors = {
             'draft': COLORS["primary"],
-            'sending': 0xffaa00,  # Orange
-            'sent': 0x00ff00,     # Green
-            'failed': 0xff0000    # Red
+            'sending': COLORS["warning"],  # Orange
+            'sent': COLORS["success"],     # Green
+            'failed': COLORS["danger"]    # Red
         }
         
         status_messages = {
@@ -126,7 +141,7 @@ class MailEmbed(Embed):
         }
         
         self.embed.color = status_colors.get(status, COLORS["primary"])
-        self.embed.set_footer(text=status_messages.get(status, message))
+        self.embed.footer.text = status_messages.get(status, message)
     
     def update_mail_data(self, mail_data: Dict):
         """Update embed with new mail data."""
@@ -136,24 +151,46 @@ class MailEmbed(Embed):
         send_to = mail_data.get('send_to', 'Không xác định')
         attachments = mail_data.get('attachments', [])
 
-        self.embed.title = f"Tiêu đề thư: {title}"
-        self.embed.description = self._format_content(content)
+        self.embed.title = "Chỉnh sửa thư"
+        self.embed.description = "Nội dung thư khi gửi đi sẽ có thông tin như sau:"
+
+        self.embed.set_thumbnail(url=Utils.get_image_file("mail.png"))
+
+        self.embed.add_field(
+            name=f"Tiêu đề thư",
+            value=title,
+            inline=False
+        )
+        self.embed.add_field(
+            name="Nội dung",
+            value=self._format_content(content),
+            inline=False
+        )
+
         self.embed.add_field(
             name="Người gửi",
-            value="Admin",
+            value=SENDER,
             inline=True
         )
-        
-        recipient_display = self._format_recipients(send_to)
+        recipient_display = MailActions.format_recipients_display(send_to, for_embed=True)
         self.embed.add_field(
             name="Người nhận",
-            value=recipient_display,
+            value=recipient_display[0],
             inline=True
         )
-        
+        self.embed.add_field(
+            name="Thời hạn nhận thư",
+            value="30 ngày",
+            inline=True
+        )
         attachment_display = self._format_attachments(attachments)
         self.embed.add_field(
-            name="Vật phẩm đính kèm",
+                name="Vật phẩm đính kèm",
             value=attachment_display,
-            inline=False
+            inline=True
+        )
+        self.embed.add_field(
+            name="Thời gian gửi",
+            value=datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+            inline=True
         )

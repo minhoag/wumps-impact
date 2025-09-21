@@ -2,7 +2,7 @@ import httpx
 import time
 from typing import Dict
 from urllib.parse import urlencode, quote
-from utils.constants import REGION, CMD_SEND_MAIL, RETCODE_SUCCESS, MUIP
+from utils.constants import REGION, CMD_SEND_MAIL, RETCODE_SUCCESS, MUIP, SENDER
 from utils.logger import logger
 
 
@@ -18,7 +18,7 @@ class MUIP:
     """Mail Utility Interface for Python - handles server communication for mail operations"""
     REGION = REGION
     ENDPOINT = str(MUIP)
-    SENDER = "P・A・I・M・O・N"
+    SENDER = SENDER
     CMD_SEND_MAIL = CMD_SEND_MAIL
     RETCODE_SUCCESS = RETCODE_SUCCESS
     
@@ -47,6 +47,7 @@ class MUIP:
         item_list: str,
         expiry_days: int = 30
     ) -> GMResponse:
+        """Send mail to a single user via server API"""
         try:
             expiry_timestamp = int((time.time() * 1000 + expiry_days * 86400000) / 1000)
             ticket = cls._generate_ticket()
@@ -64,26 +65,26 @@ class MUIP:
             }
 
             url = cls._compute_url(params)
-            logger.info(url)
-            
+
             # Make HTTP request
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.get(url)
                 response_data = response.json()
-            
-            # Check response
+                logger.info(f"UID {uid}: {response_data}")
+
             success = (
-                response_data.get("msg") == "succ" and 
+                response_data.get("msg") == "succ" and
                 response_data.get("retcode") == cls.RETCODE_SUCCESS
             )
-            
+
             return GMResponse(
                 success=success,
                 retcode=response_data.get("retcode", -1),
                 msg=response_data.get("msg", "Unknown error")
             )
-            
+
         except Exception as e:
+            logger.error(f"send_mail failed for UID {uid}: {e}")
             return GMResponse(
                 success=False,
                 retcode=-1,

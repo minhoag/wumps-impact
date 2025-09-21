@@ -69,6 +69,14 @@ class Embed:
         self.embed.set_thumbnail(url=f"attachment://{thumb_file.filename}")
         self.thumbnail_file = thumb_file
     
+    def set_description(self, description: str):
+        """Set embed description"""
+        self.embed.description = description
+
+    def set_color(self, color: int):
+        """Set the color"""
+        self.embed.color = color
+    
     def add_field(self, name: str, value: str, inline: bool = True):
         """Add a field to the embed"""
         self.embed.add_field(name=name, value=value, inline=inline)
@@ -82,11 +90,24 @@ class Embed:
                 inline=field.get('inline', True)
             )
     
+    def remove_fields(self):
+        """Remove a field from the embed"""
+        self.embed.clear_fields()
+        
     def set_image(self, url: str) -> 'Embed':
         """Set the main image and return self for chaining."""
         self.embed.set_image(url=url)
         return self
     
+    def set_foooter_text(self, text: str) -> 'Embed':
+        """Set the footer text"""
+        self.embed.footer.text = text
+        return self
+    
     def build_embed(self) -> discord.Embed:
         """Return the discord.Embed object."""
         return self.embed
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Return the embed as a dictionary"""
+        return self.embed.to_dict()

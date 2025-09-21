@@ -1,10 +1,32 @@
 import re
 import asyncio
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Union
 from utils.db import create_log_record, create_email_log_record, get_all_uid
 from utils.utils import Utils
 from utils.constants import ITEMS, MAIL_ITEM_LIMITS
-from utils.muip import MUIP
+from utils.muip import MUIP, GMResponse
+
+
+class MailBatch:
+    """Result structure for batch mail operations"""
+    def __init__(self, uid_results: List[Tuple[str, GMResponse]]):
+        self.uid_results = uid_results
+        self.success_count = sum(1 for _, response in uid_results if response.success)
+        self.total_count = len(uid_results)
+        self.success_uids = [uid for uid, response in uid_results if response.success]
+        self.failed_uids = [uid for uid, response in uid_results if not response.success]
+
+    @property
+    def is_success(self) -> bool:
+        return self.success_count == self.total_count
+
+    @property
+    def is_partial_success(self) -> bool:
+        return self.success_count > 0 and self.success_count < self.total_count
+
+    @property
+    def is_fail(self) -> bool:
+        return self.success_count == 0
 
 class MailActions:
     """Core business logic for mail system operations"""
@@ -60,6 +82,42 @@ class MailActions:
         item_id = int(item.get('value', 0))
         max_quantity = MAIL_ITEM_LIMITS.get(item_id)
         return max_quantity is not None, max_quantity or 0
+
+    @staticmethod
+    def format_recipients_display(send_to: str, for_embed: bool = True) -> Union[str, Tuple[str, str]]:
+        """
+        Unified method to format recipients for display.
+
+        Args:
+            send_to: Recipient string (e.g., "all", "10002", "10002,10003")
+            for_embed: If True, returns tuple[str, str] for embed usage.
+                      If False, returns str for summary messages.
+
+        Returns:
+            For embed: tuple(display_text, extra_info)
+            For summary: str display_text
+        """
+        if not send_to or not send_to.strip():
+            if for_embed:
+                return "Không xác định", ""
+            else:
+                return "Không xác định"
+
+        send_to_clean = send_to.strip().lower()
+        if send_to_clean == "all":
+            display_text = "Tất cả người chơi"
+            return (display_text, "") if for_embed else display_text
+
+        # Handle specific recipients
+        recipients = [r.strip() for r in send_to.split(',') if r.strip()]
+        if len(recipients) == 1:
+            display_text = f"{recipients[0]}"
+        elif len(recipients) <= 5:
+            display_text = f"{', '.join(recipients)}"
+        else:
+            display_text = f"{len(recipients)} người dùng cụ thể"
+
+        return (display_text, "") if for_embed else display_text
     
     @staticmethod
     def format_item_list(attachments: List[Dict]) -> str:
@@ -136,8 +194,8 @@ class MailActions:
             if len(recipients) > 1000:
                 return False, "Không thể gửi mail cho quá 1000 người dùng cùng lúc"
             for recipient in recipients:
-                if not re.match(r'^\d{4,20}$', recipient):
-                    return False, f"ID người dùng '{recipient}' không hợp lệ (phải là số từ 4-20 chữ số)"
+                if not re.match(r'^\d{5,10}$', recipient):
+                    return False, f"ID người dùng '{recipient}' không hợp lệ (phải là số từ 5-10 chữ số)"
         return True, "Validation passed"
     
     @staticmethod
@@ -165,89 +223,63 @@ class MailActions:
         title = mail_data['title'].strip()
         content = mail_data['content'].strip()
         expiry_days = 30
-
-        if mail_data['send_to'].strip().lower() == 'all':
-            recipient_log = "ALL"
-        else:
-            recipient_log = mail_data['send_to'].strip()
-
-        attachment_info = ""
-        if attachments:
-            attachment_count = len(attachments)
-            total_items = sum(att.get('quantity', 1) for att in attachments)
-            attachment_info = f" with {attachment_count} item type(s) ({total_items} total items)"
-
-        log_message = f"{sender_discord_id}|{recipient_log}|{title}|{attachment_info}"
+        recipient_count = len(recipient_list)
+        log_message = f"{sender_discord_id}|{recipient_count}|{title}|SENT_TO[{recipient_count}]"
         log_id = create_log_record("MAIL", log_message)
 
-        success_count = 0
-        failed_uids = []
+        tasks = [
+            MUIP.send_mail(uid, title, content, item_list, expiry_days)
+            for uid in recipient_list
+        ]
+        responses = await asyncio.gather(*tasks, return_exceptions=True)
 
-        for uid in recipient_list:
-            try:
-                response = await MUIP.send_mail(
-                    uid=uid,
-                    title=title,
-                    content=content,
-                    item_list=item_list,
-                    expiry_days=expiry_days
-                )
-                if response.success:
-                    success_count += 1
-                else:
-                    failed_uids.append(uid)
-            except Exception as e:
-                failed_uids.append(uid)
-            finally:
-                await asyncio.sleep(1)
+        uid_results = []
+        for i, response in enumerate(responses):
+            uid = recipient_list[i]
+            if isinstance(response, Exception):
+                gm_response = MUIP.GMResponse(False, -1, f"Request failed: {str(response)}")
+            else:
+                gm_response = response
+            uid_results.append((uid, gm_response))
+
+        batch_result = MailBatch(uid_results)
+        success_count = batch_result.success_count
+        failed_uids = batch_result.failed_uids
                 
         if success_count == count:
-            attachment_count = len(attachments)
-            total_items = sum(att.get('quantity', 1) for att in attachments)
             success_parts = [f"Mail successfully sent to {count} recipient(s)"]
-
-            if attachment_count > 0:
-                success_parts.append(f"with {attachment_count} item type(s) ({total_items} total items)")
-            if mail_data['send_to'].strip().lower() == 'all':
-                success_parts.append("(all users in database)")
-            elif count == 1:
-                success_parts.append(f"(UID: {recipient_list[0]})")
-            elif count <= 5:
-                success_parts.append(f"(UIDs: {', '.join(recipient_list)})")
-            else:
-                success_parts.append(f"({count} specific users)")
-            log_msg = "SUCCESS|" + ", ".join(recipient_list)
+            log_msg = f"SUCCESS|SENT_TO[{recipient_count}]"
             create_email_log_record(
                 log_id=log_id,
                 subject=title,
                 body=content,
                 sender=sender_discord_id,
-                recipient=uid,
+                recipient= f"SEND_TO[{recipient_count}]",
                 delivery_status="SENT",
                 message=log_msg
             )
             return True, " ".join(success_parts)
         elif success_count > 0:
             failed_count = len(failed_uids)
-            log_msg = "WARN|" + ", ".join(recipient_list)
+            log_msg = f"WARN|SENT_TO[{recipient_count}]"
             create_email_log_record(
                 log_id=log_id,
                 subject=title,
                 body=content,
                 sender=sender_discord_id,
-                recipient=uid,
+                recipient= f"SEND_TO[{recipient_count}]",
                 delivery_status="WARN",
                 message=log_msg
             )
             return True, f"Partially successful: {success_count}/{count} mails sent. {failed_count} failed: {', '.join(failed_uids[:5])}{'...' if failed_count > 5 else ''}"
         else:
-            log_msg = "FAILED|" + ", ".join(recipient_list)
+            log_msg = f"FAILED|SENT_TO[{recipient_count}]"
             create_email_log_record(
                 log_id=log_id,
                 subject=title,
                 body=content,
                 sender=sender_discord_id,
-                recipient=uid,
+                recipient= f"SEND_TO[{recipient_count}]",
                 delivery_status="FAILED",
                 message=log_msg
             )

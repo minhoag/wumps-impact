@@ -1,4 +1,3 @@
-from re import S
 from typing import Optional, List, Dict, Callable, Any, Tuple
 from datetime import datetime, timedelta
 import discord
@@ -43,11 +42,8 @@ class GachaActions:
 
             # create log
             create_log_record(
-                user_id=user_id,
-                user_name=user_name,
-                action="GACHA_CREATE",
-                data=event_data,
-                type="gacha"
+                type="GACHA_CREATE",
+                message=f"CREATE|{user_id}|{user_name}|{item_1}|{item_2}|{gacha_type}|{start}|{end}|{enabled}"
             )
 
             # create gacha record

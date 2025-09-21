@@ -74,6 +74,7 @@ class GachaEmbed(Embed):
 
         return self.embed
 
+# TODO: refactor draft embed
 class DraftGachaEmbed(Embed):
     def __init__(self, id: int, gacha_type: int, id1: Optional[int], id2: Optional[int], start: Optional[str], end: Optional[str], enabled: int, banner1=None, banner2=None):
         super().__init__()
@@ -105,7 +106,7 @@ class DraftGachaEmbed(Embed):
         }
 
     def build_embed(self):
-        # Set up this embed instance instead of creating a new one
+        # TODO: add get items name for this draft embed and remove duplicate code
         self.embed.title = "Xác nhận sự kiện"
         self.embed.description = "Đây là bản nháp của sự kiện sẽ được tạo. Hãy kiểm tra kỹ trước khi xác nhận."
         self.embed.color = COLORS["warning"]

@@ -1,8 +1,10 @@
-from typing import Literal
+from typing import Literal, Optional, Dict
+from datetime import datetime
 import pymysql
 import json
 from utils.logger import logger
 from utils.constants import *
+from utils.utils import Utils
 
 def get_db_hk4e_config_gio():
     db = pymysql.connect(
@@ -50,6 +52,49 @@ def get_whitelist_user():
     results = cursor.fetchall()
     db.close()
     return [row[0] for row in results]
+
+def validate_gacha_record(gacha_type: int, item1: Optional[Dict], item2: Optional[Dict]) -> bool:
+    """Check if a gacha prompt is valid"""
+    items5Array = []
+    if item1 is not None:
+        if isinstance(item1, dict) and 'id' in item1:
+            items5Array.append(int(item1['id']))
+        elif isinstance(item1, (str, int)):
+            items5Array.append(int(item1))
+    if item2 is not None:
+        if isinstance(item2, dict) and 'id' in item2:
+            items5Array.append(int(item2['id']))
+        elif isinstance(item2, (str, int)):
+            items5Array.append(int(item2))
+    items5Array.sort()
+    db = get_db_hk4e_config_gio()
+    cursor = db.cursor()
+    cursor.execute(f"""
+        SELECT gacha_type, gacha_up_config, end_time
+        FROM {GACHA_CONFIG}
+        WHERE end_time > NOW()
+    """)
+
+    results = cursor.fetchall()
+    db.close()
+
+    for row in results:
+        # First check for item conflict
+        try:
+            gacha_up_config = json.loads(row['gacha_up_config'])
+            for item_config in gacha_up_config.get('gacha_up_list', []):
+                if item_config.get('item_parent_type') == 1:
+                    db_item_list = item_config.get('item_list', [])
+                    if any(item in db_item_list for item in items5Array) and row['end_time'] > datetime.now():
+                        return False, "Vật phẩm đã tồn tại trong sự kiện này. Thời gian kết thúc: " + str(row['end_time'])
+        except (json.JSONDecodeError, KeyError, TypeError):
+            pass
+
+        # Then check for gacha type conflicts
+        if row['gacha_type'] == gacha_type and row['end_time'] > datetime.now(): # gacha of this type is still running
+            return False, "Loại sự kiện này vẫn đang hoạt động. Thời gian kết thúc: " + str(row['end_time'])
+
+    return True, ""
 
 def create_gacha_record(
     item_1: str, 

@@ -180,12 +180,27 @@ class GachaView(discord.ui.View):
             await interaction.response.send_message(error_message, ephemeral=True)
             return
 
-        if not self.item1:
-            self.item1 = selected_item
-        elif not self.item2:
-            self.item2 = selected_item
+        # Create temporary state to check validation
+        temp_item1 = self.item1
+        temp_item2 = self.item2
+
+        if not temp_item1:
+            temp_item1 = selected_item
+        elif not temp_item2:
+            temp_item2 = selected_item
         else:
-            self.item1 = selected_item
+            temp_item1 = selected_item
+
+        # Validate the temporary state
+        from utils.db import validate_gacha_record
+        is_valid, error_message = validate_gacha_record(self.gacha_type, temp_item1, temp_item2)
+        if not is_valid:
+            await interaction.response.send_message(error_message, ephemeral=True)
+            return
+
+        # If validation passes, apply the changes
+        self.item1 = temp_item1
+        self.item2 = temp_item2
         GachaActions.update_button_labels(self)
         await interaction.response.edit_message(embed=self._render_embed(), view=self)
     

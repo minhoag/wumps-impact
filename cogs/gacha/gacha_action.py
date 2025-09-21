@@ -1,8 +1,9 @@
+from re import S
 from typing import Optional, List, Dict, Callable, Any, Tuple
 from datetime import datetime, timedelta
 import discord
-from utils.db import create_gacha_record, create_log_record
-from utils.constants import BANNERS, ITEMS
+from utils.db import create_gacha_record, create_log_record, validate_gacha_record
+from utils.constants import BANNERS
 from utils.utils import Utils
 from utils.logger import logger
 
@@ -85,8 +86,18 @@ class GachaActions:
             if not Utils.is_character(item1_id):
                 msg = f"{Utils.get_item_name(item1_id)} không phải là nhân vật."
                 return False, msg
+        
+        # Check if already have this gacha on server
+        if validate_gacha_record(gacha_type, item1, item2):
+            return False, "Sự kiện thêm thất bại. Lý do: Sự kiện đã tồn tại."
 
         return True, ""
+
+    @staticmethod
+    def check_if_gacha_exists(gacha_type: int, item1: Optional[Dict], item2: Optional[Dict]) -> bool:
+        """Check if a gacha already exists based on the gacha type and items."""
+        all_gachas = get_all_gachas()
+        return False
 
     @staticmethod
     def can_add_item(current_item_count: int, gacha_type: int) -> tuple[bool, str]:

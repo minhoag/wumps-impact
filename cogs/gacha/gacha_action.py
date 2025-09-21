@@ -95,12 +95,6 @@ class GachaActions:
         return True, ""
 
     @staticmethod
-    def check_if_gacha_exists(gacha_type: int, item1: Optional[Dict], item2: Optional[Dict]) -> bool:
-        """Check if a gacha already exists based on the gacha type and items."""
-        all_gachas = get_all_gachas()
-        return False
-
-    @staticmethod
     def can_add_item(current_item_count: int, gacha_type: int) -> tuple[bool, str]:
         """Check if an item can be added based on current count and gacha type."""
         if gacha_type in [301, 201] and current_item_count >= 1:

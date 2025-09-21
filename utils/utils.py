@@ -111,7 +111,7 @@ class Utils:
     @staticmethod
     def get_item_name(item) -> str:
         """Get item name from item data. Item can be a dict or an ID (int)."""
-        for item_dict in ITEMS.values():
+        for item_dict in ITEMS:
             if item_dict.get('value') == str(item):
                 item = item_dict
                 break

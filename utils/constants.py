@@ -3,8 +3,7 @@
 import json
 import os
 
-with open(os.path.join(os.path.dirname(__file__), '../data/event.json'), 'r', encoding='utf-8') as f:
-    BANNERS = json.load(f)
+BANNERS = json.load(open(os.path.join(os.path.dirname(__file__), '../data/event.json'), 'r', encoding='utf-8'))
 ITEMS = json.load(open(os.path.join(os.path.dirname(__file__), '../data/item.json'), 'r', encoding='utf-8'))
 
 SENDER = "P・A・I・M・O・N"

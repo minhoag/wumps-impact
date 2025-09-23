@@ -1,3 +1,4 @@
+import gzip
 import re
 import asyncio
 from typing import List, Dict, Tuple, Union
@@ -223,8 +224,9 @@ class MailActions:
         title = mail_data['title'].strip()
         content = mail_data['content'].strip()
         expiry_days = 30
+        recipient = gzip.compress(recipient_list.encode('utf-8'))
         recipient_count = len(recipient_list)
-        log_message = f"{sender_discord_id}|{recipient_count}|{title}|SENT_TO[{recipient_count}]"
+        log_message = f"{sender_discord_id}|{recipient}|{recipient_count}|{title}|{content}|{item_list}"
         log_id = create_log_record("MAIL", log_message)
 
         tasks = [

@@ -4,7 +4,7 @@ from typing import Dict
 from urllib.parse import urlencode, quote
 from utils.constants import REGION, CMD_SEND_MAIL, RETCODE_SUCCESS, MUIP, SENDER
 from utils.logger import logger
-
+import random
 
 class GMResponse:
     """Response structure for GM operations"""
@@ -25,7 +25,6 @@ class MUIP:
     @classmethod
     def _generate_ticket(cls) -> str:
         """Generate a unique ticket for GM operations"""
-        import random
         return f"GM@{int(time.time() * 1000)}{random.randint(100, 999)}"
     
     @classmethod
@@ -34,6 +33,7 @@ class MUIP:
         base_url = f"http://127.0.0.1:{cls.ENDPOINT}/api"
         query_params = {
             "region": cls.REGION,
+            "ticket": cls._generate_ticket(),
             **params
         }
         return f"{base_url}?{urlencode(query_params)}"
@@ -50,7 +50,6 @@ class MUIP:
         """Send mail to a single user via server API"""
         try:
             expiry_timestamp = int((time.time() * 1000 + expiry_days * 86400000) / 1000)
-            ticket = cls._generate_ticket()
             params = {
                 "cmd": cls.CMD_SEND_MAIL,
                 "uid": uid,
@@ -59,9 +58,7 @@ class MUIP:
                 "content": content,
                 "item_list": item_list,
                 "expire_time": str(expiry_timestamp),
-                "is_collectible": "False",
-                "region": cls.REGION,
-                "ticket": quote(ticket)
+                "is_collectible": "False"
             }
 
             url = cls._compute_url(params)

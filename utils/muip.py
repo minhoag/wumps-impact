@@ -1,6 +1,6 @@
 import httpx
 import time
-from typing import Dict
+from typing import Dict, Any
 from urllib.parse import urlencode, quote
 from utils.constants import REGION, CMD_SEND_MAIL, RETCODE_SUCCESS, MUIP, SENDER
 from utils.logger import logger
@@ -37,6 +37,14 @@ class MUIP:
             **params
         }
         return f"{base_url}?{urlencode(query_params)}"
+    
+    @classmethod
+    async def _send_request(cls, url: str) -> Any:
+        """Send a request to the server"""
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(url)
+            response.raise_for_status()
+            return response.json()
     
     @classmethod
     async def send_mail(

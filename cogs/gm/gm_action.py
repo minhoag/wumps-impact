@@ -1,23 +1,27 @@
-import re
-import asyncio
-from typing import List, Dict, Tuple, Union
-from utils.db import create_log_record, create_email_log_record, get_all_uid
-from utils.utils import Utils
-from utils.constants import ITEMS, MAIL_ITEM_LIMITS
+# cogs/gm/gm_action.py
+from typing import Dict, Any
 from utils.muip import MUIP
 
 class GMActions:
     """Core business logic for GM operation system"""
+
     @staticmethod
-    def search_items(query: str) -> List[Dict]:
-        return Utils.search_items(query, ITEMS, ['vietnameseName', 'globalName'], max_results=25)
-    
-    @staticmethod
-    def validate(gm_data: Dict) -> Tuple[bool, str]:
-        if not gm_data['content'] or not gm_data['content'].strip():
-            return False, "Vui lòng nhập nội dung GM"
-        return True, ""
-    
-    @staticmethod
-    async def validate_recipients(send_to: str) -> Tuple[bool, List[str], int, str]:
-        if not send_to or not send_to.strip():
+    async def send_gm_command(cmd: str, uid: str, extra_params: Dict[str, Any] = None):
+        """
+        Send a GM command to the server via MUIP API.
+        """
+        ticket = MUIP._generate_ticket()
+        params = {
+            "region": MUIP.REGION,
+            "ticket": ticket,
+            "cmd": cmd,
+            "uid": uid,
+        }
+        if extra_params:
+            params.update({k: str(v) for k, v in extra_params.items() if v is not None})
+        response = await MUIP._send_request(MUIP._compute_url(params))
+        return {
+            "success": response.get("msg") == "succ",
+            "retcode": response.get("retcode", -1),
+            "msg": response.get("msg", "Unknown error")
+        }

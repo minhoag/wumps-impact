@@ -25,7 +25,7 @@
 | 1108 | queryPlayerOnline | uid, gameserver_id |
 | 1109 | delPlayerStatusRedisData | uid, last_login_rand |
 | 1110 | guestBindAccount | account_id, uid, account_type |
-| 1111 | delItem | uid, item_id, item_num |
+| x | delItem | uid, item_id, item_num |
 | 1112 | playerGoto | uid, scene_id, x, y, z |
 | 1113 | resetParentQuest | uid, parent_quest_id |
 | 1114 | refreshGroupSuite | uid, group_id, suite_id |
@@ -33,15 +33,15 @@
 | 1116 | gmTalk | uid, msg |
 | 1117 | setNickName | uid, nickname |
 | 1118 | refreshShop | uid |
-| 1119 | unlockTalent | uid, avatar_id, skill_depot_id, talent_id |
+| x | unlockTalent | uid, avatar_id, skill_depot_id, talent_id |
 | 1120 | takeoffEquip | uid, avatar_id, equip_id |
 | 1121 | delMail | uid, mail_id |
-| 1122 | finishDailyTask | uid, daily_task_id |
+| x | finishDailyTask | uid, daily_task_id |
 | 1123 | queryRedisOfflineMsg | uid |
-| 1124 | unlockArea | uid, area_id |
+| x | unlockArea | uid, area_id |
 | 1125 | delItemNegative | uid, item_id, item_num |
 | 1126 | delEquip | uid, guid |
-| 1127 | addItem | uid, item_id, item_count, [extra_params (oneof WeaponBin or ReliquaryBin)] |
+| x | addItem | uid, item_id, item_count, [extra_params (oneof WeaponBin or ReliquaryBin)] |
 | 1128 | modifyBornPos | uid, scene_id, pos |
 | 1129 | getPlatformPlayerNum | |
 | 1134 | delRedisMail | uid, mail_index, mail_ticket |
@@ -101,8 +101,8 @@
 | 1220 | removeGroupOneoffByConfigId | uid, scene_id, group_id, config_id, is_monster |
 | 1221 | finishRoutine | uid, routine_id |
 | 1222 | finishDailyTaskUnloadGroup | uid, daily_task_id |
-| 1223 | refreshBlossomCircleCamp | uid, refresh_id, circle_camp_id |
-| 1224 | queryPlayerShowAvatarInfo | uid, avatar_id |
+| x | refreshBlossomCircleCamp | uid, refresh_id, circle_camp_id |
+| x | queryPlayerShowAvatarInfo | uid, avatar_id |
 | 1225 | kickOutPlayerByAccountUid | account_type, account_uid |
 | 1226 | operateSetGroupDead | uid, scene_id, group_id |
 | 1227 | operateSetGroupUnregister | uid, scene_id, group_id |

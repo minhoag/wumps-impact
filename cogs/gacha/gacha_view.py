@@ -345,8 +345,8 @@ class DraftGachaView(discord.ui.View):
         )
 
         if success:
-            item1_name = GachaActions.get_item_display_name(self.item1) if self.item1 else 'N/A'
-            item2_name = GachaActions.get_item_display_name(self.item2) if self.item2 else 'N/A'
+            item1_name = Utils.get_item_name(self.item1) if self.item1 else 'N/A'
+            item2_name = Utils.get_item_name(self.item2) if self.item2 else 'N/A'
 
             success_embed = discord.Embed(
                 title="Sự kiện đã được tạo thành công!",

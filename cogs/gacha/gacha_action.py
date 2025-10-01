@@ -100,11 +100,6 @@ class GachaActions:
         return True, ""
 
     @staticmethod
-    def get_item_display_name(item: Dict) -> str:
-        """Get the best display name for an item (Vietnamese preferred)."""
-        return Utils.get_item_name(item, ['vietnameseName', 'globalName'])
-
-    @staticmethod
     def get_banner_from_id(item_id: int) -> Optional[Dict]:
         """Find banner object from item ID."""
         for banner in BANNERS:

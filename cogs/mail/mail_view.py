@@ -19,10 +19,6 @@ class MailView(discord.ui.View):
         if 'attachments' not in self.mail_data:
             self.mail_data['attachments'] = []
     
-    def _render_embed(self) -> MailEmbed:
-        """Render mail display embed with current mail data."""
-        return MailEmbed(mail_data=self.mail_data)
-    
     @discord.ui.button(label="Thêm vật phẩm", style=discord.ButtonStyle.success)
     async def add_item(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Handle adding items to mail attachments."""
@@ -83,6 +79,10 @@ class MailView(discord.ui.View):
         )
 
         await interaction.response.send_modal(edit_modal)
+    
+    def _render_embed(self) -> MailEmbed:
+        """Render mail display embed with current mail data."""
+        return MailEmbed(mail_data=self.mail_data)
 
     async def _handle_mail_edit(self, interaction: discord.Interaction, updated_mail_data: Dict[str, str]):
         """Handle mail edit submission and update the embed."""

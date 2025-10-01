@@ -86,16 +86,7 @@ class MailActions:
     @staticmethod
     def format_recipients_display(send_to: str, for_embed: bool = True) -> Union[str, Tuple[str, str]]:
         """
-        Unified method to format recipients for display.
-
-        Args:
-            send_to: Recipient string (e.g., "all", "10002", "10002,10003")
-            for_embed: If True, returns tuple[str, str] for embed usage.
-                      If False, returns str for summary messages.
-
-        Returns:
-            For embed: tuple(display_text, extra_info)
-            For summary: str display_text
+        Format recipients for display.
         """
         if not send_to or not send_to.strip():
             if for_embed:

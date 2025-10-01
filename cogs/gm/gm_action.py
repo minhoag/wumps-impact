@@ -1,6 +1,8 @@
 # cogs/gm/gm_action.py
 from typing import Dict, Any
 from utils.muip import MUIP
+from utils.db import create_log_record
+import discord
 
 class GMActions:
     """Core business logic for GM operation system"""
@@ -25,3 +27,20 @@ class GMActions:
             "retcode": response.get("retcode", -1),
             "msg": response.get("msg", "Unknown error")
         }
+
+    @staticmethod
+    async def execute_gm_command(interaction: discord.Interaction, uid: str, command: str):
+        """
+        Common method to execute a GM command and handle the response.
+        Defer interaction, send command, handle response, and log.
+        """
+        await interaction.response.defer(ephemeral=True)
+        gm_response = await GMActions.send_gm_command("1116", uid, {"msg": command})
+
+        if gm_response["success"]:
+            msg = f"Lệnh đã được gửi thành công đến UID {uid}."
+        else:
+            msg = f"Gửi lệnh thất bại: {gm_response['msg']}"
+
+        await interaction.followup.send(msg, ephemeral=True)
+        create_log_record("GM", f"{interaction.user.id}|{uid}|{command}")

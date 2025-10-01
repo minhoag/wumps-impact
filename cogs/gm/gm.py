@@ -4,7 +4,6 @@ import discord
 from discord import app_commands, Interaction
 from discord.ext import commands
 from typing import List
-from utils.db import create_log_record
 from utils.muip import MUIP
 from cogs.check import is_whitelist
 from cogs.gm.gm_action import GMActions
@@ -55,14 +54,7 @@ class GM(commands.Cog):
     ])
     async def general(self, interaction: Interaction, uid: str, command: str):
         """Send a general GM command to the specified UID."""
-        await interaction.response.defer(ephemeral=True)
-        gm_response = await GMActions.send_gm_command("1116", uid, {"msg": command})
-        if gm_response.success:
-            msg = f"Lệnh '{command}' đã được gửi thành công đến UID {uid}."
-        else:
-            msg = f"Gửi lệnh thất bại cho UID {uid}: {gm_response.message} (retcode: {gm_response.retcode})"
-        await interaction.followup.send(msg, ephemeral=True)
-        create_log_record("GM", f"{interaction.user.id}|{uid}|{command}")
+        await GMActions.execute_gm_command(interaction, uid, command)
 
     @gm.command(name="equip_add", description="Add a weapon to the player")
     @is_whitelist
@@ -76,14 +68,7 @@ class GM(commands.Cog):
     async def equip_add(self, interaction: Interaction, uid: str, item_id: int, level: int = 90, promote_level: int = 6):
         """Send equip add command."""
         command = f"equip add {item_id} {level} {promote_level}"
-        await interaction.response.defer(ephemeral=True)
-        gm_response = await GMActions.send_gm_command("1116", uid, {"msg": command})
-        if gm_response.success:
-            msg = f"Lệnh '{command}' đã được gửi thành công đến UID {uid}."
-        else:
-            msg = f"Gửi lệnh thất bại: {gm_response.message}"
-        await interaction.followup.send(msg, ephemeral=True)
-        create_log_record("GM", f"{interaction.user.id}|{uid}|{command}")
+        await GMActions.execute_gm_command(interaction, uid, command)
 
     @gm.command(name="item_add", description="Add an item to the player")
     @is_whitelist
@@ -96,14 +81,7 @@ class GM(commands.Cog):
     async def item_add(self, interaction: Interaction, uid: str, item_id: int, count: int):
         """Send item add command."""
         command = f"item add {item_id} {count}"
-        await interaction.response.defer(ephemeral=True)
-        gm_response = await GMActions.send_gm_command("1116", uid, {"msg": command})
-        if gm_response["success"] == True:
-            msg = f"Lệnh '{command}' đã được gửi thành công đến UID {uid}."
-        else:
-            msg = f"Gửi lệnh thất bại: {gm_response['msg']}"
-        await interaction.followup.send(msg, ephemeral=True)
-        create_log_record("GM", f"{interaction.user.id}|{uid}|{command}")
+        await GMActions.execute_gm_command(interaction, uid, command)
 
     @gm.command(name="item_clear", description="Remove an item from the player")
     @is_whitelist
@@ -116,14 +94,7 @@ class GM(commands.Cog):
     async def item_clear(self, interaction: Interaction, uid: str, item_id: int, count: int):
         """Send item clear command."""
         command = f"item clear {item_id} {count}"
-        await interaction.response.defer(ephemeral=True)
-        gm_response = await GMActions.send_gm_command("1116", uid, {"msg": command})
-        if gm_response["success"] == True:
-            msg = f"Lệnh '{command}' đã được gửi thành công đến UID {uid}."
-        else:
-            msg = f"Gửi lệnh thất bại: {gm_response['msg']}"
-        await interaction.followup.send(msg, ephemeral=True)
-        create_log_record("GM", f"{interaction.user.id}|{uid}|{command}")
+        await GMActions.execute_gm_command(interaction, uid, command)
 
     @gm.command(name="avatar_add", description="Add a character to the player")
     @is_whitelist
@@ -135,14 +106,7 @@ class GM(commands.Cog):
     async def avatar_add(self, interaction: Interaction, uid: str, avatar_id: int):
         """Send avatar add command."""
         command = f"avatar add {avatar_id}"
-        await interaction.response.defer(ephemeral=True)
-        gm_response = await GMActions.send_gm_command("1116", uid, {"msg": command})
-        if gm_response["success"] == True:
-            msg = f"Lệnh '{command}' đã được gửi thành công đến UID {uid}."
-        else:
-            msg = f"Gửi lệnh thất bại: {gm_response['msg']}"
-        await interaction.followup.send(msg, ephemeral=True)
-        create_log_record("GM", f"{interaction.user.id}|{uid}|{command}")
+        await GMActions.execute_gm_command(interaction, uid, command)
 
     @gm.command(name="quest", description="Manage quests for the player")
     @is_whitelist
@@ -160,14 +124,7 @@ class GM(commands.Cog):
     async def quest(self, interaction: Interaction, uid: str, action: str, quest_id: int):
         """Send quest command."""
         command = f"quest {action} {quest_id}"
-        await interaction.response.defer(ephemeral=True)
-        gm_response = await GMActions.send_gm_command("1116", uid, {"msg": command})
-        if gm_response["success"] == True:
-            msg = f"Lệnh '{command}' đã được gửi thành công đến UID {uid}."
-        else:
-            msg = f"Gửi lệnh thất bại: {gm_response['msg']}"
-        await interaction.followup.send(msg, ephemeral=True)
-        create_log_record("GM", f"{interaction.user.id}|{uid}|{command}")
+        await GMActions.execute_gm_command(interaction, uid, command)
 
     @gm.command(name="player_level", description="Set the player's adventure rank")
     @is_whitelist
@@ -178,14 +135,7 @@ class GM(commands.Cog):
     async def player_level(self, interaction: Interaction, uid: str, level: int):
         """Send player level command."""
         command = f"player level {level}"
-        await interaction.response.defer(ephemeral=True)
-        gm_response = await GMActions.send_gm_command("1116", uid, {"msg": command})
-        if gm_response["success"] == True:
-            msg = f"Lệnh '{command}' đã được gửi thành công đến UID {uid}."
-        else:
-            msg = f"Gửi lệnh thất bại: {gm_response['msg']}"
-        await interaction.followup.send(msg, ephemeral=True)
-        create_log_record("GM", f"{interaction.user.id}|{uid}|{command}")
+        await GMActions.execute_gm_command(interaction, uid, command)
 
     @gm.command(name="jump", description="Teleport to a scene")
     @is_whitelist
@@ -197,14 +147,7 @@ class GM(commands.Cog):
     async def jump(self, interaction: Interaction, uid: str, scene_id: int):
         """Send jump command."""
         command = f"jump {scene_id}"
-        await interaction.response.defer(ephemeral=True)
-        gm_response = await GMActions.send_gm_command("1116", uid, {"msg": command})
-        if gm_response["success"] == True:
-            msg = f"Lệnh '{command}' đã được gửi thành công đến UID {uid}."
-        else:
-            msg = f"Gửi lệnh thất bại: {gm_response['msg']}"
-        await interaction.followup.send(msg, ephemeral=True)
-        create_log_record("GM", f"{interaction.user.id}|{uid}|{command}")
+        await GMActions.execute_gm_command(interaction, uid, command)
 
     @gm.command(name="goto", description="Teleport to specific coordinates")
     @is_whitelist
@@ -217,14 +160,7 @@ class GM(commands.Cog):
     async def goto_cmd(self, interaction: Interaction, uid: str, x: float, y: float, z: float):
         """Send goto command."""
         command = f"goto {x} {y} {z}"
-        await interaction.response.defer(ephemeral=True)
-        gm_response = await GMActions.send_gm_command("1116", uid, {"msg": command})
-        if gm_response["success"] == True:
-            msg = f"Lệnh '{command}' đã được gửi thành công đến UID {uid}."
-        else:
-            msg = f"Gửi lệnh thất bại: {gm_response['msg']}"
-        await interaction.followup.send(msg, ephemeral=True)
-        create_log_record("GM", f"{interaction.user.id}|{uid}|{command}")
+        await GMActions.execute_gm_command(interaction, uid, command)
 
     @gm.command(name="dungeon", description="Enter a dungeon")
     @is_whitelist
@@ -236,14 +172,7 @@ class GM(commands.Cog):
     async def dungeon(self, interaction: Interaction, uid: str, dungeon_id: int):
         """Send dungeon command."""
         command = f"dungeon {dungeon_id}"
-        await interaction.response.defer(ephemeral=True)
-        gm_response = await GMActions.send_gm_command("1116", uid, {"msg": command})
-        if gm_response["success"] == True:
-            msg = f"Lệnh '{command}' đã được gửi thành công đến UID {uid}."
-        else:
-            msg = f"Gửi lệnh thất bại: {gm_response['msg']}"
-        await interaction.followup.send(msg, ephemeral=True)
-        create_log_record("GM", f"{interaction.user.id}|{uid}|{command}")
+        await GMActions.execute_gm_command(interaction, uid, command)
 
     @gm.command(name="monster", description="Spawn monsters")
     @is_whitelist
@@ -257,14 +186,7 @@ class GM(commands.Cog):
     async def monster(self, interaction: Interaction, uid: str, monster_id: int, count: int = 5, level: int = 20):
         """Send monster spawn command."""
         command = f"monster {monster_id} {count} {level}"
-        await interaction.response.defer(ephemeral=True)
-        gm_response = await GMActions.send_gm_command("1116", uid, {"msg": command})
-        if gm_response["success"] == True:
-            msg = f"Lệnh '{command}' đã được gửi thành công đến UID {uid}."
-        else:
-            msg = f"Gửi lệnh thất bại: {gm_response['msg']}"
-        await interaction.followup.send(msg, ephemeral=True)
-        create_log_record("GM", f"{interaction.user.id}|{uid}|{command}")
+        await GMActions.execute_gm_command(interaction, uid, command)
 
     @gm.command(name="mcoin", description="Add Genesis Crystals")
     @is_whitelist
@@ -275,14 +197,7 @@ class GM(commands.Cog):
     async def mcoin(self, interaction: Interaction, uid: str, amount: int):
         """Send mcoin command (Genesis Crystals)."""
         command = f"mcoin {amount}"
-        await interaction.response.defer(ephemeral=True)
-        gm_response = await GMActions.send_gm_command("1116", uid, {"msg": command})
-        if gm_response["success"] == True:
-            msg = f"Lệnh '{command}' đã được gửi thành công đến UID {uid}."
-        else:
-            msg = f"Gửi lệnh thất bại: {gm_response['msg']}"
-        await interaction.followup.send(msg, ephemeral=True)
-        create_log_record("GM", f"{interaction.user.id}|{uid}|{command}")
+        await GMActions.execute_gm_command(interaction, uid, command)
 
     @gm.command(name="scoin", description="Add Mora (or similar currency)")
     @is_whitelist
@@ -293,14 +208,7 @@ class GM(commands.Cog):
     async def scoin(self, interaction: Interaction, uid: str, amount: int):
         """Send scoin command."""
         command = f"scoin {amount}"
-        await interaction.response.defer(ephemeral=True)
-        gm_response = await GMActions.send_gm_command("1116", uid, {"msg": command})
-        if gm_response.success:
-            msg = f"Lệnh '{command}' đã được gửi thành công đến UID {uid}."
-        else:
-            msg = f"Gửi lệnh thất bại: {gm_response.message}"
-        await interaction.followup.send(msg, ephemeral=True)
-        create_log_record("GM", f"{interaction.user.id}|{uid}|{command}")
+        await GMActions.execute_gm_command(interaction, uid, command)
 
     @gm.command(name="hcoin", description="Add Primogems (or similar currency)")
     @is_whitelist
@@ -311,14 +219,7 @@ class GM(commands.Cog):
     async def hcoin(self, interaction: Interaction, uid: str, amount: int):
         """Send hcoin command."""
         command = f"hcoin {amount}"
-        await interaction.response.defer(ephemeral=True)
-        gm_response = await GMActions.send_gm_command("1116", uid, {"msg": command})
-        if gm_response.success:
-            msg = f"Lệnh '{command}' đã được gửi thành công đến UID {uid}."
-        else:
-            msg = f"Gửi lệnh thất bại: {gm_response.message}"
-        await interaction.followup.send(msg, ephemeral=True)
-        create_log_record("GM", f"{interaction.user.id}|{uid}|{command}")
+        await GMActions.execute_gm_command(interaction, uid, command)
 
     @gm.command(name="home_coin", description="Add Realm Currency")
     @is_whitelist
@@ -329,14 +230,7 @@ class GM(commands.Cog):
     async def home_coin(self, interaction: Interaction, uid: str, amount: int):
         """Send home_coin command."""
         command = f"home_coin {amount}"
-        await interaction.response.defer(ephemeral=True)
-        gm_response = await GMActions.send_gm_command("1116", uid, {"msg": command})
-        if gm_response.success:
-            msg = f"Lệnh '{command}' đã được gửi thành công đến UID {uid}."
-        else:
-            msg = f"Gửi lệnh thất bại: {gm_response.message}"
-        await interaction.followup.send(msg, ephemeral=True)
-        create_log_record("GM", f"{interaction.user.id}|{uid}|{command}")
+        await GMActions.execute_gm_command(interaction, uid, command)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(GM(bot))

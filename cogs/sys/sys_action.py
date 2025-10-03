@@ -236,16 +236,70 @@ class SystemActions:
         return server_statuses
 
     @classmethod
-    def do_start_servers(cls, servers: List[str], start_sdk: bool = False) -> List[str]:
-        """Start multiple servers. Returns simplified success message."""
-        # Start all servers in order
+    def check_running_servers(cls, servers: List[str]) -> Tuple[List[str], List[str]]:
+        """Check which servers are already running. Returns (running_servers, stopped_servers)."""
+        running = []
+        stopped = []
+
         for server in servers:
+            if cls.get_server_pid(server):
+                running.append(server)
+            else:
+                stopped.append(server)
+
+        # Check SDK server
+        sdk_running = False
+        try:
+            result = subprocess.run(["screen", "-ls"], capture_output=True, text=True, check=True)
+            sdk_running = any('sdk' in line for line in result.stdout.splitlines())
+        except subprocess.CalledProcessError:
+            pass
+
+        return running, stopped
+
+    @classmethod
+    def do_start_servers(cls, servers: List[str], start_sdk: bool = False, force_restart: bool = False) -> Tuple[List[str], bool]:
+        """Start multiple servers. Returns (messages, has_running_servers)."""
+        running_servers, stopped_servers = cls.check_running_servers(servers)
+
+        # Check if any servers are already running
+        has_running = len(running_servers) > 0
+
+        if has_running and not force_restart:
+            # Return information about running servers for confirmation
+            messages = [f"Các server đang chạy: {', '.join(running_servers)}"]
+            if stopped_servers:
+                messages.append(f"Các server chưa chạy: {', '.join(stopped_servers)}")
+            messages.append("Bạn có muốn khởi động lại các server đang chạy không?")
+            return messages, True
+
+        # Start stopped servers
+        for server in stopped_servers:
             cls.start_server(server)
 
-        if start_sdk:
-            cls.start_sdk_server()
+        # Start running servers if force restart
+        if force_restart:
+            for server in running_servers:
+                # Kill existing process first
+                pid = cls.get_server_pid(server)
+                if pid:
+                    cls.kill_process(pid, force=True)
+                # Start new instance
+                cls.start_server(server)
 
-        return ["Đã thành công khởi động server"]
+        if start_sdk:
+            # Check if SDK is running
+            sdk_running = False
+            try:
+                result = subprocess.run(["screen", "-ls"], capture_output=True, text=True, check=True)
+                sdk_running = any('sdk' in line for line in result.stdout.splitlines())
+            except subprocess.CalledProcessError:
+                pass
+
+            if force_restart or not sdk_running:
+                cls.start_sdk_server()
+
+        return ["Đã thành công khởi động server"], False
 
     @classmethod
     def do_force_stop_all(cls) -> List[str]:

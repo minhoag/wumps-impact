@@ -3,7 +3,7 @@ import discord
 from discord import app_commands, Interaction
 from discord.ext import commands
 from cogs.check import is_whitelist
-from cogs.sys.sys_view import ServerPanelView
+from cogs.sys.sys_view import ServerPanelView, ConfirmationView
 from cogs.sys.sys_action import SystemActions
 import asyncio
 import json
@@ -133,10 +133,31 @@ class SYS(commands.Cog):
             self.update_task = self.bot.loop.create_task(self.update_loop())
         await interaction.followup.send(f"Status panel set up in {channel.mention}!", ephemeral=True)
 
-    async def do_start_servers(self, interaction: Interaction, servers: List[str], start_sdk: bool = False):
-        results = SystemActions.do_start_servers(servers, start_sdk)
-        for result in results:
-            await interaction.followup.send(result, ephemeral=True)
+    async def do_start_servers(self, interaction: Interaction, servers: List[str], start_sdk: bool = False, force_restart: bool = False):
+        results, has_running = SystemActions.do_start_servers(servers, start_sdk, force_restart)
+
+        if has_running and not force_restart:
+            # Show confirmation dialog
+            confirm_embed = discord.Embed(
+                title="Phát hiện server đang chạy",
+                description="\n".join(results),
+                color=discord.Color.orange()
+            )
+            confirm_embed.set_footer(text="Chọn 'Xác nhận' để khởi động lại server hoặc 'Hủy' để dừng.")
+
+            confirm_view = ConfirmationView()
+            await interaction.followup.send(embed=confirm_embed, view=confirm_view, ephemeral=True)
+            await confirm_view.wait()
+
+            if confirm_view.confirmed:
+                # Force restart
+                await self.do_start_servers(interaction, servers, start_sdk, force_restart=True)
+            else:
+                await interaction.followup.send("Đã hủy thao tác khởi động.", ephemeral=True)
+        else:
+            # Normal start or force restart
+            for result in results:
+                await interaction.followup.send(result, ephemeral=True)
 
     async def do_force_stop_all(self, interaction: Interaction):
         results = SystemActions.do_force_stop_all()

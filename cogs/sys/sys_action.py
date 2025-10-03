@@ -79,19 +79,48 @@ class SystemActions:
 
     @staticmethod
     def clear_log_directory(log_dir: str) -> Tuple[int, int]:
-        """Clear all files in the log directory using rm -r *. Returns (files_deleted, errors)."""
+        """Clear all files in the log directory using rm -rf. Returns (files_deleted, errors)."""
+        print(f"Debug: Attempting to clear log directory: {log_dir}")
+
         if not os.path.exists(log_dir):
+            print(f"Debug: Directory {log_dir} does not exist")
+            return 0, 1
+
+        if not os.path.isdir(log_dir):
+            print(f"Debug: {log_dir} is not a directory")
             return 0, 1
 
         try:
-            # Change to log directory and remove all files
-            original_dir = os.getcwd()
-            os.chdir(log_dir)
-            result = subprocess.run(["rm", "-rf", "*"], check=True, capture_output=True)
-            os.chdir(original_dir)
-            return 1, 0  # Success, assume files were cleared
-        except subprocess.CalledProcessError:
-            return 0, 1  # Failed
+            # Count files before deletion
+            files_before = len([f for f in os.listdir(log_dir) if os.path.isfile(os.path.join(log_dir, f))])
+            print(f"Debug: Found {files_before} files before deletion")
+
+            # Use rm -rf on the directory contents
+            cmd = ["rm", "-rf", f"{log_dir}/*"]
+            print(f"Debug: Running command: {' '.join(cmd)}")
+            result = subprocess.run(cmd, check=True, capture_output=True, text=True)
+
+            if result.returncode != 0:
+                print(f"Debug: rm command failed with return code {result.returncode}")
+                print(f"Debug: stderr: {result.stderr}")
+                return 0, 1
+
+            # Count files after deletion
+            files_after = len([f for f in os.listdir(log_dir) if os.path.isfile(os.path.join(log_dir, f))])
+            print(f"Debug: Found {files_after} files after deletion")
+
+            files_deleted = files_before - files_after
+            print(f"Debug: Deleted {files_deleted} files")
+            return files_deleted, 0
+
+        except subprocess.CalledProcessError as e:
+            print(f"Error clearing log directory {log_dir}: {e}")
+            print(f"Return code: {e.returncode}")
+            print(f"Stderr: {e.stderr}")
+            return 0, 1
+        except Exception as e:
+            print(f"Unexpected error clearing log directory {log_dir}: {e}")
+            return 0, 1
 
     @staticmethod
     def start_server(server_name: str) -> bool:
@@ -267,14 +296,16 @@ class SystemActions:
 
     @classmethod
     def do_clear_logs(cls) -> Tuple[List[str], int, int]:
-        """Clear all log files. Returns (messages, success, errors)."""
+        """Clear all log files. Returns (messages, files_deleted, errors)."""
         log_dir = "/gio/bin/log"
         messages = ["Clearing log files..."]
 
-        success, errors = cls.clear_log_directory(log_dir)
-        if success:
-            messages.append("Successfully cleared all log files")
+        files_deleted, errors = cls.clear_log_directory(log_dir)
+        if files_deleted > 0:
+            messages.append(f"Successfully deleted {files_deleted} log files")
+        elif errors == 0:
+            messages.append("No log files found to delete")
         else:
             messages.append("Failed to clear log files")
 
-        return messages, success, errors
+        return messages, files_deleted, errors

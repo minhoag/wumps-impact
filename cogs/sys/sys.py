@@ -123,7 +123,7 @@ class SYS(commands.Cog):
         log_channel="Kênh để gửi log hệ thống (tùy chọn)"
     )
     @is_whitelist
-    async def setup_panel(self, interaction: Interaction, channel: discord.TextChannel = None, log_channel: discord.TextChannel = None):
+    async def setup_panel(self, interaction: Interaction, channel: discord.TextChannel = None, log_channel: str = None):
         await interaction.response.defer(ephemeral=True)
         if channel is None:
             channel = interaction.channel
@@ -140,18 +140,19 @@ class SYS(commands.Cog):
         # Set up log channel if provided
         response_parts = [f"Đã thiết lập bảng trạng thái trong {channel.mention}!"]
 
-        if log_channel is not None:
-            self.log_channel = log_channel.id
-
-            # Send test log message
-            await Utils.log_system_event(
-                self.bot, self.log_channel,
-                "Log Channel Configured",
-                f"Kênh log hệ thống đã được thiết lập thành {log_channel.mention}",
-                discord.Color.green()
-            )
-
-            response_parts.append(f"Đã thiết lập kênh log thành {log_channel.mention}!")
+        if log_channel and log_channel.strip():
+            resolved_channel, error_msg = Utils.resolve_channel(self.bot, interaction, log_channel)
+            if resolved_channel:
+                self.log_channel = resolved_channel.id
+                await Utils.log_system_event(
+                    self.bot, self.log_channel,
+                    "Log Channel Configured",
+                    f"Kênh log hệ thống đã được thiết lập thành {resolved_channel.mention}",
+                    discord.Color.green()
+                )
+                response_parts.append(f"Đã thiết lập kênh log thành {resolved_channel.mention}!")
+            else:
+                response_parts.append(f"⚠️ {error_msg}")
 
         if self.update_task is None or self.update_task.done():
             self.update_task = self.bot.loop.create_task(self.update_loop())
@@ -222,20 +223,10 @@ class SYS(commands.Cog):
             await interaction.followup.send(message, ephemeral=True)
 
         # Log log clearing action
-        if files_deleted > 0:
-            await Utils.log_system_event(
-                self.bot, self.log_channel,
-                "Logs Cleared",
-                f"Người dùng {interaction.user.mention} đã xóa {files_deleted} file log",
-                discord.Color.blue()
-            )
-        elif files_deleted == 0:
-            await Utils.log_system_event(
-                self.bot, self.log_channel,
-                "Log Clear Attempted",
-                f"Người dùng {interaction.user.mention} đã thử xóa logs nhưng không có file nào để xóa",
-                discord.Color.yellow()
-            )
+        status = "SUCCESS" if files_deleted > 0 else "NO_FILES"
+        color = discord.Color.blue() if files_deleted > 0 else discord.Color.yellow()
+        desc = f"Người dùng {interaction.user.mention} đã xóa {files_deleted} file log" if files_deleted > 0 else f"Người dùng {interaction.user.mention} đã thử xóa logs nhưng không có file nào để xóa"
+        await Utils.log_system_event(self.bot, self.log_channel, f"Logs Cleared ({status})", desc, color)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(SYS(bot))

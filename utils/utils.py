@@ -154,3 +154,32 @@ class Utils:
                     timestamp=discord.utils.utcnow()
                 )
                 await channel.send(embed=embed)
+
+    @staticmethod
+    def resolve_channel(bot: commands.Bot, interaction: discord.Interaction, channel_input: str) -> tuple[discord.TextChannel, str]:
+        """
+        Resolve a channel from string input.
+        Returns (channel, error_message). If channel is None, error_message contains the error.
+        """
+        if not channel_input or not channel_input.strip():
+            return None, "Không có kênh được chỉ định"
+
+        resolved_channel = None
+
+        # Check if it's a channel mention (<#123456789>)
+        import re
+        mention_match = re.match(r'<#(\d+)>', channel_input.strip())
+        if mention_match:
+            channel_id = int(mention_match.group(1))
+            resolved_channel = bot.get_channel(channel_id)
+        else:
+            # Try to find channel by name
+            for guild_channel in interaction.guild.channels:
+                if isinstance(guild_channel, discord.TextChannel) and guild_channel.name == channel_input.strip():
+                    resolved_channel = guild_channel
+                    break
+
+        if resolved_channel is None:
+            return None, f"Không tìm thấy kênh '{channel_input}'. Vui lòng kiểm tra tên kênh hoặc sử dụng đề cập kênh (#channel-name)."
+
+        return resolved_channel, ""

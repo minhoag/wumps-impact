@@ -80,14 +80,10 @@ class SystemActions:
     @staticmethod
     def clear_log_directory(log_dir: str) -> Tuple[int, int]:
         """Clear all files in the log directory by truncating them. Returns (files_cleared, errors)."""
-        print(f"Debug: Attempting to clear log directory: {log_dir}")
-
         if not os.path.exists(log_dir):
-            print(f"Debug: Directory {log_dir} does not exist")
             return 0, 1
 
         if not os.path.isdir(log_dir):
-            print(f"Debug: {log_dir} is not a directory")
             return 0, 1
 
         files_cleared = 0
@@ -96,7 +92,6 @@ class SystemActions:
         try:
             # Get list of files
             files = [f for f in os.listdir(log_dir) if os.path.isfile(os.path.join(log_dir, f))]
-            print(f"Debug: Found {len(files)} files to clear")
 
             for filename in files:
                 file_path = os.path.join(log_dir, filename)
@@ -105,16 +100,12 @@ class SystemActions:
                     with open(file_path, 'w') as f:
                         f.truncate(0)
                     files_cleared += 1
-                    print(f"Debug: Cleared file: {filename}")
                 except Exception as e:
-                    print(f"Debug: Failed to clear {filename}: {e}")
                     errors += 1
 
-            print(f"Debug: Successfully cleared {files_cleared} files, {errors} errors")
             return files_cleared, errors
 
         except Exception as e:
-            print(f"Unexpected error accessing log directory {log_dir}: {e}")
             return 0, 1
 
     @staticmethod
@@ -230,8 +221,7 @@ class SystemActions:
         }
 
         # Check and clean large log file
-        if cls.check_and_clean_large_log(gameserver_log):
-            print("Automatically cleaned gameserver.log (exceeded 2GB)")
+        cls.check_and_clean_large_log(gameserver_log)
 
         return server_statuses
 

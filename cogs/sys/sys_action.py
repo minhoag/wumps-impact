@@ -204,22 +204,14 @@ class SystemActions:
                     "value": "Not running"
                 }
 
-        # Check SDK server
+        # Check SDK server - always runs via screen session
         sdk_running = False
         try:
             result = subprocess.run(["screen", "-ls"], capture_output=True, text=True, check=True)
-            # Check for screen session named 'sdk'
-            # screen -ls output format typically includes lines like:
-            # "12345.sdk	(01/15/25 10:30:45)	(Detached)"
-            # or "There is a screen on: 12345.sdk (01/15/25 10:30:45) (Detached)"
             output = result.stdout.strip()
-            print(f"DEBUG: screen -ls output: {repr(output)}")  # Debug output
-            if output and ('sdk' in output):
-                # More specific check - look for the session name pattern
-                sdk_running = '.sdk' in output or 'sdk\t' in output or 'sdk ' in output
-                print(f"DEBUG: SDK detected as running: {sdk_running}")  # Debug output
-        except subprocess.CalledProcessError as e:
-            print(f"DEBUG: screen -ls failed: {e}")  # Debug output
+            # Look for screen session named 'sdk' with proper status indicators
+            sdk_running = 'sdk' in output and ('Detached' in output or 'Attached' in output)
+        except subprocess.CalledProcessError:
             pass
         if sdk_running:
             server_statuses["sdk"] = {
@@ -257,18 +249,13 @@ class SystemActions:
             else:
                 stopped.append(server)
 
-        # Check SDK server
+        # Check SDK server - always runs via screen session
         sdk_running = False
         try:
             result = subprocess.run(["screen", "-ls"], capture_output=True, text=True, check=True)
-            # Check for screen session named 'sdk'
-            # screen -ls output format typically includes lines like:
-            # "12345.sdk	(01/15/25 10:30:45)	(Detached)"
-            # or "There is a screen on: 12345.sdk (01/15/25 10:30:45) (Detached)"
             output = result.stdout.strip()
-            if output and ('sdk' in output):
-                # More specific check - look for the session name pattern
-                sdk_running = '.sdk' in output or 'sdk\t' in output or 'sdk ' in output
+            # Look for screen session named 'sdk' with proper status indicators
+            sdk_running = 'sdk' in output and ('Detached' in output or 'Attached' in output)
         except subprocess.CalledProcessError:
             pass
 

@@ -136,13 +136,16 @@ class SystemActions:
 
                 # Server configurations from bash script
                 server_configs = {
-                    "nodeserver": ["-i", "9001.3.1.1"],
-                    "gateserver": ["-i", "9001.1.1.1"],
-                    "dbgate": ["-i", "9001.4.1.1"],
                     "dispatch": ["-i", "9001.5.1.1"],
-                    "gameserver": ["-i", "9001.2.1.1"],
+                    "nodeserver": ["-i", "9001.3.1.1"],
+                    "dbgate": ["-i", "9001.4.1.1"],
+                    "oaserver": ["-i", "9001.8.1.1"],  # Added missing oaserver
                     "multiserver": ["-i", "9001.7.1.1"],
-                    "muipserver": ["-i", "9001.6.1.1"]
+                    "muipserver": ["-i", "9001.6.1.1"],
+                    "gameserver": ["-i", "9001.2.1.1"],
+                    "gateserver": ["-i", "9001.1.1.1"],
+                    "pathfindingserver": ["-i", "9001.9.1.1"],  # Added missing pathfindingserver
+                    "tothemoonserver": ["-i", "9001.10.1.1"]   # Added missing tothemoonserver
                 }
                 if server_name in server_configs:
                     cmd = ["nohup", f"./{server_name}"] + server_configs[server_name]

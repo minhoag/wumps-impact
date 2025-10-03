@@ -3,6 +3,7 @@ import discord
 from discord import Interaction
 from discord.ui import View, Button
 from cogs.sys.sys_action import SystemActions
+from cogs.check import permission_check
 
 class ConfirmationView(View):
     """Confirmation view for dangerous operations."""
@@ -40,31 +41,41 @@ class ServerPanelView(View):
     """View for the server status panel buttons."""
     def __init__(self):
         super().__init__(timeout=None)
+        
     @discord.ui.button(label="Start All", style=discord.ButtonStyle.success, custom_id="sys_start_all")
     async def start_all(self, interaction: Interaction, button: Button):
+        # Check whitelist permissions
+        if not await permission_check(interaction):
+            await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
+            return
+
         cog = interaction.client.get_cog('SYS')
         if not cog:
             await interaction.response.send_message("Error: System cog not found.", ephemeral=True)
             return
         await interaction.response.defer(ephemeral=True)
         await cog.do_start_servers(interaction, SystemActions.START_SERVER_ORDER, start_sdk=True)
-    @discord.ui.button(label="Force Stop All", style=discord.ButtonStyle.danger, custom_id="sys_stop_all")
+
+    @discord.ui.button(label="Stop All", style=discord.ButtonStyle.danger, custom_id="sys_stop_all")
     async def stop_all(self, interaction: Interaction, button: Button):
+        # Check whitelist permissions
+        if not await permission_check(interaction):
+            await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
+            return
+
         cog = interaction.client.get_cog('SYS')
         if not cog:
             await interaction.response.send_message("Error: System cog not found.", ephemeral=True)
             return
         await interaction.response.defer(ephemeral=True)
         confirm_embed = discord.Embed(
-            title="EMERGENCY: Force Stop All Servers",
+            title="EMERGENCY: Stop All Servers",
             description="**CRITICAL WARNING**\n\n"
                         "This action will immediately terminate ALL servers:\n\n"
                         "**IMPACT:**\n"
-                        "• Force kill all server processes (SIGKILL)\n"
+                        "• Stop all server processes\n"
                         "• Stop SDK server forcefully\n"
                         "• Risk of data corruption or loss\n\n"
-                        "**RECOMMENDATION:**\n"
-                        "Use graceful shutdown first. Only use force stop in emergencies.",
             color=discord.Color.red()
         )
         confirm_embed.set_footer(text="You have 30 seconds to confirm or cancel. This action cannot be undone!")
@@ -75,16 +86,28 @@ class ServerPanelView(View):
             await cog.do_force_stop_all(interaction)
         else:
             await interaction.followup.send("Operation cancelled.", ephemeral=True)
+
     @discord.ui.button(label="Start Gameserver", style=discord.ButtonStyle.primary, custom_id="sys_start_gameserver")
     async def start_gameserver(self, interaction: Interaction, button: Button):
+        # Check whitelist permissions
+        if not await permission_check(interaction):
+            await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
+            return
+
         cog = interaction.client.get_cog('SYS')
         if not cog:
             await interaction.response.send_message("Error: System cog not found.", ephemeral=True)
             return
         await interaction.response.defer(ephemeral=True)
         await cog.do_start_servers(interaction, ["gameserver"], start_sdk=False)
+
     @discord.ui.button(label="Clear Logs", style=discord.ButtonStyle.secondary, custom_id="sys_clear_logs")
     async def clear_logs(self, interaction: Interaction, button: Button):
+        # Check whitelist permissions
+        if not await permission_check(interaction):
+            await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
+            return
+
         cog = interaction.client.get_cog('SYS')
         if not cog:
             await interaction.response.send_message("Error: System cog not found.", ephemeral=True)

@@ -49,7 +49,7 @@ class SYS(commands.Cog):
 
     def create_status_embed(self, statuses):
         embed = discord.Embed(
-            title="Server Status Monitor",
+            title="Bảng Giám Sát Server",
             color=discord.Color.blue(),
             timestamp=discord.utils.utcnow()
         )
@@ -85,7 +85,7 @@ class SYS(commands.Cog):
                     running_text += f"  {cpu_line} | {mem_line}\n"
                 running_text += "\n"
             running_text += "```"
-            embed.add_field(name="RUNNING SERVERS", value=running_text, inline=False)
+            embed.add_field(name="SERVERS ĐANG CHẠY", value=running_text, inline=False)
 
         # Stopped servers section
         if stopped_servers:
@@ -96,7 +96,7 @@ class SYS(commands.Cog):
                     server_display = "SDK SERVER"
                 stopped_text += f"[OFFLINE] {server_display}\n"
             stopped_text += "```"
-            embed.add_field(name="STOPPED SERVERS", value=stopped_text, inline=False)
+            embed.add_field(name="SERVERS ĐÃ DỪNG", value=stopped_text, inline=False)
 
         # Log monitoring section
         if log_info:
@@ -105,23 +105,28 @@ class SYS(commands.Cog):
                 if "gameserver" in server_name:
                     log_text += f"GAMESERVER.LOG\n"
                     log_text += f"  {status['value']}\n"
-                    log_text += f"  Auto-clean: >2GB\n"
+                    log_text += f"  Tự động xóa: >2GB\n"
             log_text += "```"
-            embed.add_field(name="LOG MONITORING", value=log_text, inline=False)
+            embed.add_field(name="GIÁM SÁT LOG", value=log_text, inline=False)
 
         # Footer with last update time
-        embed.set_footer(text="Last updated")
+        embed.set_footer(text="Cập nhật lần cuối")
 
         return embed
 
-    sys = app_commands.Group(name="sys", description="System commands for Genshin Impact 3.4 server management")
-    @sys.command(name="panel", description="Set up the server status panel in a channel")
-    @app_commands.describe(channel="The channel to send the status panel to (default: current channel)")
+    sys = app_commands.Group(name="sys", description="Lệnh hệ thống để quản lý server Genshin Impact 3.4")
+    @sys.command(name="panel", description="Thiết lập bảng trạng thái server trong kênh")
+    @app_commands.describe(
+        channel="Kênh để gửi bảng trạng thái (mặc định: kênh hiện tại)",
+        log_channel="Kênh để gửi log hệ thống (tùy chọn)"
+    )
     @is_whitelist
-    async def setup_panel(self, interaction: Interaction, channel: discord.TextChannel = None):
+    async def setup_panel(self, interaction: Interaction, channel: discord.TextChannel = None, log_channel: discord.TextChannel = None):
         await interaction.response.defer(ephemeral=True)
         if channel is None:
             channel = interaction.channel
+
+        # Set up status panel
         statuses = self.get_server_statuses()
         embed = self.create_status_embed(statuses)
         view = ServerPanelView()
@@ -129,9 +134,28 @@ class SYS(commands.Cog):
         self.status_message = (channel.id, message.id)
         with open('status_panel.json', 'w') as f:
             json.dump({'channel': self.status_message[0], 'message': self.status_message[1]}, f)
+
+        # Set up log channel if provided
+        response_parts = [f"Đã thiết lập bảng trạng thái trong {channel.mention}!"]
+
+        if log_channel is not None:
+            self.log_channel = log_channel.id
+            with open('log_channel.json', 'w') as f:
+                json.dump({'channel': self.log_channel}, f)
+
+            # Send test log message
+            await self.log_system_event(
+                "Log Channel Configured",
+                f"Kênh log hệ thống đã được thiết lập thành {log_channel.mention}",
+                discord.Color.green()
+            )
+
+            response_parts.append(f"Đã thiết lập kênh log thành {log_channel.mention}!")
+
         if self.update_task is None or self.update_task.done():
             self.update_task = self.bot.loop.create_task(self.update_loop())
-        await interaction.followup.send(f"Status panel set up in {channel.mention}!", ephemeral=True)
+
+        await interaction.followup.send(" ".join(response_parts), ephemeral=True)
 
     async def do_start_servers(self, interaction: Interaction, servers: List[str], start_sdk: bool = False, force_restart: bool = False):
         results, has_running = SystemActions.do_start_servers(servers, start_sdk, force_restart)
@@ -154,21 +178,58 @@ class SYS(commands.Cog):
                 await self.do_start_servers(interaction, servers, start_sdk, force_restart=True)
             else:
                 await interaction.followup.send("Đã hủy thao tác khởi động.", ephemeral=True)
+                # Log cancelled action
+                await self.log_system_event(
+                    "Server Start Cancelled",
+                    f"Người dùng {interaction.user.mention} đã hủy khởi động server",
+                    discord.Color.orange()
+                )
         else:
             # Normal start or force restart
             for result in results:
                 await interaction.followup.send(result, ephemeral=True)
+
+            # Log successful server start
+            action_type = "Force Restart" if force_restart else "Start"
+            server_list = ", ".join(servers)
+            sdk_info = " + SDK" if start_sdk else ""
+            await self.log_system_event(
+                f"Servers {action_type}",
+                f"Người dùng {interaction.user.mention} đã {action_type.lower()} servers: {server_list}{sdk_info}",
+                discord.Color.green()
+            )
 
     async def do_force_stop_all(self, interaction: Interaction):
         results = SystemActions.do_force_stop_all()
         for result in results:
             await interaction.followup.send(result, ephemeral=True)
 
+        # Log server stop action
+        await self.log_system_event(
+            "Servers Force Stopped",
+            f"Người dùng {interaction.user.mention} đã dừng tất cả servers",
+            discord.Color.red()
+        )
+
     async def do_clear_logs(self, interaction: Interaction):
         """Clear all log files in the log directory."""
         messages, files_deleted, errors = SystemActions.do_clear_logs()
         for message in messages:
             await interaction.followup.send(message, ephemeral=True)
+
+        # Log log clearing action
+        if files_deleted > 0:
+            await self.log_system_event(
+                "Logs Cleared",
+                f"Người dùng {interaction.user.mention} đã xóa {files_deleted} file log",
+                discord.Color.blue()
+            )
+        elif files_deleted == 0:
+            await self.log_system_event(
+                "Log Clear Attempted",
+                f"Người dùng {interaction.user.mention} đã thử xóa logs nhưng không có file nào để xóa",
+                discord.Color.yellow()
+            )
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(SYS(bot))

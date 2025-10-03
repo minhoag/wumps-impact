@@ -3,6 +3,7 @@ from typing import Dict, Any
 from utils.muip import MUIP
 from utils.db import create_log_record
 import discord
+import httpx
 
 class GMActions:
     """Core business logic for GM operation system"""
@@ -12,21 +13,34 @@ class GMActions:
         """
         Send a GM command to the server via MUIP API.
         """
-        ticket = MUIP._generate_ticket()
-        params = {
-            "region": MUIP.REGION,
-            "ticket": ticket,
-            "cmd": cmd,
-            "uid": uid,
-        }
-        if extra_params:
-            params.update({k: str(v) for k, v in extra_params.items() if v is not None})
-        response = await MUIP._send_request(MUIP._compute_url(params))
-        return {
-            "success": response.get("msg") == "succ",
-            "retcode": response.get("retcode", -1),
-            "msg": response.get("msg", "Unknown error")
-        }
+        try:
+            ticket = MUIP._generate_ticket()
+            params = {
+                "region": MUIP.REGION,
+                "ticket": ticket,
+                "cmd": cmd,
+                "uid": uid,
+            }
+            if extra_params:
+                params.update({k: str(v) for k, v in extra_params.items() if v is not None})
+            response = await MUIP._send_request(MUIP._compute_url(params))
+            return {
+                "success": response.get("msg") == "succ",
+                "retcode": response.get("retcode", -1),
+                "msg": response.get("msg", "Unknown error")
+            }
+        except (httpx.ConnectError, httpx.TimeoutException) as e:
+            return {
+                "success": False,
+                "retcode": -1,
+                "msg": f"Lỗi kết nối đến server: {str(e)}"
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "retcode": -1,
+                "msg": f"Lỗi không xác định: {str(e)}"
+            }
 
     @staticmethod
     async def execute_gm_command(interaction: discord.Interaction, uid: str, command: str):

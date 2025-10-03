@@ -127,22 +127,29 @@ class SystemActions:
                 env["HOOK_PRELOAD"] = f"{asan_lib}:./hook/build/lib/libhook.so"
             else:
                 env["HOOK_PRELOAD"] = "./hook/build/lib/libhook.so"
-            # Make executable and start
-            os.chmod(server_name, 0o755)
-            # Server configurations from bash script
-            server_configs = {
-                "nodeserver": ["-i", "9001.3.1.1"],
-                "gateserver": ["-i", "9001.1.1.1"],
-                "dbgate": ["-i", "9001.4.1.1"],
-                "dispatch": ["-i", "9001.5.1.1"],
-                "gameserver": ["-i", "9001.2.1.1"],
-                "multiserver": ["-i", "9001.7.1.1"],
-                "muipserver": ["-i", "9001.6.1.1"]
-            }
-            if server_name in server_configs:
-                cmd = ["nohup", f"./{server_name}"] + server_configs[server_name]
-                subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=env)
-                return True
+            # Change to server directory and make executable
+            server_dir = "/gio/bin"
+            original_dir = os.getcwd()
+            try:
+                os.chdir(server_dir)
+                os.chmod(server_name, 0o755)
+
+                # Server configurations from bash script
+                server_configs = {
+                    "nodeserver": ["-i", "9001.3.1.1"],
+                    "gateserver": ["-i", "9001.1.1.1"],
+                    "dbgate": ["-i", "9001.4.1.1"],
+                    "dispatch": ["-i", "9001.5.1.1"],
+                    "gameserver": ["-i", "9001.2.1.1"],
+                    "multiserver": ["-i", "9001.7.1.1"],
+                    "muipserver": ["-i", "9001.6.1.1"]
+                }
+                if server_name in server_configs:
+                    cmd = ["nohup", f"./{server_name}"] + server_configs[server_name]
+                    subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=env, cwd=server_dir)
+                    return True
+            finally:
+                os.chdir(original_dir)  # Always restore original directory
         except Exception as e:
             print(f"Error starting {server_name}: {e}")
             return False

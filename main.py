@@ -10,6 +10,7 @@ from discord.ext import commands
 from cogs.gacha.gacha import Gacha
 from cogs.mail.mail import Mail
 from cogs.gm.gm import GM
+from cogs.sys.sys import SYS
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -26,7 +27,7 @@ class DiscordBot(commands.Bot):
         await self.tree.sync(guild=None)
 
     async def setup_hook(self) -> None:
-        cogs = [Gacha, Mail, GM]
+        cogs = [Gacha, Mail, GM, SYS]
         for cog in cogs:
             await self.add_cog(cog(self))
         await self.sync_commands()

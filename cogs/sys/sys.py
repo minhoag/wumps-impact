@@ -123,7 +123,7 @@ class SYS(commands.Cog):
         log_channel="Kênh để gửi log hệ thống (tùy chọn)"
     )
     @is_whitelist
-    async def setup_panel(self, interaction: Interaction, channel: discord.TextChannel = None, log_channel: str = None):
+    async def setup_panel(self, interaction: Interaction, channel: discord.TextChannel = None, log_channel: discord.TextChannel = None):
         await interaction.response.defer(ephemeral=True)
         if channel is None:
             channel = interaction.channel
@@ -140,19 +140,15 @@ class SYS(commands.Cog):
         # Set up log channel if provided
         response_parts = [f"Đã thiết lập bảng trạng thái trong {channel.mention}!"]
 
-        if log_channel and log_channel.strip():
-            resolved_channel, error_msg = Utils.resolve_channel(self.bot, interaction, log_channel)
-            if resolved_channel:
-                self.log_channel = resolved_channel.id
-                await Utils.log_system_event(
-                    self.bot, self.log_channel,
-                    "Log Channel Configured",
-                    f"Kênh log hệ thống đã được thiết lập thành {resolved_channel.mention}",
-                    discord.Color.green()
-                )
-                response_parts.append(f"Đã thiết lập kênh log thành {resolved_channel.mention}!")
-            else:
-                response_parts.append(f"⚠️ {error_msg}")
+        if log_channel is not None:
+            self.log_channel = log_channel.id
+            await Utils.log_system_event(
+                self.bot, self.log_channel,
+                "Log Channel Configured",
+                f"Kênh log hệ thống đã được thiết lập thành {log_channel.mention}",
+                discord.Color.green()
+            )
+            response_parts.append(f"Đã thiết lập kênh log thành {log_channel.mention}!")
 
         if self.update_task is None or self.update_task.done():
             self.update_task = self.bot.loop.create_task(self.update_loop())

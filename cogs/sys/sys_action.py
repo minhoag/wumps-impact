@@ -95,14 +95,25 @@ class SystemActions:
             files_before = len([f for f in os.listdir(log_dir) if os.path.isfile(os.path.join(log_dir, f))])
             print(f"Debug: Found {files_before} files before deletion")
 
-            # Use rm -rf on the directory contents
-            cmd = ["rm", "-rf", f"{log_dir}/*"]
-            print(f"Debug: Running command: {' '.join(cmd)}")
-            result = subprocess.run(cmd, check=True, capture_output=True, text=True)
+            # Try using rm -rf first
+            try:
+                cmd = ["rm", "-rf", f"{log_dir}/*"]
+                print(f"Debug: Running command: {' '.join(cmd)}")
+                result = subprocess.run(cmd, check=True, capture_output=True, text=True, timeout=30)
 
-            if result.returncode != 0:
-                print(f"Debug: rm command failed with return code {result.returncode}")
-                print(f"Debug: stderr: {result.stderr}")
+                if result.returncode == 0:
+                    print(f"Debug: rm command succeeded")
+                else:
+                    print(f"Debug: rm command failed with return code {result.returncode}")
+                    print(f"Debug: stderr: {result.stderr}")
+                    return 0, 1
+
+            except subprocess.TimeoutExpired:
+                print(f"Debug: rm command timed out")
+                return 0, 1
+            except subprocess.CalledProcessError as e:
+                print(f"Debug: rm command failed: {e}")
+                print(f"Debug: stderr: {e.stderr}")
                 return 0, 1
 
             # Count files after deletion
@@ -113,14 +124,22 @@ class SystemActions:
             print(f"Debug: Deleted {files_deleted} files")
             return files_deleted, 0
 
-        except subprocess.CalledProcessError as e:
-            print(f"Error clearing log directory {log_dir}: {e}")
-            print(f"Return code: {e.returncode}")
-            print(f"Stderr: {e.stderr}")
-            return 0, 1
         except Exception as e:
             print(f"Unexpected error clearing log directory {log_dir}: {e}")
-            return 0, 1
+            # Fallback: try Python file operations
+            try:
+                files_deleted = 0
+                for filename in os.listdir(log_dir):
+                    file_path = os.path.join(log_dir, filename)
+                    if os.path.isfile(file_path):
+                        os.remove(file_path)
+                        files_deleted += 1
+                        print(f"Debug: Deleted file using Python: {filename}")
+                print(f"Debug: Python fallback deleted {files_deleted} files")
+                return files_deleted, 0
+            except Exception as fallback_e:
+                print(f"Debug: Python fallback also failed: {fallback_e}")
+                return 0, 1
 
     @staticmethod
     def start_server(server_name: str) -> bool:

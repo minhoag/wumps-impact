@@ -236,5 +236,48 @@ class SYS(commands.Cog):
         if self.update_task is None or self.update_task.done():
             self.update_task = self.bot.loop.create_task(self.update_loop())
         await interaction.followup.send(f"Status panel set up in {channel.mention}!", ephemeral=True)
+async def do_start_servers(self, interaction: Interaction, servers: List[str], start_sdk: bool = False):
+    for server in servers:
+        if self.start_server(server):
+            await interaction.followup.send(f"Started {server}", ephemeral=True)
+        else:
+            await interaction.followup.send(f"Failed to start {server}", ephemeral=True)
+    if start_sdk:
+        if self.start_sdk_server():
+            await interaction.followup.send("Started SDK server", ephemeral=True)
+        else:
+            await interaction.followup.send("Failed to start SDK server", ephemeral=True)
+    await interaction.followup.send("Server startup complete!", ephemeral=True)
+
+async def do_force_stop_all(self, interaction: Interaction):
+    for server in self.STOP_SERVER_ORDER:
+        pid = self.get_server_pid(server)
+        if pid:
+            if self.kill_process(pid, force=True):
+                await interaction.followup.send(f"Force stopped {server} (PID: {pid})", ephemeral=True)
+            else:
+                await interaction.followup.send(f"Failed to force stop {server}", ephemeral=True)
+        else:
+            await interaction.followup.send(f"{server} is not running", ephemeral=True)
+    # Stop SDK server
+    stopped_sdk = False
+    try:
+        result = subprocess.run(["screen", "-ls"], capture_output=True, text=True)
+        for line in result.stdout.splitlines():
+            if 'sdk' in line:
+                screen_id = line.split('.')[0].strip()
+                if screen_id:
+                    subprocess.run(["kill", "-9", screen_id])
+                    subprocess.run(["screen", "-wipe"])
+                    stopped_sdk = True
+                    break
+    except:
+        pass
+    if stopped_sdk:
+        await interaction.followup.send("Force stopped SDK server", ephemeral=True)
+    else:
+        await interaction.followup.send("SDK server not running or failed to stop", ephemeral=True)
+    await interaction.followup.send("All servers force stopped!", ephemeral=True)
+
 async def setup(bot: commands.Bot):
     await bot.add_cog(SYS(bot))

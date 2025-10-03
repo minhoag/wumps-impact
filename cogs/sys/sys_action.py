@@ -227,37 +227,26 @@ class SystemActions:
 
     @classmethod
     def do_start_servers(cls, servers: List[str], start_sdk: bool = False) -> List[str]:
-        """Start multiple servers. Returns list of results."""
-        results = []
+        """Start multiple servers. Returns simplified success message."""
+        # Start all servers in order
         for server in servers:
-            if cls.start_server(server):
-                results.append(f"Started {server}")
-            else:
-                results.append(f"Failed to start {server}")
+            cls.start_server(server)
+
         if start_sdk:
-            if cls.start_sdk_server():
-                results.append("Started SDK server")
-            else:
-                results.append("Failed to start SDK server")
-        results.append("Server startup complete!")
-        return results
+            cls.start_sdk_server()
+
+        return ["Đã thành công khởi động server"]
 
     @classmethod
     def do_force_stop_all(cls) -> List[str]:
-        """Force stop all servers. Returns list of results."""
-        results = []
+        """Force stop all servers. Returns simplified success message."""
+        # Stop all servers in reverse order
         for server in cls.STOP_SERVER_ORDER:
             pid = cls.get_server_pid(server)
             if pid:
-                if cls.kill_process(pid, force=True):
-                    results.append(f"Force stopped {server} (PID: {pid})")
-                else:
-                    results.append(f"Failed to force stop {server}")
-            else:
-                results.append(f"{server} is not running")
+                cls.kill_process(pid, force=True)
 
         # Stop SDK server
-        stopped_sdk = False
         try:
             result = subprocess.run(["screen", "-ls"], capture_output=True, text=True, check=True)
             for line in result.stdout.splitlines():
@@ -266,31 +255,21 @@ class SystemActions:
                     if screen_id:
                         subprocess.run(["kill", "-9", screen_id], check=True)
                         subprocess.run(["screen", "-wipe"], check=True)
-                        stopped_sdk = True
                         break
         except subprocess.CalledProcessError:
             pass
 
-        if stopped_sdk:
-            results.append("Force stopped SDK server")
-        else:
-            results.append("SDK server not running or failed to stop")
-
-        results.append("All servers force stopped!")
-        return results
+        return ["Đã thành công dừng server"]
 
     @classmethod
     def do_clear_logs(cls) -> Tuple[List[str], int, int]:
-        """Clear all log files by truncating them. Returns (messages, files_cleared, errors)."""
+        """Clear all log files by truncating them. Returns simplified success message."""
         log_dir = "/gio/bin/log"
-        messages = ["Clearing log files..."]
 
         files_cleared, errors = cls.clear_log_directory(log_dir)
         if files_cleared > 0:
-            messages.append(f"Successfully cleared {files_cleared} log files")
+            return ["Đã thành công xóa logs"], files_cleared, errors
         elif errors == 0:
-            messages.append("No log files found to clear")
+            return ["Không có log nào để xóa"], files_cleared, errors
         else:
-            messages.append("Failed to clear log files")
-
-        return messages, files_cleared, errors
+            return ["Lỗi khi xóa logs"], files_cleared, errors

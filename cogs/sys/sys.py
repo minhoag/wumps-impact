@@ -5,6 +5,7 @@ from discord.ext import commands
 from cogs.check import is_whitelist
 from cogs.sys.sys_view import ServerPanelView, ConfirmationView
 from cogs.sys.sys_action import SystemActions
+from utils.utils import Utils
 import asyncio
 import json
 from typing import List
@@ -15,6 +16,7 @@ class SYS(commands.Cog):
         self.bot = bot
         self.status_message = None
         self.update_task = None
+        self.log_channel = None
         try:
             with open('status_panel.json', 'r') as f:
                 data = json.load(f)
@@ -140,11 +142,10 @@ class SYS(commands.Cog):
 
         if log_channel is not None:
             self.log_channel = log_channel.id
-            with open('log_channel.json', 'w') as f:
-                json.dump({'channel': self.log_channel}, f)
 
             # Send test log message
-            await self.log_system_event(
+            await Utils.log_system_event(
+                self.bot, self.log_channel,
                 "Log Channel Configured",
                 f"Kênh log hệ thống đã được thiết lập thành {log_channel.mention}",
                 discord.Color.green()
@@ -179,7 +180,8 @@ class SYS(commands.Cog):
             else:
                 await interaction.followup.send("Đã hủy thao tác khởi động.", ephemeral=True)
                 # Log cancelled action
-                await self.log_system_event(
+                await Utils.log_system_event(
+                    self.bot, self.log_channel,
                     "Server Start Cancelled",
                     f"Người dùng {interaction.user.mention} đã hủy khởi động server",
                     discord.Color.orange()
@@ -193,7 +195,8 @@ class SYS(commands.Cog):
             action_type = "Force Restart" if force_restart else "Start"
             server_list = ", ".join(servers)
             sdk_info = " + SDK" if start_sdk else ""
-            await self.log_system_event(
+            await Utils.log_system_event(
+                self.bot, self.log_channel,
                 f"Servers {action_type}",
                 f"Người dùng {interaction.user.mention} đã {action_type.lower()} servers: {server_list}{sdk_info}",
                 discord.Color.green()
@@ -205,7 +208,8 @@ class SYS(commands.Cog):
             await interaction.followup.send(result, ephemeral=True)
 
         # Log server stop action
-        await self.log_system_event(
+        await Utils.log_system_event(
+            self.bot, self.log_channel,
             "Servers Force Stopped",
             f"Người dùng {interaction.user.mention} đã dừng tất cả servers",
             discord.Color.red()
@@ -219,13 +223,15 @@ class SYS(commands.Cog):
 
         # Log log clearing action
         if files_deleted > 0:
-            await self.log_system_event(
+            await Utils.log_system_event(
+                self.bot, self.log_channel,
                 "Logs Cleared",
                 f"Người dùng {interaction.user.mention} đã xóa {files_deleted} file log",
                 discord.Color.blue()
             )
         elif files_deleted == 0:
-            await self.log_system_event(
+            await Utils.log_system_event(
+                self.bot, self.log_channel,
                 "Log Clear Attempted",
                 f"Người dùng {interaction.user.mention} đã thử xóa logs nhưng không có file nào để xóa",
                 discord.Color.yellow()

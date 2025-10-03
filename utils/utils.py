@@ -139,3 +139,17 @@ class Utils:
     def is_character(item_id: int) -> bool:
         """Check if item is a character by ID length. 4-digit IDs are characters, 5-digit IDs are weapons."""
         return len(str(item_id)) == 4
+
+    @staticmethod
+    async def log_system_event(bot: commands.Bot, log_channel_id: int, title: str, description: str, color: discord.Color):
+        """Send a system event log to the configured log channel."""
+        if log_channel_id:
+            channel = bot.get_channel(log_channel_id)
+            if channel:
+                embed = discord.Embed(
+                    title=title,
+                    description=description,
+                    color=color,
+                    timestamp=discord.utils.utcnow()
+                )
+                await channel.send(embed=embed)

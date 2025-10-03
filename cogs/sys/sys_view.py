@@ -2,6 +2,8 @@
 import discord
 from discord import Interaction
 from discord.ui import View, Button
+from cogs.sys.sys_action import SystemActions
+
 class ConfirmationView(View):
     """Confirmation view for dangerous operations."""
     def __init__(self):
@@ -33,6 +35,7 @@ class ConfirmationView(View):
             view=None
         )
         self.stop()
+
 class ServerPanelView(View):
     """View for the server status panel buttons."""
     def __init__(self):
@@ -44,7 +47,7 @@ class ServerPanelView(View):
             await interaction.response.send_message("Error: System cog not found.", ephemeral=True)
             return
         await interaction.response.defer(ephemeral=True)
-        await cog.do_start_servers(interaction, cog.START_SERVER_ORDER, start_sdk=True)
+        await cog.do_start_servers(interaction, SystemActions.START_SERVER_ORDER, start_sdk=True)
     @discord.ui.button(label="Force Stop All", style=discord.ButtonStyle.danger, custom_id="sys_stop_all")
     async def stop_all(self, interaction: Interaction, button: Button):
         cog = interaction.client.get_cog('SYS')
@@ -82,4 +85,9 @@ class ServerPanelView(View):
         await cog.do_start_servers(interaction, ["gameserver"], start_sdk=False)
     @discord.ui.button(label="Clear Logs", style=discord.ButtonStyle.secondary, custom_id="sys_clear_logs")
     async def clear_logs(self, interaction: Interaction, button: Button):
-        await interaction.response.send_message("Not implemented yet.", ephemeral=True)
+        cog = interaction.client.get_cog('SYS')
+        if not cog:
+            await interaction.response.send_message("Error: System cog not found.", ephemeral=True)
+            return
+        await interaction.response.defer(ephemeral=True)
+        await cog.do_clear_logs(interaction)

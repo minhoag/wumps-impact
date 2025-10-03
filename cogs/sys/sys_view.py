@@ -75,7 +75,7 @@ class ServerPanelView(View):
                         "**IMPACT:**\n"
                         "• Stop all server processes\n"
                         "• Stop SDK server forcefully\n"
-                        "• Risk of data corruption or loss\n\n"
+                        "• Risk of data corruption or loss\n\n",
             color=discord.Color.red()
         )
         confirm_embed.set_footer(text="You have 30 seconds to confirm or cancel. This action cannot be undone!")

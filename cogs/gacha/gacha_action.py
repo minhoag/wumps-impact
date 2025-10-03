@@ -43,7 +43,7 @@ class GachaActions:
             # create log
             create_log_record(
                 type="GACHA_CREATE",
-                message=f"CREATE|{user_id}|{user_name}|{item_1}|{item_2}|{gacha_type}|{start}|{end}|{enabled}"
+                message=f"SUCCESS|CREATE|{user_id}|{user_name}|{item_1}|{item_2}|{gacha_type}|{start}|{end}|{enabled}"
             )
 
             # create gacha record

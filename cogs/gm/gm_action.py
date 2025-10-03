@@ -57,4 +57,5 @@ class GMActions:
             msg = f"Gửi lệnh thất bại: {gm_response['msg']}"
 
         await interaction.followup.send(msg, ephemeral=True)
-        create_log_record("GM", f"{interaction.user.id}|{uid}|{command}")
+        status = "SUCCESS" if gm_response["success"] else "FAILED"
+        create_log_record("GM", f"{interaction.user.id}|{uid}|{status}|{command}")

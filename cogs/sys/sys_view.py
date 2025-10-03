@@ -13,9 +13,9 @@ class ConfirmationView(View):
         self.confirmed = True
         await interaction.response.edit_message(
             embed=discord.Embed(
-                title="Confirmed",
-                description="Operation will proceed...",
-                color=discord.Color.green()
+                title="CONFIRMED",
+                description="Force stop operation initiated.\nStopping all servers...",
+                color=discord.Color.orange()
             ),
             view=None
         )
@@ -26,9 +26,9 @@ class ConfirmationView(View):
         self.confirmed = False
         await interaction.response.edit_message(
             embed=discord.Embed(
-                title="Cancelled",
-                description="Operation has been cancelled.",
-                color=discord.Color.red()
+                title="CANCELLED",
+                description="Force stop operation cancelled.\nAll servers remain running.",
+                color=discord.Color.blue()
             ),
             view=None
         )
@@ -54,13 +54,14 @@ class ServerPanelView(View):
         await interaction.response.defer(ephemeral=True)
         confirm_embed = discord.Embed(
             title="EMERGENCY: Force Stop All Servers",
-            description="**WARNING: This will FORCE STOP all servers immediately!**\n\n"
-                        "This will:\n"
-                        "• Send SIGKILL (-9) to ALL servers\n"
-                        "• Immediately terminate all processes\n"
+            description="**CRITICAL WARNING**\n\n"
+                        "This action will immediately terminate ALL servers:\n\n"
+                        "**IMPACT:**\n"
+                        "• Force kill all server processes (SIGKILL)\n"
                         "• Stop SDK server forcefully\n"
-                        "• **POTENTIAL DATA LOSS**\n\n"
-                        "**Use only in emergency situations!**",
+                        "• Risk of data corruption or loss\n\n"
+                        "**RECOMMENDATION:**\n"
+                        "Use graceful shutdown first. Only use force stop in emergencies.",
             color=discord.Color.red()
         )
         confirm_embed.set_footer(text="You have 30 seconds to confirm or cancel. This action cannot be undone!")

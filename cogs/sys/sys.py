@@ -207,16 +207,55 @@ class SYS(commands.Cog):
         return server_statuses
     def create_status_embed(self, statuses):
         embed = discord.Embed(
-            title="Server Status",
+            title="Server Status Monitor",
             color=discord.Color.blue(),
             timestamp=discord.utils.utcnow()
         )
+
+        # Separate running and stopped servers
+        running_servers = []
+        stopped_servers = []
+
         for server_name, status in statuses.items():
-            embed.add_field(
-                name=status["name"],
-                value=status["value"],
-                inline=True
-            )
+            if "RUNNING" in status["name"]:
+                running_servers.append((server_name, status))
+            else:
+                stopped_servers.append((server_name, status))
+
+        # Running servers section
+        if running_servers:
+            running_text = "```\n"
+            for server_name, status in running_servers:
+                server_display = server_name.upper()
+                if server_name == "sdk":
+                    server_display = "SDK SERVER"
+                lines = status["value"].split('\n')
+                pid_line = lines[0] if lines else "Unknown"
+                cpu_line = lines[1] if len(lines) > 1 else ""
+                mem_line = lines[2] if len(lines) > 2 else ""
+
+                running_text += f"[ONLINE] {server_display}\n"
+                running_text += f"  {pid_line}\n"
+                if cpu_line and mem_line:
+                    running_text += f"  {cpu_line} | {mem_line}\n"
+                running_text += "\n"
+            running_text += "```"
+            embed.add_field(name="RUNNING SERVERS", value=running_text, inline=False)
+
+        # Stopped servers section
+        if stopped_servers:
+            stopped_text = "```\n"
+            for server_name, status in stopped_servers:
+                server_display = server_name.upper()
+                if server_name == "sdk":
+                    server_display = "SDK SERVER"
+                stopped_text += f"[OFFLINE] {server_display}\n"
+            stopped_text += "```"
+            embed.add_field(name="STOPPED SERVERS", value=stopped_text, inline=False)
+
+        # Footer with last update time
+        embed.set_footer(text="Last updated")
+
         return embed
     sys = app_commands.Group(name="sys", description="System commands for Genshin Impact 3.4 server management")
     @sys.command(name="panel", description="Set up the server status panel in a channel")

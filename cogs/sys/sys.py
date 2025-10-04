@@ -8,6 +8,7 @@ from cogs.sys.sys_action import SystemActions
 from utils.utils import Utils
 import asyncio
 import json
+import subprocess
 from typing import List
 
 class SYS(commands.Cog):
@@ -87,7 +88,7 @@ class SYS(commands.Cog):
                 if server_name == "sdk":
                     server_display = "SDK SERVER"
                 stopped_text += f"[OFFLINE] {server_display}\n"
-            stopped_text += "```"
+            stopped_text += "```\n\n"
             embed.add_field(name="SERVERS ĐÃ DỪNG", value=stopped_text, inline=True)
 
         # Event status section (replaces log monitoring)
@@ -97,10 +98,55 @@ class SYS(commands.Cog):
                 embed.add_field(name="TRẠNG THÁI SỰ KIỆN", value=event_text, inline=False)
                 break
 
+        # System resource monitoring
+        cpu_usage = self.get_cpu_usage()
+        ram_usage = self.get_ram_usage()
+        resource_text = f"```\n{cpu_usage}\n{ram_usage}\n```"
+        embed.add_field(name="TÀI NGUYÊN HỆ THỐNG", value=resource_text, inline=False)
+
         # Footer with last update time
         embed.set_footer(text="Cập nhật lần cuối")
 
         return embed
+
+    def get_cpu_usage(self) -> str:
+        """Get CPU usage using top command."""
+        try:
+            # Run top command and parse CPU usage
+            result = subprocess.run(
+                ["top", "-bn1"],
+                capture_output=True, text=True, check=True
+            )
+            # Find the Cpu(s) line and extract usage
+            for line in result.stdout.split('\n'):
+                if 'Cpu(s)' in line:
+                    # Parse the CPU percentage from the line
+                    parts = line.split()
+                    if len(parts) >= 2:
+                        cpu_percent = parts[1]
+                        return f"CPU: using {cpu_percent}%"
+            return "CPU: unavailable"
+        except subprocess.CalledProcessError:
+            return "CPU: unavailable"
+
+    def get_ram_usage(self) -> str:
+        """Get RAM usage using free command."""
+        try:
+            # Run free command with --giga flag and parse memory usage
+            result = subprocess.run(
+                ["free", "--giga"],
+                capture_output=True, text=True, check=True
+            )
+            # Find the Mem: line and extract used memory
+            for line in result.stdout.split('\n'):
+                if line.startswith('Mem:'):
+                    parts = line.split()
+                    if len(parts) >= 3:
+                        used_ram = parts[2]  # Used memory in GB
+                        return f"RAM: using {used_ram} GB"
+            return "RAM: unavailable"
+        except subprocess.CalledProcessError:
+            return "RAM: unavailable"
 
     sys = app_commands.Group(name="sys", description="Lệnh hệ thống để quản lý server Genshin Impact 3.4")
 

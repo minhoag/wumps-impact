@@ -81,7 +81,7 @@ class SYS(commands.Cog):
             embed.add_field(name="SERVERS ĐANG CHẠY", value=running_text, inline=True)
 
         # Combined information section with specific formatting
-        combined_text = "**HỆ THỐNG**\n```\n"
+        combined_text = "\n```\n"
         cpu_usage = self.get_cpu_usage()
         ram_usage = self.get_ram_usage()
         combined_text += f"{cpu_usage}\n{ram_usage}\n```\n"
@@ -105,7 +105,7 @@ class SYS(commands.Cog):
 
         combined_text += "```"
 
-        embed.add_field(name="THÔNG TIN", value=combined_text, inline=False)
+        embed.add_field(name="THÔNG TIN", value=combined_text, inline=True)
 
         # Footer with last update time
         embed.set_footer(text="Cập nhật lần cuối")

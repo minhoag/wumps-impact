@@ -85,7 +85,7 @@ class SYS(commands.Cog):
         # System resource monitoring
         cpu_usage = self.get_cpu_usage()
         ram_usage = self.get_ram_usage()
-        resource_text += f"{cpu_usage}\n{ram_usage}\n```\n```"
+        resource_text += f"{cpu_usage}\n{ram_usage}\n```\n**KHÔNG HOẠT ĐỘNG**\n```"
         if stopped_servers:
             for server_name, status in stopped_servers:
                 server_display = server_name.upper()
@@ -93,15 +93,10 @@ class SYS(commands.Cog):
                     server_display = "SDK SERVER"
                 resource_text += f"[OFFLINE] {server_display}\n"
             resource_text += "```"
-        embed.add_field(name="TÀI NGUYÊN HỆ THỐNG", value=resource_text, inline=True)
-
-        # Event status section (replaces log monitoring)
-        for server_name, status in statuses.items():
-            if "event_status" in server_name:
-                event_text = f"```\n{status['value']}\n```"
-                embed.add_field(name="TRẠNG THÁI SỰ KIỆN", value=event_text, inline=False)
-                break
-
+        if "event_status" in server_name:
+                resource_text = f"\n```**SỰ KIỆN ĐANG HOẠT ĐỘNG**\n{status['value']}\n```"
+        embed.add_field(name="THÔNG TIN", value=resource_text, inline=True)
+        
         # Footer with last update time
         embed.set_footer(text="Cập nhật lần cuối")
 

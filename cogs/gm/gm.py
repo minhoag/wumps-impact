@@ -262,7 +262,7 @@ class GM(commands.Cog):
         command = f"home_coin {amount}"
         await GMActions.execute_gm_command(interaction, uid, command)
     
-    @gm.command(name="refresh_whitelist", description="Refresh the whitelist")
+    @gm.command(name="whitelist", description="Cập nhật whitelist")
     async def refresh_whitelist(self, interaction: Interaction):
         """Refresh the whitelist."""
         if not permission(interaction, self.bot):

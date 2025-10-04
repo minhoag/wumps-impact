@@ -81,15 +81,19 @@ class SYS(commands.Cog):
             embed.add_field(name="SERVERS ĐANG CHẠY", value=running_text, inline=True)
 
         # Stopped servers section
+        resource_text = f"ĐÃ DỪNG\n```"
         if stopped_servers:
-            stopped_text = "```\n"
             for server_name, status in stopped_servers:
                 server_display = server_name.upper()
                 if server_name == "sdk":
                     server_display = "SDK SERVER"
-                stopped_text += f"[OFFLINE] {server_display}\n"
-            stopped_text += "```\n\n"
-            embed.add_field(name="SERVERS ĐÃ DỪNG", value=stopped_text, inline=True)
+                resource_text += f"[OFFLINE] {server_display}\n"
+            resource_text += "```"
+        # System resource monitoring
+        cpu_usage = self.get_cpu_usage()
+        ram_usage = self.get_ram_usage()
+        resource_text += f"\n{cpu_usage}\n{ram_usage}\n```"
+        embed.add_field(name="TÀI NGUYÊN HỆ THỐNG", value=resource_text, inline=False)
 
         # Event status section (replaces log monitoring)
         for server_name, status in statuses.items():
@@ -97,12 +101,6 @@ class SYS(commands.Cog):
                 event_text = f"```\n{status['value']}\n```"
                 embed.add_field(name="TRẠNG THÁI SỰ KIỆN", value=event_text, inline=False)
                 break
-
-        # System resource monitoring
-        cpu_usage = self.get_cpu_usage()
-        ram_usage = self.get_ram_usage()
-        resource_text = f"```\n{cpu_usage}\n{ram_usage}\n```"
-        embed.add_field(name="TÀI NGUYÊN HỆ THỐNG", value=resource_text, inline=False)
 
         # Footer with last update time
         embed.set_footer(text="Cập nhật lần cuối")
@@ -124,7 +122,7 @@ class SYS(commands.Cog):
                     parts = line.split()
                     if len(parts) >= 2:
                         cpu_percent = parts[1]
-                        return f"CPU: using {cpu_percent}%"
+                        return f"CPU: sử dụng {cpu_percent}%"
             return "CPU: unavailable"
         except subprocess.CalledProcessError:
             return "CPU: unavailable"
@@ -143,7 +141,7 @@ class SYS(commands.Cog):
                     parts = line.split()
                     if len(parts) >= 3:
                         used_ram = parts[2]  # Used memory in GB
-                        return f"RAM: using {used_ram} GB"
+                        return f"RAM: sử dụng {used_ram} GB"
             return "RAM: unavailable"
         except subprocess.CalledProcessError:
             return "RAM: unavailable"

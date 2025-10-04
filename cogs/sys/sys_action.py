@@ -186,29 +186,14 @@ class SystemActions:
         for server in cls.STATUS_LIST:
             pid = cls.get_server_pid(server)
             if pid:
-                cpu = ""
-                mem = ""
-                try:
-                    result = subprocess.run(["ps", "-p", pid, "-o", "pcpu,pmem"], capture_output=True, text=True, check=True)
-                    lines = result.stdout.strip().splitlines()
-                    if len(lines) >= 2:
-                        cpu, mem = lines[1].split()
-                except subprocess.CalledProcessError:
-                    pass
-                if cpu and mem:
-                    server_statuses[server] = {
-                        "name": f"RUNNING {server}",
-                        "value": f"PID: {pid}\nCPU: {cpu}%\nMEM: {mem}%"
-                    }
-                else:
-                    server_statuses[server] = {
-                        "name": f"RUNNING {server}",
-                        "value": f"PID: {pid}"
-                    }
+                server_statuses[server] = {
+                    "name": f"{server}",
+                    "value": "Online"
+                }
             else:
                 server_statuses[server] = {
-                    "name": f"STOPPED {server}",
-                    "value": "Not running"
+                    "name": f"{server}",
+                    "value": "Offline"
                 }
 
         # Check SDK server - always runs via screen session
@@ -222,13 +207,13 @@ class SystemActions:
             pass
         if sdk_running:
             server_statuses["sdk"] = {
-                "name": "RUNNING SDK Server",
-                "value": "Running"
+                "name": "SDK Server",
+                "value": "Online"
             }
         else:
             server_statuses["sdk"] = {
-                "name": "STOPPED SDK Server",
-                "value": "Not running"
+                "name": "SDK Server",
+                "value": "Offline"
             }
 
         # Event status monitoring

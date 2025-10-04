@@ -61,9 +61,9 @@ class SYS(commands.Cog):
         stopped_servers = []
 
         for server_name, status in statuses.items():
-            if "RUNNING" in status["name"]:
+            if status["value"] == "Online":
                 running_servers.append((server_name, status))
-            elif "STOPPED" in status["name"]:
+            elif status["value"] == "Offline":
                 stopped_servers.append((server_name, status))
 
         # Running servers section
@@ -73,15 +73,8 @@ class SYS(commands.Cog):
                 server_display = server_name.upper()
                 if server_name == "sdk":
                     server_display = "SDK SERVER"
-                lines = status["value"].split('\n')
-                pid_line = lines[0] if lines else "Unknown"
-                cpu_line = lines[1] if len(lines) > 1 else ""
-                mem_line = lines[2] if len(lines) > 2 else ""
 
                 running_text += f"[ONLINE] {server_display}\n"
-                running_text += f"  {pid_line}\n"
-                if cpu_line and mem_line:
-                    running_text += f"  {cpu_line} | {mem_line}\n"
                 running_text += "\n"
             running_text += "```"
             embed.add_field(name="SERVERS ĐANG CHẠY", value=running_text, inline=True)
@@ -118,7 +111,6 @@ class SYS(commands.Cog):
     )
     @is_whitelist
     async def setup_panel(self, interaction: Interaction, channel: discord.TextChannel = None, log_channel: discord.TextChannel = None):
-        await interaction.response.defer(ephemeral=True)
         if channel is None:
             channel = interaction.channel
 

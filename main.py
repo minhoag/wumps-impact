@@ -23,8 +23,8 @@ class DiscordBot(commands.Bot):
             command_prefix="!",
             intents=intents
         )
-        self.whitelisted_guilds = []
-        self.whitelisted_users = []
+        self.whitelisted_guilds: list[str] = []
+        self.whitelisted_users: list[str] = []
 
     async def sync_commands(self) -> None:
         await self.tree.sync(guild=None)

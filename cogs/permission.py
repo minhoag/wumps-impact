@@ -10,12 +10,12 @@ def permission(interaction: Interaction, bot: commands.Bot) -> bool:
     whitelisted_users = bot.whitelisted_users
     # developer id
     developer_id = "291345472327516170"
-    if interaction.user.id == developer_id:
+    if str(interaction.user.id) == developer_id:
         return True
     
-    if interaction.guild_id and interaction.guild_id in whitelisted_guilds:
+    if str(interaction.guild_id) and str(interaction.guild_id) in whitelisted_guilds:
         return True
 
-    if interaction.user.id in whitelisted_users:
+    if str(interaction.user.id) in whitelisted_users:
         return True
     return False

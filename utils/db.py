@@ -36,7 +36,7 @@ def get_db_hk4e_discord_gio():
     )
     return db
 
-def get_whitelist_server():
+def get_whitelist_server() -> list[str]:
     db = get_db_hk4e_discord_gio()
     cursor = db.cursor()
     cursor.execute(f"SELECT id FROM {T_WHITELIST} WHERE type = 'GUILD'")
@@ -44,7 +44,7 @@ def get_whitelist_server():
     db.close()
     return [row[0] for row in results]
 
-def get_whitelist_user():
+def get_whitelist_user() -> list[str]:
     db = get_db_hk4e_discord_gio()
     cursor = db.cursor()
     cursor.execute(f"SELECT id FROM {T_WHITELIST} WHERE type = 'USER'")

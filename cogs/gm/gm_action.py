@@ -3,6 +3,7 @@ from typing import Dict, Any
 from utils.muip import MUIP
 from utils.db import create_log_record
 import discord
+from cogs.check import permission_check
 import httpx
 
 class GMActions:
@@ -49,6 +50,13 @@ class GMActions:
         Defer interaction, send command, handle response, and log.
         """
         await interaction.response.defer(ephemeral=True)
+        if not (uid.isdigit() and len(uid) == 9 and uid[0] in '123456789'):
+            await interaction.followup.send("UID không hợp lệ. Phải là 9 chữ số bắt đầu từ 1-9.", ephemeral=True)
+            return
+        passed = await permission_check(interaction)
+        if not passed:
+            await interaction.followup.send("Bạn không có quyền sử dụng lệnh này.", ephemeral=True)
+            return
         gm_response = await GMActions.send_gm_command("1116", uid, {"msg": command})
 
         if gm_response["success"]:

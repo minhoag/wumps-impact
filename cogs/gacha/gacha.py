@@ -4,7 +4,7 @@ from discord.ext import commands
 
 from cogs.gacha.gacha_view import GachaView
 from cogs.gacha.gacha_embed import GachaEmbed
-from cogs.check import is_whitelist
+from cogs.check import permission_check
 
 class Gacha(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -13,8 +13,13 @@ class Gacha(commands.Cog):
     group = app_commands.Group(name="gacha", description="Gacha command")
 
     @group.command(name="create", description="Create new gacha")
-    @is_whitelist
     async def create(self, interaction: Interaction):
+        await interaction.response.defer(ephemeral=True)
+        passed = await permission_check(interaction)
+        if not passed:
+            await interaction.followup.send("Bạn không có quyền sử dụng lệnh này.", ephemeral=True)
+            return
+
         view = GachaView()
         embed_instance = GachaEmbed(
             id=view.base_id,
@@ -32,7 +37,7 @@ class Gacha(commands.Cog):
         if hasattr(embed_instance, 'thumbnail_file') and embed_instance.thumbnail_file:
             files.append(embed_instance.thumbnail_file)
 
-        await interaction.response.send_message(
+        await interaction.followup.send(
             embed=embed,
             view=view,
             ephemeral=True,

@@ -1,35 +1,27 @@
 # cogs/gm/gm.py
-
 import discord
 from discord import app_commands, Interaction
 from discord.ext import commands
 from typing import List
 from utils.muip import MUIP
-from cogs.check import is_whitelist
 from cogs.gm.gm_action import GMActions
 from utils.utils import Utils
 from utils.constants import ITEMS
-
 class GM(commands.Cog):
     """Cog for handling GM commands."""
-
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-
     gm = app_commands.Group(name="gm", description="Lệnh GM để quản lý server Genshin Impact 3.4")
-
     async def item_autocomplete(self, interaction: Interaction, current: str) -> List[app_commands.Choice[int]]:
         """Autocomplete for item IDs using search."""
-        matching_items = Utils.search_items(current, ITEMS, ['vietnameseName', 'globalName'], 25)
+        matching_items = await self.bot.loop.run_in_executor(None, lambda: Utils.search_items(current, ITEMS, ['vietnameseName', 'globalName'], 25))
         return [
             app_commands.Choice(
                 name=item.get('vietnameseName', item.get('globalName', 'Unknown')),
                 value=int(item['value'])
             ) for item in matching_items
         ]
-
     @gm.command(name="general", description="Thực hiện lệnh GM chung không cần tham số bổ sung")
-    @is_whitelist
     @app_commands.describe(
         uid="UID của người chơi",
         command="Chọn lệnh chung"
@@ -55,9 +47,7 @@ class GM(commands.Cog):
     async def general(self, interaction: Interaction, uid: str, command: str):
         """Send a general GM command to the specified UID."""
         await GMActions.execute_gm_command(interaction, uid, command)
-
     @gm.command(name="equip_add", description="Thêm vũ khí cho người chơi")
-    @is_whitelist
     @app_commands.describe(
         uid="UID của người chơi",
         item_id="ID vũ khí (có thể tìm kiếm)",
@@ -69,9 +59,7 @@ class GM(commands.Cog):
         """Send equip add command."""
         command = f"equip add {item_id} {level} {promote_level}"
         await GMActions.execute_gm_command(interaction, uid, command)
-
     @gm.command(name="item_add", description="Add an item to the player")
-    @is_whitelist
     @app_commands.describe(
         uid="UID of the player",
         item_id="Item ID (searchable)",
@@ -80,11 +68,12 @@ class GM(commands.Cog):
     @app_commands.autocomplete(item_id=item_autocomplete)
     async def item_add(self, interaction: Interaction, uid: str, item_id: int, count: int):
         """Send item add command."""
+        if count <= 0 or count > 1000000:
+            await interaction.response.send_message("Số lượng phải từ 1 đến 1,000,000.", ephemeral=True)
+            return
         command = f"item add {item_id} {count}"
         await GMActions.execute_gm_command(interaction, uid, command)
-
     @gm.command(name="item_clear", description="Remove an item from the player")
-    @is_whitelist
     @app_commands.describe(
         uid="UID of the player",
         item_id="Item ID (searchable)",
@@ -93,11 +82,12 @@ class GM(commands.Cog):
     @app_commands.autocomplete(item_id=item_autocomplete)
     async def item_clear(self, interaction: Interaction, uid: str, item_id: int, count: int):
         """Send item clear command."""
+        if count <= 0 or count > 1000000:
+            await interaction.response.send_message("Số lượng phải từ 1 đến 1,000,000.", ephemeral=True)
+            return
         command = f"item clear {item_id} {count}"
         await GMActions.execute_gm_command(interaction, uid, command)
-
     @gm.command(name="avatar_add", description="Thêm nhân vật cho người chơi")
-    @is_whitelist
     @app_commands.describe(
         uid="UID của người chơi",
         avatar_id="ID nhân vật (có thể tìm kiếm)"
@@ -107,9 +97,7 @@ class GM(commands.Cog):
         """Send avatar add command."""
         command = f"avatar add {avatar_id}"
         await GMActions.execute_gm_command(interaction, uid, command)
-
     @gm.command(name="quest", description="Quản lý nhiệm vụ cho người chơi")
-    @is_whitelist
     @app_commands.describe(
         uid="UID của người chơi",
         action="Hành động nhiệm vụ",
@@ -125,9 +113,7 @@ class GM(commands.Cog):
         """Send quest command."""
         command = f"quest {action} {quest_id}"
         await GMActions.execute_gm_command(interaction, uid, command)
-
     @gm.command(name="player_level", description="Thiết lập cấp độ phiêu lưu của người chơi")
-    @is_whitelist
     @app_commands.describe(
         uid="UID của người chơi",
         level="Cấp độ phiêu lưu (1-60)"
@@ -136,9 +122,7 @@ class GM(commands.Cog):
         """Send player level command."""
         command = f"player level {level}"
         await GMActions.execute_gm_command(interaction, uid, command)
-
     @gm.command(name="jump", description="Dịch chuyển đến một khu vực")
-    @is_whitelist
     @app_commands.describe(
         uid="UID của người chơi",
         scene_id="ID khu vực (có thể tìm kiếm)"
@@ -148,9 +132,7 @@ class GM(commands.Cog):
         """Send jump command."""
         command = f"jump {scene_id}"
         await GMActions.execute_gm_command(interaction, uid, command)
-
     @gm.command(name="goto", description="Dịch chuyển đến tọa độ cụ thể")
-    @is_whitelist
     @app_commands.describe(
         uid="UID của người chơi",
         x="Tọa độ X",
@@ -161,9 +143,7 @@ class GM(commands.Cog):
         """Send goto command."""
         command = f"goto {x} {y} {z}"
         await GMActions.execute_gm_command(interaction, uid, command)
-
     @gm.command(name="dungeon", description="Vào một dungeon")
-    @is_whitelist
     @app_commands.describe(
         uid="UID của người chơi",
         dungeon_id="ID dungeon (có thể tìm kiếm)"
@@ -173,9 +153,7 @@ class GM(commands.Cog):
         """Send dungeon command."""
         command = f"dungeon {dungeon_id}"
         await GMActions.execute_gm_command(interaction, uid, command)
-
     @gm.command(name="monster", description="Triệu hồi quái vật")
-    @is_whitelist
     @app_commands.describe(
         uid="UID của người chơi",
         monster_id="ID quái vật (có thể tìm kiếm)",
@@ -187,50 +165,53 @@ class GM(commands.Cog):
         """Send monster spawn command."""
         command = f"monster {monster_id} {count} {level}"
         await GMActions.execute_gm_command(interaction, uid, command)
-
     @gm.command(name="mcoin", description="Thêm Nguyên Thạch")
-    @is_whitelist
     @app_commands.describe(
         uid="UID của người chơi",
         amount="Số lượng cần thêm"
     )
     async def mcoin(self, interaction: Interaction, uid: str, amount: int):
         """Send mcoin command (Genesis Crystals)."""
+        if amount <= 0 or amount > 1000000:
+            await interaction.response.send_message("Số lượng phải từ 1 đến 1,000,000.", ephemeral=True)
+            return
         command = f"mcoin {amount}"
         await GMActions.execute_gm_command(interaction, uid, command)
-
     @gm.command(name="scoin", description="Thêm Mora")
-    @is_whitelist
     @app_commands.describe(
         uid="UID của người chơi",
         amount="Số lượng cần thêm"
     )
     async def scoin(self, interaction: Interaction, uid: str, amount: int):
         """Send scoin command."""
+        if amount <= 0 or amount > 1000000:
+            await interaction.response.send_message("Số lượng phải từ 1 đến 1,000,000.", ephemeral=True)
+            return
         command = f"scoin {amount}"
         await GMActions.execute_gm_command(interaction, uid, command)
-
     @gm.command(name="hcoin", description="Thêm Primogem")
-    @is_whitelist
     @app_commands.describe(
         uid="UID của người chơi",
         amount="Số lượng cần thêm"
     )
     async def hcoin(self, interaction: Interaction, uid: str, amount: int):
         """Send hcoin command."""
+        if amount <= 0 or amount > 1000000:
+            await interaction.response.send_message("Số lượng phải từ 1 đến 1,000,000.", ephemeral=True)
+            return
         command = f"hcoin {amount}"
         await GMActions.execute_gm_command(interaction, uid, command)
-
     @gm.command(name="home_coin", description="Thêm Tiền Liền Sở")
-    @is_whitelist
     @app_commands.describe(
         uid="UID của người chơi",
         amount="Số lượng cần thêm"
     )
     async def home_coin(self, interaction: Interaction, uid: str, amount: int):
         """Send home_coin command."""
+        if amount <= 0 or amount > 1000000:
+            await interaction.response.send_message("Số lượng phải từ 1 đến 1,000,000.", ephemeral=True)
+            return
         command = f"home_coin {amount}"
         await GMActions.execute_gm_command(interaction, uid, command)
-
 async def setup(bot: commands.Bot):
     await bot.add_cog(GM(bot))

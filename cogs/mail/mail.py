@@ -6,7 +6,6 @@ from typing import Dict
 from cogs.mail.mail_modal import MailModal
 from cogs.mail.mail_embed import MailEmbed
 from cogs.mail.mail_view import MailView
-from cogs.check import is_whitelist
 
 class Mail(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -15,8 +14,6 @@ class Mail(commands.Cog):
         self.session_timeout = 30
     
     @app_commands.command(name="mail", description="Create and send mail to users")
-    @is_whitelist
-
     async def create(self, interaction: Interaction):
         """Create a mail with attachments"""
         modal = MailModal(self.handle_mail_submit)

@@ -10,31 +10,41 @@ class ConfirmationView(View):
     def __init__(self):
         super().__init__(timeout=30)
         self.confirmed = False
+
     @discord.ui.button(label="Xác nhận", style=discord.ButtonStyle.success)
     async def confirm(self, interaction: Interaction, button: Button):
         """Handle confirmation."""
+        print(f"[DEBUG] ConfirmationView.confirm called - setting confirmed=True")
         self.confirmed = True
-        await interaction.response.edit_message(
-            embed=discord.Embed(
-                title="ĐÃ XÁC NHẬN",
-                description="Đã bắt đầu dừng server!\nĐang dừng tất cả server...",
-                color=discord.Color.orange()
-            ),
-            view=None
-        )
+        try:
+            await interaction.response.edit_message(
+                embed=discord.Embed(
+                    title="ĐÃ XÁC NHẬN",
+                    description="Đã bắt đầu dừng server!\nĐang dừng tất cả server...",
+                    color=discord.Color.orange()
+                ),
+                view=None
+            )
+        except discord.NotFound:
+            print(f"[DEBUG] Failed to edit message in confirm - interaction expired")
         self.stop()
+
     @discord.ui.button(label="Hủy", style=discord.ButtonStyle.danger)
     async def cancel(self, interaction: Interaction, button: Button):
         """Handle cancellation."""
+        print(f"[DEBUG] ConfirmationView.cancel called - setting confirmed=False")
         self.confirmed = False
-        await interaction.response.edit_message(
-            embed=discord.Embed(
-                title="ĐÃ HỦY",
-                description="Đã hủy dừng khẩn cấp.\nTất cả server vẫn đang chạy bình thường.",
-                color=discord.Color.blue()
-            ),
-            view=None
-        )
+        try:
+            await interaction.response.edit_message(
+                embed=discord.Embed(
+                    title="ĐÃ HỦY",
+                    description="Đã hủy dừng khẩn cấp.\nTất cả server vẫn đang chạy bình thường.",
+                    color=discord.Color.blue()
+                ),
+                view=None
+            )
+        except discord.NotFound:
+            print(f"[DEBUG] Failed to edit message in cancel - interaction expired")
         self.stop()
 
 class ServerPanelView(View):
@@ -66,8 +76,12 @@ class ServerPanelView(View):
             return
 
         cog = interaction.client.get_cog('SYS')
-        
-        await interaction.response.defer(ephemeral=True)
+
+        try:
+            await interaction.response.defer(ephemeral=True)
+        except discord.NotFound:
+            # Interaction already handled or expired
+            return
 
         # Create a more user-friendly confirmation dialog
         confirm_embed = discord.Embed(
@@ -85,12 +99,21 @@ class ServerPanelView(View):
         confirm_embed.set_footer(text="Bạn có 30 giây để xác nhận hoặc hủy. Hành động này không thể hoàn tác!")
 
         confirm_view = ConfirmationView()
-        await interaction.followup.send(embed=confirm_embed, view=confirm_view, ephemeral=True)
-        await confirm_view.wait()
-        if confirm_view.confirmed:
-            await cog.do_force_stop_all(interaction)
-        else:
-            await interaction.followup.send("Đã hủy thao tác.", ephemeral=True)
+        try:
+            await interaction.followup.send(embed=confirm_embed, view=confirm_view, ephemeral=True)
+            print(f"[DEBUG] Confirmation dialog sent, waiting for response...")
+            await confirm_view.wait()
+            print(f"[DEBUG] Confirmation wait completed. confirmed={confirm_view.confirmed}")
+            if confirm_view.confirmed:
+                print(f"[DEBUG] User confirmed - calling do_force_stop_all")
+                await cog.do_force_stop_all(interaction)
+            else:
+                print(f"[DEBUG] User cancelled or timed out - sending cancellation message")
+                await interaction.followup.send("Đã hủy thao tác.", ephemeral=True)
+        except discord.NotFound:
+            # Interaction expired during confirmation process
+            print(f"[DEBUG] Interaction expired during confirmation process")
+            pass
 
     @discord.ui.button(label="Khởi động Gameserver", style=discord.ButtonStyle.primary, custom_id="sys_start_gameserver")
     async def start_gameserver(self, interaction: Interaction, button: Button):

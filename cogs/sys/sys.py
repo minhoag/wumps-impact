@@ -2,7 +2,6 @@
 import discord
 from discord import app_commands, Interaction
 from discord.ext import commands
-from cogs.check import is_whitelist
 from cogs.sys.sys_view import ServerPanelView, ConfirmationView
 from cogs.sys.sys_action import SystemActions
 from utils.utils import Utils
@@ -158,7 +157,6 @@ class SYS(commands.Cog):
         channel="Kênh để gửi bảng trạng thái (mặc định: kênh hiện tại)",
         log_channel="Kênh để gửi log hệ thống (tùy chọn)"
     )
-    @is_whitelist
     async def setup_panel(self, interaction: Interaction, channel: discord.TextChannel = None, log_channel: discord.TextChannel = None):
         await interaction.response.defer(ephemeral=True)
 

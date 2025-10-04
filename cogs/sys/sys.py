@@ -93,10 +93,13 @@ class SYS(commands.Cog):
                     server_display = "SDK SERVER"
                 resource_text += f"[OFFLINE] {server_display}\n"
             resource_text += "```"
+        resource_text = f"\n```**SỰ KIỆN ĐANG HOẠT ĐỘNG**"
         if "event_status" in server_name:
-                resource_text = f"\n```**SỰ KIỆN ĐANG HOẠT ĐỘNG**\n{status['value']}\n```"
+            resource_text = f"\n{status['value']}\n```"
+        else:
+            resource_text = f"\n*Không có sự kiện đang hoạt động*\n```"
         embed.add_field(name="THÔNG TIN", value=resource_text, inline=True)
-        
+
         # Footer with last update time
         embed.set_footer(text="Cập nhật lần cuối")
 

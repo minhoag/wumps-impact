@@ -18,4 +18,6 @@ def permission(interaction: Interaction, bot: commands.Bot) -> bool:
 
     if str(interaction.user.id) in whitelisted_users:
         return True
+    
+    print(f"User {interaction.user.id} does not have permission. Type of interaction: {type(interaction.user.id)}")
     return False

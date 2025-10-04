@@ -112,7 +112,7 @@ class ServerPanelView(View):
         await interaction.response.defer(ephemeral=True)
         await cog.do_clear_logs(interaction)
     
-    @discord.ui.select(placeholder="Quản lý sự kiện", options=[
+    @discord.ui.select(placeholder="Quản lý sự kiện", custom_id="sys_event_toggle", options=[
         discord.SelectOption(label="Sự kiện địa mạch", value="toggle_blossom", description="Bật/tắt sự kiện Hoa Địa Mạch"),
     ])
     async def manage_event(self, interaction: Interaction, select: discord.ui.Select):

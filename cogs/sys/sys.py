@@ -56,18 +56,15 @@ class SYS(commands.Cog):
             timestamp=discord.utils.utcnow()
         )
 
-        # Separate running and stopped servers and logs
+        # Separate running and stopped servers
         running_servers = []
         stopped_servers = []
-        log_info = []
 
         for server_name, status in statuses.items():
             if "RUNNING" in status["name"]:
                 running_servers.append((server_name, status))
             elif "STOPPED" in status["name"]:
                 stopped_servers.append((server_name, status))
-            elif "LOG" in status["name"]:
-                log_info.append((server_name, status))
 
         # Running servers section
         if running_servers:
@@ -87,7 +84,7 @@ class SYS(commands.Cog):
                     running_text += f"  {cpu_line} | {mem_line}\n"
                 running_text += "\n"
             running_text += "```"
-            embed.add_field(name="SERVERS ĐANG CHẠY", value=running_text, inline=False)
+            embed.add_field(name="SERVERS ĐANG CHẠY", value=running_text, inline=True)
 
         # Stopped servers section
         if stopped_servers:
@@ -98,18 +95,14 @@ class SYS(commands.Cog):
                     server_display = "SDK SERVER"
                 stopped_text += f"[OFFLINE] {server_display}\n"
             stopped_text += "```"
-            embed.add_field(name="SERVERS ĐÃ DỪNG", value=stopped_text, inline=False)
+            embed.add_field(name="SERVERS ĐÃ DỪNG", value=stopped_text, inline=True)
 
-        # Log monitoring section
-        if log_info:
-            log_text = "```\n"
-            for server_name, status in log_info:
-                if "gameserver" in server_name:
-                    log_text += f"GAMESERVER.LOG\n"
-                    log_text += f"  {status['value']}\n"
-                    log_text += f"  Tự động xóa: >2GB\n"
-            log_text += "```"
-            embed.add_field(name="GIÁM SÁT LOG", value=log_text, inline=False)
+        # Event status section (replaces log monitoring)
+        for server_name, status in statuses.items():
+            if "event_status" in server_name:
+                event_text = f"```\n{status['value']}\n```"
+                embed.add_field(name="TRẠNG THÁI SỰ KIỆN", value=event_text, inline=False)
+                break
 
         # Footer with last update time
         embed.set_footer(text="Cập nhật lần cuối")
@@ -117,6 +110,7 @@ class SYS(commands.Cog):
         return embed
 
     sys = app_commands.Group(name="sys", description="Lệnh hệ thống để quản lý server Genshin Impact 3.4")
+
     @sys.command(name="panel", description="Thiết lập bảng trạng thái server trong kênh")
     @app_commands.describe(
         channel="Kênh để gửi bảng trạng thái (mặc định: kênh hiện tại)",
@@ -223,6 +217,44 @@ class SYS(commands.Cog):
         color = discord.Color.blue() if files_deleted > 0 else discord.Color.yellow()
         desc = f"Người dùng {interaction.user.mention} đã xóa {files_deleted} file log" if files_deleted > 0 else f"Người dùng {interaction.user.mention} đã thử xóa logs nhưng không có file nào để xóa"
         await Utils.log_system_event(self.bot, self.log_channel, f"Logs Cleared ({status})", desc, color)
+    
+    async def do_start_laylines(self, interaction: Interaction, event: str):
+        """Handle starting/stopping laylines events with confirmation for starts."""
+        if event != "develop":
+            # Show confirmation for starting events
+            confirm_embed = discord.Embed(
+                title="XÁC NHẬN BẮT ĐẦU SỰ KIỆN",
+                description=f"Bạn có muốn bắt đầu sự kiện **{event}** không?\n\n",
+                color=discord.Color.orange()
+            )
+            confirm_embed.set_footer(text="Chọn 'Xác nhận' để bắt đầu sự kiện hoặc 'Hủy' để dừng.")
+            confirm_view = ConfirmationView()
+            await interaction.followup.send(embed=confirm_embed, view=confirm_view, ephemeral=True)
+            await confirm_view.wait()
+
+            if not confirm_view.confirmed:
+                await interaction.followup.send("Đã hủy bắt đầu sự kiện.", ephemeral=True)
+                return
+
+        # Start/stop the event
+        success = SystemActions.do_toggle_event(event)
+        if success:
+            action = "bắt đầu" if event != "develop" else "dừng"
+            status_msg = f"Đã {action} sự kiện {event} thành công!"
+            color = discord.Color.green() if event != "develop" else discord.Color.red()
+            await interaction.followup.send(status_msg, ephemeral=True)
+
+            # Log to designated channel
+            event_action = "Started" if event != "develop" else "Stopped"
+            await Utils.log_system_event(
+                self.bot, self.log_channel,
+                f"Event {event_action}",
+                f"Người dùng {interaction.user.mention} đã {action} sự kiện {event}",
+                color
+            )
+        else:
+            action = "bắt đầu" if event != "develop" else "dừng"
+            await interaction.followup.send(f"Lỗi khi {action} sự kiện {event}!", ephemeral=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(SYS(bot))

@@ -231,15 +231,14 @@ class SystemActions:
                 "value": "Not running"
             }
 
-        # Log file monitoring
-        gameserver_log = "/gio/bin/log/gameserver.log"
-        log_size = cls.get_log_file_size(gameserver_log)
-        server_statuses["log_gameserver"] = {
-            "name": "GAMESERVER LOG",
-            "value": f"Size: {log_size}"
+        # Event status monitoring
+        event_status = cls.get_current_event_status()
+        server_statuses["event_status"] = {
+            "name": "TRẠNG THÁI SỰ KIỆN",
+            "value": event_status
         }
 
-        # Check and clean large log file
+        gameserver_log = "/gio/bin/log/gameserver.log"
         cls.check_and_clean_large_log(gameserver_log)
 
         return server_statuses
@@ -352,3 +351,49 @@ class SystemActions:
             return ["Không có log nào để xóa"], files_cleared, errors
         else:
             return ["Lỗi khi xóa logs"], files_cleared, errors
+    
+
+    @classmethod
+    def get_current_event_status(cls) -> str:
+        """Get the current event status by checking git branch."""
+        data_path = "/gio/data/"
+        try:
+            # Get current branch
+            result = subprocess.run(["git", "branch", "--show-current"], cwd=data_path,
+                                  capture_output=True, text=True, check=True)
+            current_branch = result.stdout.strip()
+
+            # Map branches to events
+            branch_to_event = {
+                "event/blossom": "Sự kiện Hoa Địa Mạch",
+                "develop": "Không có sự kiện đang hoạt động"
+            }
+
+            return branch_to_event.get(current_branch, f"Branch: {current_branch}")
+        except subprocess.CalledProcessError:
+            return "Không thể kiểm tra trạng thái sự kiện"
+
+    @classmethod
+    def do_toggle_event(cls, event_name: str) -> bool:
+        """Toggle game events by switching git branches."""
+        data_path = "/gio/data/"
+
+        # Map events to their branches
+        event_branches = {
+            "develop": "develop",  # Stop event - go to develop branch
+            "laylines": "event/blossom",
+        }
+
+        if event_name.lower() not in event_branches:
+            return False
+
+        target_branch = event_branches[event_name.lower()]
+
+        try:
+            # git checkout target branch
+            subprocess.run(["git", "checkout", target_branch], cwd=data_path, check=True)
+            # git pull target branch
+            subprocess.run(["git", "pull", "origin", target_branch], cwd=data_path, check=True)
+        except subprocess.CalledProcessError:
+            return False
+        return True

@@ -50,9 +50,7 @@ class ServerPanelView(View):
             return
 
         cog = interaction.client.get_cog('SYS')
-        if not cog:
-            await interaction.response.send_message("Lỗi: Không tìm thấy System cog.", ephemeral=True)
-            return
+        
         await interaction.response.defer(ephemeral=True)
         await cog.do_start_servers(interaction, SystemActions.START_SERVER_ORDER, start_sdk=True)
 
@@ -64,9 +62,7 @@ class ServerPanelView(View):
             return
 
         cog = interaction.client.get_cog('SYS')
-        if not cog:
-            await interaction.response.send_message("Lỗi: Không tìm thấy System cog.", ephemeral=True)
-            return
+        
         await interaction.response.defer(ephemeral=True)
 
         # Create a more user-friendly confirmation dialog
@@ -100,9 +96,7 @@ class ServerPanelView(View):
             return
 
         cog = interaction.client.get_cog('SYS')
-        if not cog:
-            await interaction.response.send_message("Lỗi: Không tìm thấy System cog.", ephemeral=True)
-            return
+        
         await interaction.response.defer(ephemeral=True)
         await cog.do_start_servers(interaction, ["gameserver"], start_sdk=False)
 
@@ -114,8 +108,55 @@ class ServerPanelView(View):
             return
 
         cog = interaction.client.get_cog('SYS')
-        if not cog:
-            await interaction.response.send_message("Lỗi: Không tìm thấy System cog.", ephemeral=True)
-            return
+
         await interaction.response.defer(ephemeral=True)
         await cog.do_clear_logs(interaction)
+    
+    @discord.ui.select(placeholder="Quản lý sự kiện", options=[
+        discord.SelectOption(label="Sự kiện địa mạch", value="toggle_blossom", description="Bật/tắt sự kiện Hoa Địa Mạch"),
+    ])
+    async def manage_event(self, interaction: Interaction, select: discord.ui.Select):
+        if not await permission_check(interaction):
+            await interaction.response.send_message("Bạn không có quyền sử dụng lệnh này.", ephemeral=True)
+            return
+
+        value = select.values[0]
+        if value == "toggle_blossom":
+            await self._handle_event_toggle(interaction, "blossom")
+
+    async def _handle_event_toggle(self, interaction: Interaction, event_name: str):
+        """Handle toggling an event on/off. Start requires confirmation, stop does not."""
+        cog = interaction.client.get_cog('SYS')
+
+        # Check current event status - if on event branch, event is active
+        try:
+            import subprocess
+            result = subprocess.run(["git", "branch", "--show-current"], cwd="/gio/data/",
+                                  capture_output=True, text=True, check=True)
+            current_branch = result.stdout.strip()
+            is_event_active = current_branch == "event/blossom"
+        except subprocess.CalledProcessError:
+            is_event_active = False
+
+        if is_event_active:
+            # Event is active, stop it and switch to develop branch
+            await interaction.response.defer(ephemeral=True)
+            await cog.do_start_laylines(interaction, "develop")
+        else:
+            # Event is not active, start it (requires confirmation)
+            confirm_embed = discord.Embed(
+                title="XÁC NHẬN BẮT ĐẦU SỰ KIỆN",
+                description=f"Bạn có muốn bắt đầu sự kiện **{event_name}** không?\n\n"
+                           f"**Lưu ý:** Việc này sẽ checkout branch sự kiện và pull dữ liệu mới.",
+                color=discord.Color.orange()
+            )
+            confirm_embed.set_footer(text="Chọn 'Xác nhận' để bắt đầu sự kiện hoặc 'Hủy' để dừng.")
+
+            confirm_view = ConfirmationView()
+            await interaction.response.send_message(embed=confirm_embed, view=confirm_view, ephemeral=True)
+            await confirm_view.wait()
+
+            if confirm_view.confirmed:
+                await cog.do_start_laylines(interaction, event_name)
+            else:
+                await interaction.followup.send("Đã hủy bắt đầu sự kiện.", ephemeral=True)

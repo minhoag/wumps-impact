@@ -281,7 +281,7 @@ class SYS(commands.Cog):
             )
         else:
             action = "bắt đầu" if event != "develop" else "dừng"
-            await interaction.followup.send(f"Lỗi khi {action} sự kiện {event}!", ephemeral=True)
+            await interaction.followup.send(f"Lỗi khi {action} sự kiện!", ephemeral=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(SYS(bot))

@@ -6,6 +6,8 @@ import os
 import subprocess
 from typing import List, Dict, Tuple
 
+from utils.logger import logger
+
 
 class SystemActions:
     """Handles all system-related business logic operations."""
@@ -380,5 +382,6 @@ class SystemActions:
             # git pull target branch
             subprocess.run(["git", "pull", "origin", target_branch], cwd=data_path, check=True)
         except subprocess.CalledProcessError:
+            logger.error(f"Error toggling event: {event_name}")
             return False
         return True

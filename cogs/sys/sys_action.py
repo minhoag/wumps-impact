@@ -139,13 +139,13 @@ class SystemActions:
                     "dispatch": ["-i", "9001.5.1.1"],
                     "nodeserver": ["-i", "9001.3.1.1"],
                     "dbgate": ["-i", "9001.4.1.1"],
-                    "oaserver": ["-i", "9001.8.1.1"],  # Added missing oaserver
+                    "oaserver": ["-i", "9001.8.1.1"],  # missing oaserver
                     "multiserver": ["-i", "9001.7.1.1"],
                     "muipserver": ["-i", "9001.6.1.1"],
                     "gameserver": ["-i", "9001.2.1.1"],
                     "gateserver": ["-i", "9001.1.1.1"],
-                    "pathfindingserver": ["-i", "9001.9.1.1"],  # Added missing pathfindingserver
-                    "tothemoonserver": ["-i", "9001.10.1.1"]   # Added missing tothemoonserver
+                    "pathfindingserver": ["-i", "9001.9.1.1"],  # missing pathfindingserver
+                    "tothemoonserver": ["-i", "9001.10.1.1"]   # missing tothemoonserver
                 }
                 if server_name in server_configs:
                     cmd = ["nohup", f"./{server_name}"] + server_configs[server_name]
@@ -161,16 +161,23 @@ class SystemActions:
     @staticmethod
     def start_sdk_server() -> bool:
         """Start SDK server."""
-        sdk_dir = "../sdk"
-        if os.path.exists(sdk_dir):
+        sdk_dir = "/gio/sdk"
+        jar_path = os.path.join(sdk_dir, "sdkserver.jar")
+
+        if os.path.exists(jar_path):
             original_dir = os.getcwd()
             try:
                 os.chdir(sdk_dir)
                 subprocess.run(["screen", "-dmS", "sdk", "java", "-jar", "sdkserver.jar"], check=True)
                 return True
+            except subprocess.CalledProcessError as e:
+                print(f"Error starting SDK server: {e}")
+                return False
             finally:
                 os.chdir(original_dir)  # Always go back
-        return False
+        else:
+            print(f"SDK JAR not found at {jar_path}")
+            return False
 
     @classmethod
     def get_server_statuses(cls) -> Dict[str, Dict[str, str]]:
@@ -292,16 +299,20 @@ class SystemActions:
                 cls.start_server(server)
 
         if start_sdk:
-            # Check if SDK is running
+            # Check if SDK is running - use same logic as get_server_statuses
             sdk_running = False
             try:
                 result = subprocess.run(["screen", "-ls"], capture_output=True, text=True, check=True)
-                sdk_running = any('sdk' in line for line in result.stdout.splitlines())
+                output = result.stdout.strip()
+                # Look for screen session named 'sdk' with proper status indicators
+                sdk_running = 'sdk' in output and ('Detached' in output or 'Attached' in output)
             except subprocess.CalledProcessError:
                 pass
 
             if force_restart or not sdk_running:
-                cls.start_sdk_server()
+                success = cls.start_sdk_server()
+                if not success:
+                    print("Warning: Failed to start SDK server")
 
         return ["Đã thành công khởi động server"], False
 

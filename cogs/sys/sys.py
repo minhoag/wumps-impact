@@ -85,7 +85,7 @@ class SYS(commands.Cog):
         cpu_usage = self.get_cpu_usage()
         ram_usage = self.get_ram_usage()
         combined_text += f"{cpu_usage}\n{ram_usage}\n```\n"
-        combined_text += "KHÔNG HOẠT ĐỘNG\n```\n"
+        combined_text += "**KHÔNG HOẠT ĐỘNG**\n```\n"
 
         # Add stopped servers
         if stopped_servers:
@@ -95,12 +95,12 @@ class SYS(commands.Cog):
                     server_display = "SDK SERVER"
                 combined_text += f"[OFFLINE] {server_display}\n"
 
-        combined_text += "```\nTRẠNG THÁI SỰ KIỆN\n```\n"
+        combined_text += "```\n**TRẠNG THÁI SỰ KIỆN**\n```\n"
 
         # Add event status
         for server_name, status in statuses.items():
             if "event_status" in server_name:
-                combined_text += f"*{status['value']}*\n"
+                combined_text += f"{status['value']}\n"
                 break
 
         combined_text += "```"

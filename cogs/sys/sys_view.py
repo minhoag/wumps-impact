@@ -41,6 +41,10 @@ class ServerPanelView(View):
     """View for the server status panel buttons."""
     def __init__(self):
         super().__init__(timeout=None)
+    
+    EVENT_NAME = {
+        "blossom": "Hoa Địa Mạch",
+    }
         
     @discord.ui.button(label="Khởi động tất cả", style=discord.ButtonStyle.success, custom_id="sys_start_all")
     async def start_all(self, interaction: Interaction, button: Button):
@@ -146,8 +150,7 @@ class ServerPanelView(View):
             # Event is not active, start it (requires confirmation)
             confirm_embed = discord.Embed(
                 title="XÁC NHẬN BẮT ĐẦU SỰ KIỆN",
-                description=f"Bạn có muốn bắt đầu sự kiện **{event_name}** không?\n\n"
-                           f"**Lưu ý:** Việc này sẽ checkout branch sự kiện và pull dữ liệu mới.",
+                description=f"Bạn có muốn bắt đầu sự kiện **{self.EVENT_NAME[event_name]}** không?\n\n",
                 color=discord.Color.orange()
             )
             confirm_embed.set_footer(text="Chọn 'Xác nhận' để bắt đầu sự kiện hoặc 'Hủy' để dừng.")

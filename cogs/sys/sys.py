@@ -78,7 +78,7 @@ class SYS(commands.Cog):
                 running_text += f"[ONLINE] {server_display}\n"
                 running_text += "\n"
             running_text += "```"
-            embed.add_field(name="SERVERS ĐANG CHẠY", value=running_text, inline=True)
+            embed.add_field(name="ĐANG HOẠT ĐỘNG", value=running_text, inline=True)
 
         # Combined information section with specific formatting
         combined_text = "\n```\n"

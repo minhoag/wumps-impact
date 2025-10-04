@@ -85,7 +85,7 @@ class SYS(commands.Cog):
         # System resource monitoring
         cpu_usage = self.get_cpu_usage()
         ram_usage = self.get_ram_usage()
-        resource_text += f"{cpu_usage}\n{ram_usage}\n```\n\n```"
+        resource_text += f"{cpu_usage}\n{ram_usage}\n```\n```"
         if stopped_servers:
             for server_name, status in stopped_servers:
                 server_display = server_name.upper()

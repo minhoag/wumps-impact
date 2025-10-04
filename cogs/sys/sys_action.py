@@ -381,10 +381,11 @@ class SystemActions:
             subprocess.run(["git", "checkout", target_branch], cwd=data_path, check=True)
             # git pull target branch
             subprocess.run(["git", "pull", "origin", target_branch], cwd=data_path, check=True)
+            print(f"Successfully toggled event: {event_name}")
         except subprocess.CalledProcessError:
-            logger.error(f"Error toggling event: {event_name}")
+            print(f"Error toggling event: {event_name}")
             return False
         except Exception as e:
-            logger.error(f"Error toggling event: {event_name}")
+            print(f"Error toggling event: {event_name}")
             return False
         return True

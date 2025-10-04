@@ -383,7 +383,7 @@ class SystemActions:
             # git pull target branch
             result2 = subprocess.run(["git", "pull", "origin", target_branch], cwd=data_path, check=True,
                                    capture_output=True, text=True)
-            print(f"Successfully toggled event: {event_name} -> {target_branch}")
+            print(f"Successfully toggled event: {result1} -> {result2}")
             return True
         except subprocess.CalledProcessError as e:
             print(f"Error toggling event: {event_name} -> {target_branch}")

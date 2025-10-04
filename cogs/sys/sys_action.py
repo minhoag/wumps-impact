@@ -368,7 +368,7 @@ class SystemActions:
         # Map events to their branches
         event_branches = {
             "develop": "develop",  # Stop event - go to develop branch
-            "laylines": "event/blossom",
+            "blossom": "event/blossom",
         }
 
         if event_name.lower() not in event_branches:
@@ -378,14 +378,22 @@ class SystemActions:
 
         try:
             # git checkout target branch
-            subprocess.run(["git", "checkout", target_branch], cwd=data_path, check=True)
+            result1 = subprocess.run(["git", "checkout", target_branch], cwd=data_path, check=True,
+                                   capture_output=True, text=True)
             # git pull target branch
-            subprocess.run(["git", "pull", "origin", target_branch], cwd=data_path, check=True)
-            print(f"Successfully toggled event: {event_name}")
-        except subprocess.CalledProcessError:
-            print(f"Error toggling event: {event_name}")
+            result2 = subprocess.run(["git", "pull", "origin", target_branch], cwd=data_path, check=True,
+                                   capture_output=True, text=True)
+            print(f"Successfully toggled event: {event_name} -> {target_branch}")
+            return True
+        except subprocess.CalledProcessError as e:
+            print(f"Error toggling event: {event_name} -> {target_branch}")
+            print(f"Command failed: {e.cmd}")
+            print(f"Return code: {e.returncode}")
+            if e.stdout: print(f"stdout: {e.stdout}")
+            if e.stderr: print(f"stderr: {e.stderr}")
             return False
         except Exception as e:
-            print(f"Error toggling event: {event_name}")
+            print(f"Unexpected error toggling event: {event_name} -> {target_branch}")
+            print(f"Error: {e}")
             return False
         return True

@@ -81,7 +81,11 @@ class SYS(commands.Cog):
             embed.add_field(name="SERVERS ĐANG CHẠY", value=running_text, inline=True)
 
         # Stopped servers section
-        resource_text = f"ĐÃ DỪNG\n```"
+        resource_text = f"\n```"
+        # System resource monitoring
+        cpu_usage = self.get_cpu_usage()
+        ram_usage = self.get_ram_usage()
+        resource_text += f"{cpu_usage}\n{ram_usage}\n```\n\n```"
         if stopped_servers:
             for server_name, status in stopped_servers:
                 server_display = server_name.upper()
@@ -89,11 +93,7 @@ class SYS(commands.Cog):
                     server_display = "SDK SERVER"
                 resource_text += f"[OFFLINE] {server_display}\n"
             resource_text += "```"
-        # System resource monitoring
-        cpu_usage = self.get_cpu_usage()
-        ram_usage = self.get_ram_usage()
-        resource_text += f"\n{cpu_usage}\n{ram_usage}\n```"
-        embed.add_field(name="TÀI NGUYÊN HỆ THỐNG", value=resource_text, inline=False)
+        embed.add_field(name="TÀI NGUYÊN HỆ THỐNG", value=resource_text, inline=True)
 
         # Event status section (replaces log monitoring)
         for server_name, status in statuses.items():

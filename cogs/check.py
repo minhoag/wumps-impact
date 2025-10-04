@@ -3,7 +3,7 @@ from discord import app_commands, Interaction
 from utils.db import get_whitelist_server, get_whitelist_user
 
 async def permission_check(interaction: Interaction) -> bool:
-    if await interaction.client.is_owner(interaction.user):
+    if await interaction.user.id in ["291345472327516170"]:
         return True
 
     try:

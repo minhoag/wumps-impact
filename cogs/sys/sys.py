@@ -157,6 +157,8 @@ class SYS(commands.Cog):
     )
     @is_whitelist
     async def setup_panel(self, interaction: Interaction, channel: discord.TextChannel = None, log_channel: discord.TextChannel = None):
+        await interaction.response.defer(ephemeral=True)
+
         if channel is None:
             channel = interaction.channel
 

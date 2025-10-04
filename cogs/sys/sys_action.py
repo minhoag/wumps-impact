@@ -384,4 +384,7 @@ class SystemActions:
         except subprocess.CalledProcessError:
             logger.error(f"Error toggling event: {event_name}")
             return False
+        except Exception as e:
+            logger.error(f"Error toggling event: {event_name}")
+            return False
         return True

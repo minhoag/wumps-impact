@@ -80,29 +80,32 @@ class SYS(commands.Cog):
             running_text += "```"
             embed.add_field(name="SERVERS ĐANG CHẠY", value=running_text, inline=True)
 
-        # Stopped servers section
+        # Combined information section with specific formatting
+        combined_text = "**HỆ THỐNG**\n```\n"
+        cpu_usage = self.get_cpu_usage()
+        ram_usage = self.get_ram_usage()
+        combined_text += f"{cpu_usage}\n{ram_usage}\n```\n"
+        combined_text += "KHÔNG HOẠT ĐỘNG\n```\n"
+
+        # Add stopped servers
         if stopped_servers:
-            stopped_text = "```\n"
             for server_name, status in stopped_servers:
                 server_display = server_name.upper()
                 if server_name == "sdk":
                     server_display = "SDK SERVER"
-                stopped_text += f"[OFFLINE] {server_display}\n"
-            stopped_text += "```\n\n"
-            embed.add_field(name="SERVERS ĐÃ DỪNG", value=stopped_text, inline=True)
+                combined_text += f"[OFFLINE] {server_display}\n"
 
-        # Event status section
+        combined_text += "```\nTRẠNG THÁI SỰ KIỆN\n```\n"
+
+        # Add event status
         for server_name, status in statuses.items():
             if "event_status" in server_name:
-                event_text = f"```\n{status['value']}\n```"
-                embed.add_field(name="TRẠNG THÁI SỰ KIỆN", value=event_text, inline=False)
+                combined_text += f"*{status['value']}*\n"
                 break
 
-        # System resource monitoring
-        cpu_usage = self.get_cpu_usage()
-        ram_usage = self.get_ram_usage()
-        resource_text = f"```\n{cpu_usage}\n{ram_usage}\n```"
-        embed.add_field(name="TÀI NGUYÊN HỆ THỐNG", value=resource_text, inline=False)
+        combined_text += "```"
+
+        embed.add_field(name="THÔNG TIN", value=combined_text, inline=False)
 
         # Footer with last update time
         embed.set_footer(text="Cập nhật lần cuối")

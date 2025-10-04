@@ -3,7 +3,6 @@ import discord
 from discord import Interaction
 from discord.ui import View, Button
 from cogs.sys.sys_action import SystemActions
-from cogs.check import permission_check
 
 class ConfirmationView(View):
     """Confirmation view for dangerous operations."""
@@ -58,11 +57,6 @@ class ServerPanelView(View):
         
     @discord.ui.button(label="Khởi động tất cả", style=discord.ButtonStyle.success, custom_id="sys_start_all")
     async def start_all(self, interaction: Interaction, button: Button):
-        # Check whitelist permissions
-        if not await permission_check(interaction):
-            await interaction.response.send_message("Bạn không có quyền sử dụng lệnh này.", ephemeral=True)
-            return
-
         cog = interaction.client.get_cog('SYS')
         
         await interaction.response.defer(ephemeral=True)
@@ -70,11 +64,6 @@ class ServerPanelView(View):
 
     @discord.ui.button(label="Dừng tất cả", style=discord.ButtonStyle.danger, custom_id="sys_stop_all")
     async def stop_all(self, interaction: Interaction, button: Button):
-        # Check whitelist permissions
-        if not await permission_check(interaction):
-            await interaction.response.send_message("Bạn không có quyền sử dụng lệnh này.", ephemeral=True)
-            return
-
         cog = interaction.client.get_cog('SYS')
 
         try:
@@ -117,11 +106,6 @@ class ServerPanelView(View):
 
     @discord.ui.button(label="Khởi động Gameserver", style=discord.ButtonStyle.primary, custom_id="sys_start_gameserver")
     async def start_gameserver(self, interaction: Interaction, button: Button):
-        # Check whitelist permissions
-        if not await permission_check(interaction):
-            await interaction.response.send_message("Bạn không có quyền sử dụng lệnh này.", ephemeral=True)
-            return
-
         cog = interaction.client.get_cog('SYS')
         
         await interaction.response.defer(ephemeral=True)
@@ -129,13 +113,7 @@ class ServerPanelView(View):
 
     @discord.ui.button(label="Xóa Logs", style=discord.ButtonStyle.secondary, custom_id="sys_clear_logs")
     async def clear_logs(self, interaction: Interaction, button: Button):
-        # Check whitelist permissions
-        if not await permission_check(interaction):
-            await interaction.response.send_message("Bạn không có quyền sử dụng lệnh này.", ephemeral=True)
-            return
-
         cog = interaction.client.get_cog('SYS')
-
         await interaction.response.defer(ephemeral=True)
         await cog.do_clear_logs(interaction)
     
@@ -143,10 +121,6 @@ class ServerPanelView(View):
         discord.SelectOption(label="Sự kiện địa mạch", value="toggle_blossom", description="Bật/tắt sự kiện Hoa Địa Mạch"),
     ])
     async def manage_event(self, interaction: Interaction, select: discord.ui.Select):
-        if not await permission_check(interaction):
-            await interaction.response.send_message("Bạn không có quyền sử dụng lệnh này.", ephemeral=True)
-            return
-
         value = select.values[0]
         if value == "toggle_blossom":
             await self._handle_event_toggle(interaction, "blossom")

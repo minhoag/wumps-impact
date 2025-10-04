@@ -5,12 +5,13 @@ load_dotenv()
 
 import discord
 from utils.logger import logger
-from discord import app_commands, Interaction
+from discord import app_commands
 from discord.ext import commands
 from cogs.gacha.gacha import Gacha
 from cogs.mail.mail import Mail
 from cogs.gm.gm import GM
 from cogs.sys.sys import SYS
+from utils.db import get_whitelist_server, get_whitelist_user
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -22,15 +23,22 @@ class DiscordBot(commands.Bot):
             command_prefix="!",
             intents=intents
         )
-    
+        self.whitelisted_guilds = []
+        self.whitelisted_users = []
+
     async def sync_commands(self) -> None:
         await self.tree.sync(guild=None)
+    
+    async def sync_whitelist(self) -> None:
+        self.whitelisted_guilds = get_whitelist_server()
+        self.whitelisted_users = get_whitelist_user()
 
     async def setup_hook(self) -> None:
         cogs = [Gacha, Mail, GM, SYS]
         for cog in cogs:
             await self.add_cog(cog(self))
         await self.sync_commands()
+        await self.sync_whitelist()
         logger.info(f"Logged in as {self.user.name}")
     
     async def on_command_error(self, ctx: commands.Context, error: commands.CommandError) -> None:
@@ -43,10 +51,9 @@ class DiscordBot(commands.Bot):
         logger.info(f"Bot is ready! Logged in as {self.user.name} in {len(self.guilds)} guild(s)")
 
 bot = DiscordBot()
+
 @bot.tree.error
 async def on_tree_error(interaction: discord.Interaction, error: app_commands.AppCommandError):
-    if isinstance(error, app_commands.CheckFailure):
-        await interaction.response.send_message("Server của bạn không được phép sử dụng lệnh này.", ephemeral=True)
-    else:
-        raise error
+    raise error
+
 bot.run(os.getenv("TOKEN"))

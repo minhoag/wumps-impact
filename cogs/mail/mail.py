@@ -6,6 +6,7 @@ from typing import Dict
 from cogs.mail.mail_modal import MailModal
 from cogs.mail.mail_embed import MailEmbed
 from cogs.mail.mail_view import MailView
+from cogs.permission import permission
 
 class Mail(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -16,11 +17,17 @@ class Mail(commands.Cog):
     @app_commands.command(name="mail", description="Create and send mail to users")
     async def create(self, interaction: Interaction):
         """Create a mail with attachments"""
+        if not permission(interaction, self.bot):
+            await interaction.response.send_message("Bạn không có quyền sử dụng bot", ephemeral=True)
+            return
         modal = MailModal(self.handle_mail_submit)
         await interaction.response.send_modal(modal)
 
     async def handle_mail_submit(self, interaction: discord.Interaction, mail_data: Dict):
         """Handle mail modal submission and create MailView."""
+        if not permission(interaction, self.bot):
+            await interaction.response.send_message("Bạn không có quyền sử dụng bot", ephemeral=True)
+            return
         mail_view = MailView(
             mail_data=mail_data,
             on_mail_sent=None

@@ -1,17 +1,19 @@
 # cogs/gm/gm.py
-import discord
 from discord import app_commands, Interaction
 from discord.ext import commands
 from typing import List
-from utils.muip import MUIP
 from cogs.gm.gm_action import GMActions
 from utils.utils import Utils
 from utils.constants import ITEMS
+from cogs.permission import permission
+
 class GM(commands.Cog):
     """Cog for handling GM commands."""
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+    
     gm = app_commands.Group(name="gm", description="Lệnh GM để quản lý server Genshin Impact 3.4")
+
     async def item_autocomplete(self, interaction: Interaction, current: str) -> List[app_commands.Choice[int]]:
         """Autocomplete for item IDs using search."""
         matching_items = await self.bot.loop.run_in_executor(None, lambda: Utils.search_items(current, ITEMS, ['vietnameseName', 'globalName'], 25))
@@ -21,6 +23,7 @@ class GM(commands.Cog):
                 value=int(item['value'])
             ) for item in matching_items
         ]
+    
     @gm.command(name="general", description="Thực hiện lệnh GM chung không cần tham số bổ sung")
     @app_commands.describe(
         uid="UID của người chơi",
@@ -46,6 +49,9 @@ class GM(commands.Cog):
     ])
     async def general(self, interaction: Interaction, uid: str, command: str):
         """Send a general GM command to the specified UID."""
+        if not permission(interaction, self.bot):
+            await interaction.response.send_message("Bạn không có quyền sử dụng bot", ephemeral=True)
+            return
         await GMActions.execute_gm_command(interaction, uid, command)
     @gm.command(name="equip_add", description="Thêm vũ khí cho người chơi")
     @app_commands.describe(
@@ -57,6 +63,9 @@ class GM(commands.Cog):
     @app_commands.autocomplete(item_id=item_autocomplete)
     async def equip_add(self, interaction: Interaction, uid: str, item_id: int, level: int = 90, promote_level: int = 6):
         """Send equip add command."""
+        if not permission(interaction, self.bot):
+            await interaction.response.send_message("Bạn không có quyền sử dụng bot", ephemeral=True)
+            return
         command = f"equip add {item_id} {level} {promote_level}"
         await GMActions.execute_gm_command(interaction, uid, command)
     @gm.command(name="item_add", description="Add an item to the player")
@@ -68,6 +77,9 @@ class GM(commands.Cog):
     @app_commands.autocomplete(item_id=item_autocomplete)
     async def item_add(self, interaction: Interaction, uid: str, item_id: int, count: int):
         """Send item add command."""
+        if not permission(interaction, self.bot):
+            await interaction.response.send_message("Bạn không có quyền sử dụng bot", ephemeral=True)
+            return
         if count <= 0 or count > 1000000:
             await interaction.response.send_message("Số lượng phải từ 1 đến 1,000,000.", ephemeral=True)
             return
@@ -82,6 +94,9 @@ class GM(commands.Cog):
     @app_commands.autocomplete(item_id=item_autocomplete)
     async def item_clear(self, interaction: Interaction, uid: str, item_id: int, count: int):
         """Send item clear command."""
+        if not permission(interaction, self.bot):
+            await interaction.response.send_message("Bạn không có quyền sử dụng bot", ephemeral=True)
+            return
         if count <= 0 or count > 1000000:
             await interaction.response.send_message("Số lượng phải từ 1 đến 1,000,000.", ephemeral=True)
             return
@@ -95,6 +110,9 @@ class GM(commands.Cog):
     @app_commands.autocomplete(avatar_id=item_autocomplete)
     async def avatar_add(self, interaction: Interaction, uid: str, avatar_id: int):
         """Send avatar add command."""
+        if not permission(interaction, self.bot):
+            await interaction.response.send_message("Bạn không có quyền sử dụng bot", ephemeral=True)
+            return
         command = f"avatar add {avatar_id}"
         await GMActions.execute_gm_command(interaction, uid, command)
     @gm.command(name="quest", description="Quản lý nhiệm vụ cho người chơi")
@@ -111,6 +129,9 @@ class GM(commands.Cog):
     @app_commands.autocomplete(quest_id=item_autocomplete)
     async def quest(self, interaction: Interaction, uid: str, action: str, quest_id: int):
         """Send quest command."""
+        if not permission(interaction, self.bot):
+            await interaction.response.send_message("Bạn không có quyền sử dụng bot", ephemeral=True)
+            return
         command = f"quest {action} {quest_id}"
         await GMActions.execute_gm_command(interaction, uid, command)
     @gm.command(name="player_level", description="Thiết lập cấp độ phiêu lưu của người chơi")
@@ -120,6 +141,9 @@ class GM(commands.Cog):
     )
     async def player_level(self, interaction: Interaction, uid: str, level: int):
         """Send player level command."""
+        if not permission(interaction, self.bot):
+            await interaction.response.send_message("Bạn không có quyền sử dụng bot", ephemeral=True)
+            return
         command = f"player level {level}"
         await GMActions.execute_gm_command(interaction, uid, command)
     @gm.command(name="jump", description="Dịch chuyển đến một khu vực")
@@ -130,6 +154,9 @@ class GM(commands.Cog):
     @app_commands.autocomplete(scene_id=item_autocomplete)
     async def jump(self, interaction: Interaction, uid: str, scene_id: int):
         """Send jump command."""
+        if not permission(interaction, self.bot):
+            await interaction.response.send_message("Bạn không có quyền sử dụng bot", ephemeral=True)
+            return
         command = f"jump {scene_id}"
         await GMActions.execute_gm_command(interaction, uid, command)
     @gm.command(name="goto", description="Dịch chuyển đến tọa độ cụ thể")
@@ -141,6 +168,9 @@ class GM(commands.Cog):
     )
     async def goto_cmd(self, interaction: Interaction, uid: str, x: float, y: float, z: float):
         """Send goto command."""
+        if not permission(interaction, self.bot):
+            await interaction.response.send_message("Bạn không có quyền sử dụng bot", ephemeral=True)
+            return
         command = f"goto {x} {y} {z}"
         await GMActions.execute_gm_command(interaction, uid, command)
     @gm.command(name="dungeon", description="Vào một dungeon")
@@ -151,6 +181,9 @@ class GM(commands.Cog):
     @app_commands.autocomplete(dungeon_id=item_autocomplete)
     async def dungeon(self, interaction: Interaction, uid: str, dungeon_id: int):
         """Send dungeon command."""
+        if not permission(interaction, self.bot):
+            await interaction.response.send_message("Bạn không có quyền sử dụng bot", ephemeral=True)
+            return
         command = f"dungeon {dungeon_id}"
         await GMActions.execute_gm_command(interaction, uid, command)
     @gm.command(name="monster", description="Triệu hồi quái vật")
@@ -163,6 +196,9 @@ class GM(commands.Cog):
     @app_commands.autocomplete(monster_id=item_autocomplete)
     async def monster(self, interaction: Interaction, uid: str, monster_id: int, count: int = 5, level: int = 20):
         """Send monster spawn command."""
+        if not permission(interaction, self.bot):
+            await interaction.response.send_message("Bạn không có quyền sử dụng bot", ephemeral=True)
+            return
         command = f"monster {monster_id} {count} {level}"
         await GMActions.execute_gm_command(interaction, uid, command)
     @gm.command(name="mcoin", description="Thêm Nguyên Thạch")
@@ -172,6 +208,9 @@ class GM(commands.Cog):
     )
     async def mcoin(self, interaction: Interaction, uid: str, amount: int):
         """Send mcoin command (Genesis Crystals)."""
+        if not permission(interaction, self.bot):
+            await interaction.response.send_message("Bạn không có quyền sử dụng bot", ephemeral=True)
+            return
         if amount <= 0 or amount > 1000000:
             await interaction.response.send_message("Số lượng phải từ 1 đến 1,000,000.", ephemeral=True)
             return
@@ -184,6 +223,9 @@ class GM(commands.Cog):
     )
     async def scoin(self, interaction: Interaction, uid: str, amount: int):
         """Send scoin command."""
+        if not permission(interaction, self.bot):
+            await interaction.response.send_message("Bạn không có quyền sử dụng bot", ephemeral=True)
+            return
         if amount <= 0 or amount > 1000000:
             await interaction.response.send_message("Số lượng phải từ 1 đến 1,000,000.", ephemeral=True)
             return
@@ -196,6 +238,9 @@ class GM(commands.Cog):
     )
     async def hcoin(self, interaction: Interaction, uid: str, amount: int):
         """Send hcoin command."""
+        if not permission(interaction, self.bot):
+            await interaction.response.send_message("Bạn không có quyền sử dụng bot", ephemeral=True)
+            return
         if amount <= 0 or amount > 1000000:
             await interaction.response.send_message("Số lượng phải từ 1 đến 1,000,000.", ephemeral=True)
             return
@@ -208,10 +253,23 @@ class GM(commands.Cog):
     )
     async def home_coin(self, interaction: Interaction, uid: str, amount: int):
         """Send home_coin command."""
+        if not permission(interaction, self.bot):
+            await interaction.response.send_message("Bạn không có quyền sử dụng bot", ephemeral=True)
+            return
         if amount <= 0 or amount > 1000000:
             await interaction.response.send_message("Số lượng phải từ 1 đến 1,000,000.", ephemeral=True)
             return
         command = f"home_coin {amount}"
         await GMActions.execute_gm_command(interaction, uid, command)
+    
+    @gm.command(name="refresh_whitelist", description="Refresh the whitelist")
+    async def refresh_whitelist(self, interaction: Interaction):
+        """Refresh the whitelist."""
+        if not permission(interaction, self.bot):
+            await interaction.response.send_message("Bạn không có quyền sử dụng bot", ephemeral=True)
+            return
+        await self.bot.sync_whitelist()
+        await interaction.response.send_message("Whitelist đã được cập nhật.", ephemeral=True)
+
 async def setup(bot: commands.Bot):
     await bot.add_cog(GM(bot))

@@ -9,6 +9,7 @@ import asyncio
 import json
 import subprocess
 from typing import List
+from cogs.permission import permission
 
 class SYS(commands.Cog):
     """Cog for handling System commands."""
@@ -158,6 +159,9 @@ class SYS(commands.Cog):
         log_channel="Kênh để gửi log hệ thống (tùy chọn)"
     )
     async def setup_panel(self, interaction: Interaction, channel: discord.TextChannel = None, log_channel: discord.TextChannel = None):
+        if not permission(interaction, self.bot):
+            await interaction.response.send_message("Bạn không có quyền sử dụng bot", ephemeral=True)
+            return
         await interaction.response.defer(ephemeral=True)
 
         if channel is None:
@@ -191,6 +195,9 @@ class SYS(commands.Cog):
         await interaction.followup.send(" ".join(response_parts), ephemeral=True)
 
     async def do_start_servers(self, interaction: Interaction, servers: List[str], start_sdk: bool = False, force_restart: bool = False):
+        if not permission(interaction, self.bot):
+            await interaction.response.send_message("Bạn không có quyền sử dụng bot", ephemeral=True)
+            return
         results, has_running = SystemActions.do_start_servers(servers, start_sdk, force_restart)
 
         if has_running and not force_restart:
@@ -219,11 +226,8 @@ class SYS(commands.Cog):
                     discord.Color.orange()
                 )
         else:
-            # Normal start or force restart
             for result in results:
                 await interaction.followup.send(result, ephemeral=True)
-
-            # Log successful server start
             action_type = "Force Restart" if force_restart else "Start"
             server_list = ", ".join(servers)
             sdk_info = " + SDK" if start_sdk else ""
@@ -235,6 +239,9 @@ class SYS(commands.Cog):
             )
 
     async def do_force_stop_all(self, interaction: Interaction):
+        if not permission(interaction, self.bot):
+            await interaction.response.send_message("Bạn không có quyền sử dụng bot", ephemeral=True)
+            return
         results = SystemActions.do_force_stop_all()
         for result in results:
             await interaction.followup.send(result, ephemeral=True)
@@ -249,6 +256,9 @@ class SYS(commands.Cog):
 
     async def do_clear_logs(self, interaction: Interaction):
         """Clear all log files in the log directory."""
+        if not permission(interaction, self.bot):
+            await interaction.response.send_message("Bạn không có quyền sử dụng bot", ephemeral=True)
+            return
         messages, files_deleted, errors = SystemActions.do_clear_logs()
         for message in messages:
             await interaction.followup.send(message, ephemeral=True)
@@ -261,7 +271,9 @@ class SYS(commands.Cog):
     
     async def do_start_laylines(self, interaction: Interaction, event: str):
         """Handle starting/stopping laylines events (confirmation handled in view)."""
-        # Start/stop the event
+        if not permission(interaction, self.bot):
+            await interaction.response.send_message("Bạn không có quyền sử dụng bot", ephemeral=True)
+            return
         success = SystemActions.do_toggle_event(event)
         if success:
             action = "bắt đầu" if event != "develop" else "dừng"

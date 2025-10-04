@@ -4,7 +4,7 @@ from discord.ext import commands
 
 from cogs.gacha.gacha_view import GachaView
 from cogs.gacha.gacha_embed import GachaEmbed
-from cogs.check import permission_check
+from cogs.permission import permission
 
 class Gacha(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -14,12 +14,10 @@ class Gacha(commands.Cog):
 
     @group.command(name="create", description="Create new gacha")
     async def create(self, interaction: Interaction):
-        await interaction.response.defer(ephemeral=True)
-        passed = await permission_check(interaction)
-        if not passed:
-            await interaction.followup.send("Bạn không có quyền sử dụng lệnh này.", ephemeral=True)
+        if not permission(interaction, self.bot):
+            await interaction.response.send_message("Bạn không có quyền sử dụng bot", ephemeral=True)
             return
-
+        await interaction.response.defer(ephemeral=True)
         view = GachaView()
         embed_instance = GachaEmbed(
             id=view.base_id,

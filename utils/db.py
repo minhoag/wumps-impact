@@ -4,7 +4,6 @@ import pymysql
 import json
 from utils.logger import logger
 from utils.constants import *
-from utils.utils import Utils
 
 def get_db_hk4e_config_gio():
     db = pymysql.connect(

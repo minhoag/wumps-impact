@@ -5,7 +5,6 @@ from cogs.mail.mail_action import MailActions
 from cogs.mail.mail_embed import MailEmbed
 from cogs.mail.mail_modal import MailModal
 from cogs.embed import COLORS, Embed
-from cogs.check import permission_check
 from utils.constants import ITEMS
 from utils.utils import Utils
 
@@ -23,9 +22,6 @@ class MailView(discord.ui.View):
     @discord.ui.button(label="Thêm vật phẩm", style=discord.ButtonStyle.success)
     async def add_item(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Handle adding items to mail attachments."""
-        if not await permission_check(interaction):
-            await interaction.response.send_message("Bạn không có quyền sử dụng lệnh này.", ephemeral=True)
-            return
         # Create search modal for item search
         search_modal = SearchModal(
             name=True,
@@ -37,9 +33,6 @@ class MailView(discord.ui.View):
     @discord.ui.button(label="Xóa Vật Phẩm", style=discord.ButtonStyle.danger)
     async def remove_item(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Handle removing items from mail attachments."""
-        if not await permission_check(interaction):
-            await interaction.response.send_message("Bạn không có quyền sử dụng lệnh này.", ephemeral=True)
-            return
         attachments = self.mail_data.get('attachments', [])
         if not attachments:
             await interaction.response.send_message(
@@ -77,9 +70,6 @@ class MailView(discord.ui.View):
     @discord.ui.button(label="Chỉnh sửa", style=discord.ButtonStyle.primary)
     async def edit_mail(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Handle editing mail with modal pre-filled with current data."""
-        if not await permission_check(interaction):
-            await interaction.response.send_message("Bạn không có quyền sử dụng lệnh này.", ephemeral=True)
-            return
         # Create modal with current mail data as initial values
         edit_modal = MailModal(
             on_submit_cb=self._handle_mail_edit,
@@ -120,9 +110,6 @@ class MailView(discord.ui.View):
     @discord.ui.button(label="Xác nhận gửi", style=discord.ButtonStyle.primary)
     async def confirm_send(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Handle mail validation and sending with comprehensive validation and detailed feedback."""
-        if not await permission_check(interaction):
-            await interaction.response.send_message("Bạn không có quyền sử dụng lệnh này.", ephemeral=True)
-            return
         is_valid, error_message = MailActions.validate(self.mail_data)    
         if not is_valid:
             await interaction.response.send_message(

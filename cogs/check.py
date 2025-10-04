@@ -2,14 +2,17 @@
 from discord import app_commands, Interaction
 from utils.db import get_whitelist_server, get_whitelist_user
 
-ALLOW_GUILDS = get_whitelist_server()
-ALLOW_USERS = get_whitelist_user()
-
 async def permission_check(interaction: Interaction) -> bool:
     if await interaction.client.is_owner(interaction.user):
         return True
-    if str(interaction.guild_id) not in ALLOW_GUILDS and str(interaction.user.id) not in ALLOW_USERS:
+
+    try:
+        ALLOW_GUILDS = get_whitelist_server()
+        ALLOW_USERS = get_whitelist_user()
+    except Exception as e:
         return False
-    return True
+    if str(interaction.user.id) in ALLOW_USERS or (interaction.guild_id and str(interaction.guild_id) in ALLOW_GUILDS):
+        return True
+    return False
 
 is_whitelist = app_commands.check(permission_check)

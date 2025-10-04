@@ -262,23 +262,7 @@ class SYS(commands.Cog):
         await Utils.log_system_event(self.bot, self.log_channel, f"Logs Cleared ({status})", desc, color)
     
     async def do_start_laylines(self, interaction: Interaction, event: str):
-        """Handle starting/stopping laylines events with confirmation for starts."""
-        if event != "develop":
-            # Show confirmation for starting events
-            confirm_embed = discord.Embed(
-                title="XÁC NHẬN BẮT ĐẦU SỰ KIỆN",
-                description=f"Bạn có muốn bắt đầu sự kiện **{event}** không?\n\n",
-                color=discord.Color.orange()
-            )
-            confirm_embed.set_footer(text="Chọn 'Xác nhận' để bắt đầu sự kiện hoặc 'Hủy' để dừng.")
-            confirm_view = ConfirmationView()
-            await interaction.followup.send(embed=confirm_embed, view=confirm_view, ephemeral=True)
-            await confirm_view.wait()
-
-            if not confirm_view.confirmed:
-                await interaction.followup.send("Đã hủy bắt đầu sự kiện.", ephemeral=True)
-                return
-
+        """Handle starting/stopping laylines events (confirmation handled in view)."""
         # Start/stop the event
         success = SystemActions.do_toggle_event(event)
         if success:

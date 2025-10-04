@@ -378,22 +378,13 @@ class SystemActions:
 
         try:
             # git checkout target branch
-            result1 = subprocess.run(["git", "checkout", target_branch], cwd=data_path, check=True,
+            subprocess.run(["git", "checkout", target_branch], cwd=data_path, check=True,
                                    capture_output=True, text=True)
             # git pull target branch
-            result2 = subprocess.run(["git", "pull", "origin", target_branch], cwd=data_path, check=True,
+            subprocess.run(["git", "pull", "origin", target_branch], cwd=data_path, check=True,
                                    capture_output=True, text=True)
-            print(f"Successfully toggled event: {result1} -> {result2}")
             return True
         except subprocess.CalledProcessError as e:
-            print(f"Error toggling event: {event_name} -> {target_branch}")
-            print(f"Command failed: {e.cmd}")
-            print(f"Return code: {e.returncode}")
-            if e.stdout: print(f"stdout: {e.stdout}")
-            if e.stderr: print(f"stderr: {e.stderr}")
             return False
         except Exception as e:
-            print(f"Unexpected error toggling event: {event_name} -> {target_branch}")
-            print(f"Error: {e}")
             return False
-        return True

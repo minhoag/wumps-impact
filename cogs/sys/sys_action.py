@@ -378,11 +378,9 @@ class SystemActions:
 
         try:
             # git checkout target branch
-            subprocess.run(["git", "checkout", target_branch], cwd=data_path, check=True,
-                                   capture_output=True, text=True)
+            subprocess.run(["git", "checkout", target_branch], cwd=data_path, check=True)
             # git pull target branch
-            subprocess.run(["git", "pull", "origin", target_branch], cwd=data_path, check=True,
-                                   capture_output=True, text=True)
+            subprocess.run(["git", "pull", "origin", target_branch], cwd=data_path, check=True)
             return True
         except subprocess.CalledProcessError as e:
             return False

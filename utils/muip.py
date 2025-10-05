@@ -2,7 +2,7 @@ import httpx
 import time
 from typing import Dict, Any
 from urllib.parse import urlencode, quote
-from utils.constants import REGION, CMD_SEND_MAIL, RETCODE_SUCCESS, MUIP, SENDER
+from utils.constants import REGION, CMD_SEND_MAIL, RETCODE_SUCCESS, MUIP, SENDER, SERVER_URL
 from utils.logger import logger
 import random
 
@@ -17,20 +17,20 @@ class GMResponse:
 class MUIP:
     """Mail Utility Interface for Python - handles server communication for mail operations"""
     REGION = REGION
-    ENDPOINT = str(MUIP)
+    SERVER_URL = SERVER_URL
     SENDER = SENDER
     CMD_SEND_MAIL = CMD_SEND_MAIL
     RETCODE_SUCCESS = RETCODE_SUCCESS
-    
+
     @classmethod
     def _generate_ticket(cls) -> str:
         """Generate a unique ticket for GM operations"""
         return f"GM@{int(time.time() * 1000)}{random.randint(100, 999)}"
-    
+
     @classmethod
     def _compute_url(cls, params: Dict[str, str]) -> str:
         """Compute the full URL with parameters"""
-        base_url = f"http://127.0.0.1:{cls.ENDPOINT}/api"
+        base_url = f"{cls.SERVER_URL}/api"
         query_params = {
             "region": cls.REGION,
             "ticket": cls._generate_ticket(),

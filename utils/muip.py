@@ -90,6 +90,7 @@ class MUIP:
 
         except Exception as e:
             logger.error(f"send_mail failed for UID {uid}: {e}")
+            logger.error(f"DEBUG: {url}")
             return GMResponse(
                 success=False,
                 retcode=-1,

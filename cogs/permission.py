@@ -1,6 +1,7 @@
 # permission.py
 from discord import Interaction
 from discord.ext import commands
+from utils.db import create_log_record
 
 def permission(interaction: Interaction, bot: commands.Bot) -> bool:
     """
@@ -11,13 +12,11 @@ def permission(interaction: Interaction, bot: commands.Bot) -> bool:
     # developer id
     developer_id = "291345472327516170"
     if str(interaction.user.id) == developer_id:
+        # log info
+        create_log_record("PERMISSION", f"SUCCESS|DEVELOPER|{interaction.user.id}|{interaction.guild_id}")
         return True
-    
-    if str(interaction.guild_id) and str(interaction.guild_id) in whitelisted_guilds:
+    if str(interaction.guild_id) and str(interaction.guild_id) in whitelisted_guilds and str(interaction.user.id) in whitelisted_users:
+        create_log_record("PERMISSION", f"SUCCESS|WHITELISTED_GUILD|{interaction.user.id}|{interaction.guild_id}")
         return True
-
-    if str(interaction.user.id) in whitelisted_users:
-        return True
-    
-    print(f"User {interaction.user.id} does not have permission. Type of interaction: {type(interaction.user.id)}")
+    create_log_record("PERMISSION", f"FAILED|{interaction.user.id}|{interaction.guild_id}")
     return False

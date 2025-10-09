@@ -103,6 +103,17 @@ class SYS(commands.Cog):
                 combined_text += f"{status['value']}\n"
                 break
 
+        combined_text += "```\n**TMUX SESSIONS**\n```\n"
+        
+        # Add tmux sessions information
+        tmux_info = statuses.get("tmux_sessions", {})
+        tmux_sessions = tmux_info.get("value", [])
+        if tmux_sessions:
+            for session in tmux_sessions:
+                combined_text += f"[ACTIVE] {session['name']}\n"
+        else:
+            combined_text += "Không có session nào đang chạy\n"
+        
         combined_text += "```"
 
         embed.add_field(name="THÔNG TIN", value=combined_text, inline=True)

@@ -161,8 +161,57 @@ class SystemActions:
         return False
 
     @staticmethod
-    def start_sdk_server() -> bool:
-        """Start SDK server."""
+    def is_sdk_server_running() -> bool:
+        """Check if SDK server tmux session is running."""
+        try:
+            result = subprocess.run(["tmux", "has-session", "-t", "sdk"], 
+                                  capture_output=True, text=True)
+            return result.returncode == 0
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            return False
+    
+    @staticmethod
+    def get_tmux_sessions() -> List[Dict[str, str]]:
+        """Get all running tmux sessions with details."""
+        sessions = []
+        try:
+            # Get list of tmux sessions
+            result = subprocess.run(["tmux", "list-sessions"], 
+                                  capture_output=True, text=True)
+            if result.returncode == 0:
+                for line in result.stdout.strip().split('\n'):
+                    if line:
+                        # Parse tmux session line: "sdk: 1 windows (created Thu Oct  9 12:34:56 2025)"
+                        parts = line.split(':')
+                        if len(parts) >= 2:
+                            session_name = parts[0].strip()
+                            session_info = ':'.join(parts[1:]).strip()
+                            sessions.append({
+                                'name': session_name,
+                                'info': session_info
+                            })
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            pass
+        return sessions
+
+    @staticmethod
+    def stop_sdk_server() -> bool:
+        """Stop SDK server by killing the tmux session."""
+        try:
+            if SystemActions.is_sdk_server_running():
+                subprocess.run(["tmux", "kill-session", "-t", "sdk"], check=True)
+                return True
+            return False
+        except subprocess.CalledProcessError:
+            return False
+
+    @staticmethod
+    def start_sdk_server() -> Tuple[bool, str]:
+        """Start SDK server. Returns (success, message)."""
+        # Check if already running
+        if SystemActions.is_sdk_server_running():
+            return False, "Một session vẫn còn đang chạy"
+        
         sdk_dir = "/gio/sdk"
         jar_path = os.path.join(sdk_dir, "sdkserver.jar")
 
@@ -170,16 +219,16 @@ class SystemActions:
             original_dir = os.getcwd()
             try:
                 os.chdir(sdk_dir)
-                subprocess.run(["screen", "-dmS", "sdk", "java", "-jar", "sdkserver.jar"], check=True)
-                return True
+                subprocess.run(["tmux", "new-session", "-d", "-s", "sdk", "java", "-jar", "sdkserver.jar"], check=True)
+                return True, "SDK server started successfully"
             except subprocess.CalledProcessError as e:
                 print(f"Error starting SDK server: {e}")
-                return False
+                return False, f"Error starting SDK server: {e}"
             finally:
                 os.chdir(original_dir)  # Always go back
         else:
             print(f"SDK JAR not found at {jar_path}")
-            return False
+            return False, f"SDK JAR not found at {jar_path}"
 
     @classmethod
     def get_server_statuses(cls) -> Dict[str, Dict[str, str]]:
@@ -198,15 +247,8 @@ class SystemActions:
                     "value": "Offline"
                 }
 
-        # Check SDK server - always runs via screen session
-        sdk_running = False
-        try:
-            result = subprocess.run(["screen", "-ls"], capture_output=True, text=True, check=True)
-            output = result.stdout.strip()
-            # Look for screen session named 'sdk' with proper status indicators
-            sdk_running = 'sdk' in output and ('Detached' in output or 'Attached' in output)
-        except subprocess.CalledProcessError:
-            pass
+        # Check SDK server - runs via tmux session
+        sdk_running = cls.is_sdk_server_running()
         if sdk_running:
             server_statuses["sdk"] = {
                 "name": "SDK Server",
@@ -223,6 +265,14 @@ class SystemActions:
         server_statuses["event_status"] = {
             "name": "TRẠNG THÁI SỰ KIỆN",
             "value": event_status
+        }
+        
+        # Get tmux sessions information
+        tmux_sessions = cls.get_tmux_sessions()
+        server_statuses["tmux_sessions"] = {
+            "name": "TMUX SESSIONS",
+            "value": tmux_sessions,
+            "type": "tmux_list"
         }
 
         gameserver_log = "/gio/bin/log/gameserver.log"
@@ -241,16 +291,6 @@ class SystemActions:
                 running.append(server)
             else:
                 stopped.append(server)
-
-        # Check SDK server - always runs via screen session
-        sdk_running = False
-        try:
-            result = subprocess.run(["screen", "-ls"], capture_output=True, text=True, check=True)
-            output = result.stdout.strip()
-            # Look for screen session named 'sdk' with proper status indicators
-            sdk_running = 'sdk' in output and ('Detached' in output or 'Attached' in output)
-        except subprocess.CalledProcessError:
-            pass
 
         return running, stopped
 
@@ -285,20 +325,19 @@ class SystemActions:
                 cls.start_server(server)
 
         if start_sdk:
-            # Check if SDK is running - use same logic as get_server_statuses
-            sdk_running = False
-            try:
-                result = subprocess.run(["screen", "-ls"], capture_output=True, text=True, check=True)
-                output = result.stdout.strip()
-                # Look for screen session named 'sdk' with proper status indicators
-                sdk_running = 'sdk' in output and ('Detached' in output or 'Attached' in output)
-            except subprocess.CalledProcessError:
-                pass
-
-            if force_restart or not sdk_running:
-                success = cls.start_sdk_server()
+            sdk_running = cls.is_sdk_server_running()
+            
+            if force_restart and sdk_running:
+                # Stop existing session before restart
+                cls.stop_sdk_server()
+                sdk_running = False
+            
+            if not sdk_running:
+                success, message = cls.start_sdk_server()
                 if not success:
-                    print("Warning: Failed to start SDK server")
+                    if message == "Một session vẫn còn đang chạy":
+                        return [message], False
+                    print(f"Warning: Failed to start SDK server: {message}")
 
         return ["Đã thành công khởi động server"], False
 
@@ -311,18 +350,8 @@ class SystemActions:
             if pid:
                 cls.kill_process(pid, force=True)
 
-        # Stop SDK server
-        try:
-            result = subprocess.run(["screen", "-ls"], capture_output=True, text=True, check=True)
-            for line in result.stdout.splitlines():
-                if 'sdk' in line:
-                    screen_id = line.split('.')[0].strip()
-                    if screen_id:
-                        subprocess.run(["kill", "-9", screen_id], check=True)
-                        subprocess.run(["screen", "-wipe"], check=True)
-                        break
-        except subprocess.CalledProcessError:
-            pass
+        # Stop SDK server by killing tmux session
+        cls.stop_sdk_server()
 
         return ["Đã thành công dừng server"]
 
@@ -386,3 +415,7 @@ class SystemActions:
             return False
         except Exception as e:
             return False
+    
+    def auto_restart_game_servers(cls) -> bool:
+        """Auto restart game servers."""
+        return cls.do_start_servers(cls.GAME_SERVERS, start_sdk=False, force_restart=True)

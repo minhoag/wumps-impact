@@ -1,8 +1,8 @@
 import httpx
 import time
 from typing import Dict, Any
-from urllib.parse import urlencode, quote
-from utils.constants import REGION, CMD_SEND_MAIL, RETCODE_SUCCESS, MUIP, SENDER, SERVER_URL
+from urllib.parse import urlencode
+from utils.constants import REGION, CMD_SEND_MAIL, RETCODE_SUCCESS, SENDER, SERVER_URL
 from utils.logger import logger
 import random
 

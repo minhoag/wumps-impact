@@ -11,7 +11,7 @@ SENDER = "P・A・I・M・O・N"
 URL="103.195.188.90"
 PORT="2888"
 MUIP="14861"
-SERVER_URL = f"http://{URL}:{PORT}"
+SERVER_URL = f"http://{URL}:{MUIP}"
 # endpoints
 GACHA_INFO = "/gacha/info"
 GACHA_RECORD = "/gacha/record"

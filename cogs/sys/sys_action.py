@@ -111,8 +111,14 @@ class SystemActions:
                 env["HOOK_PRELOAD"] = "./hook/build/lib/libhook.so"
             # Change to server directory and make executable
             server_dir = "/gio/bin"
+            server_path = os.path.join(server_dir, server_name)
             original_dir = os.getcwd()
             try:
+                # Check if server executable exists
+                if not os.path.exists(server_path):
+                    print(f"Server executable not found: {server_path}")
+                    return False
+
                 os.chdir(server_dir)
                 os.chmod(server_name, 0o755)
 
@@ -137,14 +143,23 @@ class SystemActions:
                         pass
 
                     # Start server in tmux session
+                    full_server_path = os.path.join(server_dir, server_name)
                     cmd = ["tmux", "new-session", "-d", "-s", f"{server_name}_session",
-                           f"cd {server_dir}; ./{server_name}"] + server_configs[server_name]
+                           "bash", "-c", f"exec {full_server_path} {' '.join(server_configs[server_name])}"]
+                    print(f"Starting {server_name} with command: {' '.join(cmd)}")
+                    print(f"Full server path: {full_server_path}")
                     subprocess.run(cmd, env=env, check=True)
                     return True
             finally:
                 os.chdir(original_dir)  # Always restore original directory
+        except FileNotFoundError as e:
+            print(f"Command not found when starting {server_name}: {e}")
+            return False
+        except subprocess.CalledProcessError as e:
+            print(f"Command failed when starting {server_name}: {e}")
+            return False
         except Exception as e:
-            print(f"Error starting {server_name}: {e}")
+            print(f"Unexpected error starting {server_name}: {e}")
             return False
         return False
 

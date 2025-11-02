@@ -5,7 +5,7 @@ Handles server management, process control, and log management.
 import os
 import subprocess
 from typing import List, Dict, Tuple
-
+from utils.logger import logger
 SERVER_DIR = "/gio"
 
 class SystemActions:
@@ -28,8 +28,6 @@ class SystemActions:
             return result.returncode == 0
         except (subprocess.CalledProcessError, FileNotFoundError):
             return False
-
-
 
     @staticmethod
     def stop_server(server_name: str) -> bool:
@@ -71,19 +69,15 @@ class SystemActions:
         errors = 0
 
         try:
-            # Get list of files
             files = [f for f in os.listdir(log_dir) if os.path.isfile(os.path.join(log_dir, f))]
-
             for filename in files:
                 file_path = os.path.join(log_dir, filename)
                 try:
-                    # Truncate the file (make it empty) instead of deleting
                     with open(file_path, 'w') as f:
                         f.truncate(0)
                     files_cleared += 1
                 except Exception as e:
                     errors += 1
-
             return files_cleared, errors
 
         except Exception as e:
@@ -114,7 +108,7 @@ class SystemActions:
             try:
                 # Check if server executable exists
                 if not os.path.exists(server_path):
-                    print(f"Server executable not found: {server_path}")
+                    logger.error(f"Server executable not found: {server_path}")
                     return False
 
                 os.chdir(SERVER_DIR)
@@ -141,23 +135,26 @@ class SystemActions:
                         pass
 
                     # Start server in tmux session
-                    full_server_path = os.path.join(SERVER_DIR, server_name)
+                    server_args = ' '.join(server_configs[server_name])
+                    # Use the format that matches the bash script
                     cmd = ["tmux", "new-session", "-d", "-s", f"{server_name}_session",
-                           "bash", "-c", f"exec {full_server_path} {' '.join(server_configs[server_name])}"]
-                    print(f"Starting {server_name} with command: {' '.join(cmd)}")
-                    print(f"Full server path: {full_server_path}")
-                    subprocess.run(cmd, env=env, check=True)
+                           f"cd {SERVER_DIR} && exec ./{server_name} {server_args}"]
+                    logger.info(f"Starting {server_name} with command: {cmd}")
+                    result = subprocess.run(cmd, env=env, capture_output=True, text=True)
+                    if result.returncode != 0:
+                        logger.error(f"Failed to start {server_name}: {result.stderr}")
+                        return False
                     return True
             finally:
                 os.chdir(original_dir)  # Always restore original directory
         except FileNotFoundError as e:
-            print(f"Command not found when starting {server_name}: {e}")
+            logger.error(f"Command not found when starting {server_name}: {e}")
             return False
         except subprocess.CalledProcessError as e:
-            print(f"Command failed when starting {server_name}: {e}")
+            logger.error(f"Command failed when starting {server_name}: {e}")
             return False
         except Exception as e:
-            print(f"Unexpected error starting {server_name}: {e}")
+            logger.error(f"Unexpected error starting {server_name}: {e}")
             return False
         return False
 
@@ -223,12 +220,12 @@ class SystemActions:
                 subprocess.run(["tmux", "new-session", "-d", "-s", "sdk", "java", "-jar", "sdkserver.jar"], check=True)
                 return True, "SDK server started successfully"
             except subprocess.CalledProcessError as e:
-                print(f"Error starting SDK server: {e}")
+                logger.error(f"Error starting SDK server: {e}")
                 return False, f"Error starting SDK server: {e}"
             finally:
                 os.chdir(original_dir)  # Always go back
         else:
-            print(f"SDK JAR not found at {jar_path}")
+            logger.error(f"SDK JAR not found at {jar_path}")
             return False, f"SDK JAR not found at {jar_path}"
 
     @classmethod
@@ -345,7 +342,7 @@ class SystemActions:
                 if not success:
                     if message == "Một session vẫn còn đang chạy":
                         return [message], False
-                    print(f"Warning: Failed to start SDK server: {message}")
+                    logger.warning(f"Failed to start SDK server: {message}")
 
         return ["Đã thành công khởi động server"], False
 

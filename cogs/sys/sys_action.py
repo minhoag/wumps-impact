@@ -21,22 +21,25 @@ class SystemActions:
 
     @staticmethod
     def is_server_running(server_name: str) -> bool:
-        """Check if server tmux session is running."""
+        """Check if server process is running (matches bash script logic)."""
         try:
-            result = subprocess.run(["tmux", "has-session", "-t", f"{server_name}_session"],
-                                  capture_output=True, text=True)
-            return result.returncode == 0
+            # Match bash script: ps -ef|grep "$1 -i "|grep -v grep|grep -v _session
+            result = subprocess.run(["ps", "-ef"], capture_output=True, text=True)
+            if result.returncode == 0:
+                for line in result.stdout.split('\n'):
+                    # Check if line contains the server with -i flag
+                    if f"{server_name} -i " in line and "grep" not in line and "_session" not in line:
+                        return True
+            return False
         except (subprocess.CalledProcessError, FileNotFoundError):
             return False
 
     @staticmethod
     def stop_server(server_name: str) -> bool:
-        """Stop a server by sending C-c to its tmux session."""
+        """Stop a server by sending C-c to its tmux session (matches bash script logic)."""
         try:
-            # Check if tmux session exists
-            result = subprocess.run(["tmux", "has-session", "-t", f"{server_name}_session"],
-                                  capture_output=True, text=True)
-            if result.returncode != 0:
+            # Check if process is running (not just tmux session)
+            if not SystemActions.is_server_running(server_name):
                 return False  # Not running
 
             # Send C-c to stop the server gracefully

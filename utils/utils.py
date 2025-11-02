@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Iterable, Tuple, Optional
 import discord
 from discord.ext import commands
 import os
@@ -18,83 +18,71 @@ class Utils:
     def search_items(query: str, data, search_fields: List[str] = None, max_results: int = 25) -> List[Dict]:
         if not query or not query.strip() or not data:
             return []
-        items_list = list(data.values()) if isinstance(data, dict) else data
+        items_list: Iterable[Dict] = data.values() if isinstance(data, dict) else data
 
         def _norm(s: str) -> str:
-            s = unicodedata.normalize('NFKC', s).lower().strip()
-            return ''.join(ch for ch in unicodedata.normalize('NFD', s) if not unicodedata.combining(ch))
+            normalized = unicodedata.normalize('NFKC', s).lower().strip()
+            return ''.join(ch for ch in unicodedata.normalize('NFD', normalized) if not unicodedata.combining(ch))
 
-        search_terms = [_norm(term) for term in query.strip().split() if term.strip()]
-        if not search_terms:
+        normalized_query = _norm(query)
+        if not normalized_query:
             return []
-        if not search_fields:
-            search_fields = ['vietnameseName', 'globalName', 'value']
-        if items_list and 'name' in items_list[0] and 'name' not in search_fields:
-            search_fields = list(search_fields) + ['name']
 
-        matches_with_scores = []
-        terms_len = len(search_terms)
+        query_terms = tuple(term for term in (_norm(part) for part in query.split()) if term)
+        if not query_terms:
+            return []
+
+        if not search_fields:
+            search_fields = ['vietnameseName', 'globalName']
+        else:
+            search_fields = list(search_fields)
+
+        def score_field(value: str, field_index: int) -> Optional[Tuple[int, int, int, int, int]]:
+            norm_value = _norm(value)
+            if not norm_value:
+                return None
+
+            matching_terms = [term for term in query_terms if term in norm_value]
+            if not matching_terms:
+                return None
+
+            missing_terms = len(query_terms) - len(matching_terms)
+            if norm_value == normalized_query:
+                match_type = 0
+            elif norm_value.startswith(normalized_query):
+                match_type = 1
+            elif normalized_query in norm_value:
+                match_type = 2
+            else:
+                match_type = 3
+
+            first_pos = min(norm_value.find(term) for term in matching_terms)
+            return (missing_terms, match_type, first_pos, len(norm_value), field_index)
+
+        scored_items: List[Tuple[Tuple[int, int, int, int, int], Dict]] = []
 
         for item in items_list:
-            best_field_score = float('inf')
-            matched_terms = 0
-            item_score = 0
-
-            norm_fields = {}
-            for f in search_fields:
-                v = item.get(f, '')
-                if v:
-                    norm_fields[f] = _norm(str(v))
-            if not norm_fields:
+            if not isinstance(item, dict):
                 continue
 
-            for f, field_value in norm_fields.items():
-                field_score = 0
-                terms_found_in_field = 0
-                words = None
+            best_score = None
+            for idx, field_name in enumerate(search_fields):
+                field_value = item.get(field_name)
+                if not field_value:
+                    continue
 
-                for term in search_terms:
-                    if field_value == term:
-                        field_score += 0
-                        terms_found_in_field += 1
-                        item_score += 10
-                    elif field_value.startswith(term):
-                        field_score += 1
-                        terms_found_in_field += 1
-                        item_score += 5
-                    elif term in field_value:
-                        field_score += 2
-                        terms_found_in_field += 1
-                        item_score += 2
-                    else:
-                        if words is None:
-                            words = field_value.split()
-                        found = False
-                        for w in words:
-                            if term in w:
-                                field_score += 3
-                                terms_found_in_field += 1
-                                item_score += 1
-                                found = True
-                                break
-                        if not found:
-                            continue
+                score = score_field(str(field_value), idx)
+                if score is None:
+                    continue
 
-                if terms_found_in_field:
-                    avg_field_score = field_score / terms_found_in_field
-                    if avg_field_score < best_field_score:
-                        best_field_score = avg_field_score
-                    matched_terms += terms_found_in_field
+                if best_score is None or score < best_score:
+                    best_score = score
 
-            if best_field_score < float('inf'):
-                coverage_bonus = (matched_terms / terms_len) * 5
-                name_length = len(str(item.get('vietnameseName', '') + item.get('globalName', '')))
-                length_penalty = min(name_length / 50, 3)
-                final_score = best_field_score + coverage_bonus + length_penalty + item_score
-                matches_with_scores.append((item, final_score))
+            if best_score is not None:
+                scored_items.append((best_score, item))
 
-        matches_with_scores.sort(key=lambda x: x[1])
-        return [item for item, _ in matches_with_scores[:max_results]]
+        scored_items.sort(key=lambda entry: entry[0])
+        return [item for _, item in scored_items[:max_results]]
 
     @staticmethod
     def get_image_file(filename: str) -> discord.File:

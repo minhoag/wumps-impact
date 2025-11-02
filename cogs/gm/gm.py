@@ -19,7 +19,7 @@ class GM(commands.Cog):
         matching_items = await self.bot.loop.run_in_executor(None, lambda: Utils.search_items(current, ITEMS, ['vietnameseName', 'globalName'], 25))
         return [
             app_commands.Choice(
-                name=item.get('vietnameseName', item.get('globalName', 'Unknown')),
+                name=Utils.get_item_name(item),
                 value=int(item['value'])
             ) for item in matching_items
         ]

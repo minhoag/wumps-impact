@@ -6,6 +6,12 @@ from .gacha_action import GachaActions
 from utils.utils import Utils
 
 
+BANNER_LOOKUP = {
+    str(banner["value"]): banner
+    for banner in BANNERS
+    if isinstance(banner, dict) and banner.get("value")
+}
+
 class GachaEmbed(Embed):
     def __init__(self, id: int, gacha_type: int, id1: Optional[int], id2: Optional[int], start: Optional[str], end: Optional[str], enabled: int, banner1=None, banner2=None):
         super().__init__()
@@ -19,17 +25,19 @@ class GachaEmbed(Embed):
 
         # Use provided banner objects, or find them from IDs if not provided
         if banner1 is None and id1:
-            for banner in BANNERS:
-                if banner.get('value') and str(banner.get('value')) == str(id1):
-                    banner1 = banner
-                    break
+            banner1 = BANNER_LOOKUP.get(str(id1))
         if banner2 is None and id2:
-            for banner in BANNERS:
-                if banner.get('value') and str(banner.get('value')) == str(id2):
-                    banner2 = banner
-                    break
+            banner2 = BANNER_LOOKUP.get(str(id2))
 
+        self.banner1 = banner1
+        self.banner2 = banner2
         self.display_up4_item_list = GachaActions.get_display_up4_item_list(banner1, banner2)
+        self.featured_item_names = tuple(
+            Utils.get_item_name(item_id) for item_id in (self.id1, self.id2) if item_id
+        )
+        self.up4_item_names = tuple(
+            Utils.get_item_name(item_id) for item_id in self.display_up4_item_list
+        ) if self.display_up4_item_list else tuple()
         self.gacha_type_name = {
             201: "Banner nhân vật 2",
             301: "Banner nhân vật 1",
@@ -51,19 +59,16 @@ class GachaEmbed(Embed):
         self.add_field(name="Loại sự kiện", value=self.gacha_type_name[self.gacha_type], inline=True)
 
         # Display selected items with names
-        items_text = ""
-        if self.id1:
-            items_text += f"{Utils.get_item_name(self.id1)}"
-        if self.id2:
-            items_text += f"\n{Utils.get_item_name(self.id2)}"
-        if not items_text:
+        if self.featured_item_names:
+            items_text = "\n".join(self.featured_item_names)
+        else:
             items_text = "Chưa chọn vật phẩm nào"
 
         self.add_field(name="5 sao", value=items_text, inline=False)
 
         # Format the 4-star items list for display
-        if self.display_up4_item_list:
-            display_text = " • " + "\n • ".join(Utils.get_item_name(item) for item in self.display_up4_item_list)
+        if self.up4_item_names:
+            display_text = " • " + "\n • ".join(self.up4_item_names)
         else:
             display_text = "Chưa chọn vật phẩm nào"
 
@@ -74,39 +79,11 @@ class GachaEmbed(Embed):
 
         return self.embed
 
-# TODO: refactor draft embed
-class DraftGachaEmbed(Embed):
+class DraftGachaEmbed(GachaEmbed):
     def __init__(self, id: int, gacha_type: int, id1: Optional[int], id2: Optional[int], start: Optional[str], end: Optional[str], enabled: int, banner1=None, banner2=None):
-        super().__init__()
-        self.id = id
-        self.gacha_type = gacha_type
-        self.id1 = id1
-        self.id2 = id2
-        self.start = start or datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.end = end or datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.enabled = enabled
-
-        # Use provided banner objects, or find them from IDs if not provided
-        if banner1 is None and id1:
-            for banner in BANNERS:
-                if banner.get('value') and str(banner.get('value')) == str(id1):
-                    banner1 = banner
-                    break
-        if banner2 is None and id2:
-            for banner in BANNERS:
-                if banner.get('value') and str(banner.get('value')) == str(id2):
-                    banner2 = banner
-                    break
-
-        self.display_up4_item_list = GachaActions.get_display_up4_item_list(banner1, banner2)
-        self.gacha_type_name = {
-            201: "Banner nhân vật 2",
-            301: "Banner nhân vật 1",
-            302: "Banner vũ khí",
-        }
+        super().__init__(id, gacha_type, id1, id2, start, end, enabled, banner1=banner1, banner2=banner2)
 
     def build_embed(self):
-        # TODO: add get items name for this draft embed and remove duplicate code
         self.embed.title = "Xác nhận sự kiện"
         self.embed.description = "Đây là bản nháp của sự kiện sẽ được tạo. Hãy kiểm tra kỹ trước khi xác nhận."
         self.embed.color = COLORS["warning"]
@@ -120,20 +97,15 @@ class DraftGachaEmbed(Embed):
         self.add_field(name="Loại sự kiện", value=self.gacha_type_name[self.gacha_type], inline=True)
 
         # Display selected items with names
-        items_text = ""
-        if self.id1:
-            item_name = Utils.get_item_name(self.id1)
-            items_text += f"• {item_name}"
-        if self.id2:
-            item_name = Utils.get_item_name(self.id2)
-            items_text += f"\n• {item_name}"
-        if not items_text:
+        if self.featured_item_names:
+            items_text = "\n".join(f"• {name}" for name in self.featured_item_names)
+        else:
             items_text = "Không có vật phẩm nào được chọn"
 
         self.add_field(name="Vật phẩm được chọn", value=items_text, inline=False)
 
-        if self.display_up4_item_list:
-            display_text = " • " + "\n • ".join(self.display_up4_item_list)
+        if self.up4_item_names:
+            display_text = "\n".join(f"• {name}" for name in self.up4_item_names)
         else:
             display_text = "Không tìm thấy vật phẩm 4 sao đi kèm"
 

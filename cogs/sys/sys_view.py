@@ -62,6 +62,26 @@ class ServerPanelView(View):
         await interaction.response.defer(ephemeral=True)
         await cog.do_start_servers(interaction, SystemActions.START_SERVER_ORDER, start_sdk=True)
 
+    @discord.ui.button(label="Khởi động Gameserver", style=discord.ButtonStyle.primary, custom_id="sys_start_gameserver")
+    async def start_gameserver(self, interaction: Interaction, button: Button):
+        cog = interaction.client.get_cog('SYS')
+
+        await interaction.response.defer(ephemeral=True)
+        await cog.do_start_servers(interaction, ["gameserver"], start_sdk=False)
+
+    @discord.ui.button(label="Khởi động lại Gameserver", style=discord.ButtonStyle.primary, custom_id="sys_restart_gameserver")
+    async def restart_gameserver(self, interaction: Interaction, button: Button):
+        cog = interaction.client.get_cog('SYS')
+
+        await interaction.response.defer(ephemeral=True)
+        await cog.do_restart_servers(interaction, ["gameserver"])
+
+    @discord.ui.button(label="Xóa Logs", style=discord.ButtonStyle.secondary, custom_id="sys_clear_logs")
+    async def clear_logs(self, interaction: Interaction, button: Button):
+        cog = interaction.client.get_cog('SYS')
+        await interaction.response.defer(ephemeral=True)
+        await cog.do_clear_logs(interaction)
+
     @discord.ui.button(label="Dừng tất cả", style=discord.ButtonStyle.danger, custom_id="sys_stop_all")
     async def stop_all(self, interaction: Interaction, button: Button):
         cog = interaction.client.get_cog('SYS')
@@ -104,19 +124,6 @@ class ServerPanelView(View):
             print(f"[DEBUG] Interaction expired during confirmation process")
             pass
 
-    @discord.ui.button(label="Khởi động Gameserver", style=discord.ButtonStyle.primary, custom_id="sys_start_gameserver")
-    async def start_gameserver(self, interaction: Interaction, button: Button):
-        cog = interaction.client.get_cog('SYS')
-        
-        await interaction.response.defer(ephemeral=True)
-        await cog.do_start_servers(interaction, ["gameserver"], start_sdk=False)
-
-    @discord.ui.button(label="Xóa Logs", style=discord.ButtonStyle.secondary, custom_id="sys_clear_logs")
-    async def clear_logs(self, interaction: Interaction, button: Button):
-        cog = interaction.client.get_cog('SYS')
-        await interaction.response.defer(ephemeral=True)
-        await cog.do_clear_logs(interaction)
-    
     @discord.ui.select(placeholder="Quản lý sự kiện", custom_id="sys_event_toggle", row=0, options=[
         discord.SelectOption(label="Sự kiện địa mạch", value="toggle_blossom", description="Bật/tắt sự kiện Hoa Địa Mạch"),
     ])

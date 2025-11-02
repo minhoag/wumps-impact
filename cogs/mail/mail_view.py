@@ -107,16 +107,39 @@ class MailView(discord.ui.View):
                 ephemeral=True
             )
 
+    @discord.ui.button(label="Sửa và thử lại", style=discord.ButtonStyle.secondary, disabled=True)
+    async def retry_edit_mail(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """Handle retrying to send mail or editing the mail content after failure."""
+        # Re-enable all buttons for editing
+        for item in self.children:
+            if isinstance(item, discord.ui.Button):
+                item.disabled = False
+
+        # Reset the embed to show current mail data (without status)
+        embed = self._render_embed()
+        embed.set_description("")
+        embed.remove_fields()
+
+        await interaction.response.edit_message(
+            embed=embed.build_embed(),
+            view=self
+        )
+
     @discord.ui.button(label="Xác nhận gửi", style=discord.ButtonStyle.primary)
     async def confirm_send(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Handle mail validation and sending with comprehensive validation and detailed feedback."""
-        is_valid, error_message = MailActions.validate(self.mail_data)    
+        is_valid, error_message = MailActions.validate(self.mail_data)
         if not is_valid:
             await interaction.response.send_message(
                 f"Lỗi: ** {error_message} **",
                 ephemeral=True
             )
             return
+
+        # Disable retry/edit button during sending attempt
+        for item in self.children:
+            if isinstance(item, discord.ui.Button) and item.label == "Sửa và thử lại":
+                item.disabled = True
         await interaction.response.defer()
         
         embed = self._render_embed()
@@ -167,10 +190,20 @@ class MailView(discord.ui.View):
                 await self.on_mail_sent(True, message)
                 
         else:
+            # Enable retry/edit button for failed sends
+            for item in self.children:
+                if isinstance(item, discord.ui.Button) and item.label == "Sửa và thử lại":
+                    item.disabled = False
+
             embed.set_mail_status('failed', message)
-            embed.set_foooter_text("Gửi thư thất bại. Hãy thử lại sau")
+            embed.set_foooter_text("Gửi thư thất bại. Bạn có thể thử lại hoặc chỉnh sửa mail")
             embed.set_color(COLORS["danger"])
             embed.set_description("Thư gửi thất bại! Nguyên nhân: " + message)
+            embed.add_field(
+                name="Lựa chọn",
+                value="• Sử dụng nút **Sửa và thử lại** để chỉnh sửa mail và gửi lại\n• Hoặc đóng tin nhắn này để hủy",
+                inline=False
+            )
             await interaction.followup.edit_message(
                 interaction.message.id,
                 embed=embed,

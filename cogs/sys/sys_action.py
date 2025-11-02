@@ -10,63 +10,43 @@ from utils.logger import logger
 
 
 class SystemActions:
-    """Handles all system-related business logic operations."""
-
-    # Server order from the bash script
     START_SERVER_ORDER = [
-        "dispatch", "nodeserver", "dbgate", "oaserver", "multiserver",
-        "muipserver", "gameserver", "gateserver", "pathfindingserver", "tothemoonserver"
+        "dispatch", "nodeserver", "dbgate", "gateserver", "gameserver", "multiserver", "muipserver"
     ]
     STOP_SERVER_ORDER = [
-        "tothemoonserver", "pathfindingserver", "gateserver", "gameserver",
-        "multiserver", "muipserver", "oaserver", "dbgate", "nodeserver", "dispatch"
+        "muipserver", "multiserver", "gameserver", "gateserver", "dbgate", "nodeserver", "dispatch"
     ]
     STATUS_LIST = [
-        "dispatch", "nodeserver", "dbgate", "oaserver", "multiserver",
-        "muipserver", "gameserver", "gateserver", "pathfindingserver", "tothemoonserver"
+        "dispatch", "nodeserver", "dbgate", "gateserver", "gameserver", "multiserver", "muipserver"
     ]
 
     @staticmethod
-    def get_server_pid(server_name: str) -> str:
-        """Get PID of a running server."""
+    def is_server_running(server_name: str) -> bool:
+        """Check if server tmux session is running."""
         try:
-            result = subprocess.run(
-                ["ps", "aux"],
-                capture_output=True, text=True, check=True
-            )
-            for line in result.stdout.split('\n'):
-                if f"{server_name} -i" in line:
-                    parts = line.split()
-                    return parts[1]  # PID is second column
-        except subprocess.CalledProcessError:
-            pass
-        return ""
+            result = subprocess.run(["tmux", "has-session", "-t", f"{server_name}_session"],
+                                  capture_output=True, text=True)
+            return result.returncode == 0
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            return False
+
+
 
     @staticmethod
-    def kill_process(pid: str, force: bool = False) -> bool:
-        """Kill a process by PID."""
+    def stop_server(server_name: str) -> bool:
+        """Stop a server by sending C-c to its tmux session."""
         try:
-            if force:
-                subprocess.run(["kill", "-9", pid], check=True)
-            else:
-                subprocess.run(["kill", pid], check=True)
+            # Check if tmux session exists
+            result = subprocess.run(["tmux", "has-session", "-t", f"{server_name}_session"],
+                                  capture_output=True, text=True)
+            if result.returncode != 0:
+                return False  # Not running
+
+            # Send C-c to stop the server gracefully
+            subprocess.run(["tmux", "send-keys", "-t", f"{server_name}_session", "C-c"], check=True)
             return True
         except subprocess.CalledProcessError:
             return False
-
-    @staticmethod
-    def get_log_file_size(file_path: str) -> str:
-        """Get the size of a log file in human readable format."""
-        if os.path.exists(file_path):
-            size_bytes = os.path.getsize(file_path)
-            # Convert to appropriate unit
-            for unit in ['B', 'KB', 'MB', 'GB']:
-                if size_bytes < 1024.0:
-                    return ".1f"
-                size_bytes /= 1024.0
-            return ".1f"
-        else:
-            return "File not found"
 
     @staticmethod
     def check_and_clean_large_log(file_path: str, max_size_gb: float = 2.0) -> bool:
@@ -116,7 +96,7 @@ class SystemActions:
         try:
             # Set environment variables like in the bash script
             env = os.environ.copy()
-            env["ASAN_OPTIONS"] = "poison_heap=false:poison_partial=false:poison_array_cookie=false:allow_user_poisoning=false:alloc_dealloc_mismatch=false:new_delete_type_mismatch=false:detect_leaks=false:check_printf=false:detect_container_overflow=false:detect_deadlocks=false:detect_write_exec=false:detect_odr_violation=0:strict_string_checks=false:strict_memcmp=false:intercept_strstr=false:intercept_strpbrk=false:intercept_strndup=false:intercept_strchr=false:intercept_memcmp=false:intercept_memmem=false:intercept_intrin=false:intercept_stat=false:intercept_send=false:replace_intrin=false:replace_str=false:report_globals=0:malloc_context_size=0:allocator_release_to_os_interval_ms=5000:quarantine_size_mb=16:max_malloc_fill_size=512:max_redzone=64:abort_on_error=0:halt_on_error=0"
+            env["ASAN_OPTIONS"] = "poison_heap=false:poison_partial=false:poison_array_cookie=false:allow_user_poisoning=false:alloc_dealloc_mismatch=false:new_delete_type_mismatch=false:detect_leaks=false:check_printf=false:detect_container_overflow=false:detect_deadlocks=false:detect_write_exec=false:detect_odr_violation=0:strict_string_checks=false:strict_memcmp=false:intercept_strstr=false:intercept_strspn=false:intercept_strtok=false:intercept_strpbrk=false:intercept_strlen=false:intercept_strndup=false:intercept_strchr=false:intercept_memcmp=false:intercept_memmem=false:intercept_intrin=false:intercept_stat=false:intercept_send=false:replace_intrin=false:replace_str=false:report_globals=0:malloc_context_size=0:allocator_release_to_os_interval_ms=5000:quarantine_size_mb=64:max_malloc_fill_size=512:max_redzone=64"
             # Find ASan library
             asan_lib = ""
             try:
@@ -141,17 +121,25 @@ class SystemActions:
                     "dispatch": ["-i", "9001.5.1.1"],
                     "nodeserver": ["-i", "9001.3.1.1"],
                     "dbgate": ["-i", "9001.4.1.1"],
-                    "oaserver": ["-i", "9001.8.1.1"],  # missing oaserver
-                    "multiserver": ["-i", "9001.7.1.1"],
-                    "muipserver": ["-i", "9001.6.1.1"],
-                    "gameserver": ["-i", "9001.2.1.1"],
                     "gateserver": ["-i", "9001.1.1.1"],
-                    "pathfindingserver": ["-i", "9001.9.1.1"],  # missing pathfindingserver
-                    "tothemoonserver": ["-i", "9001.10.1.1"]   # missing tothemoonserver
+                    "gameserver": ["-i", "9001.2.1.1"],
+                    "multiserver": ["-i", "9001.7.1.1"],
+                    "muipserver": ["-i", "9001.6.1.1"]
                 }
                 if server_name in server_configs:
-                    cmd = ["nohup", f"./{server_name}"] + server_configs[server_name]
-                    subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=env, cwd=server_dir)
+                    # Check if tmux session already exists
+                    try:
+                        result = subprocess.run(["tmux", "has-session", "-t", f"{server_name}_session"],
+                                              capture_output=True, text=True)
+                        if result.returncode == 0:
+                            return True  # Already running
+                    except (subprocess.CalledProcessError, FileNotFoundError):
+                        pass
+
+                    # Start server in tmux session
+                    cmd = ["tmux", "new-session", "-d", "-s", f"{server_name}_session",
+                           f"cd {server_dir}; ./{server_name}"] + server_configs[server_name]
+                    subprocess.run(cmd, env=env, check=True)
                     return True
             finally:
                 os.chdir(original_dir)  # Always restore original directory
@@ -235,8 +223,7 @@ class SystemActions:
         """Get status of all servers and log files."""
         server_statuses = {}
         for server in cls.STATUS_LIST:
-            pid = cls.get_server_pid(server)
-            if pid:
+            if cls.is_server_running(server):
                 server_statuses[server] = {
                     "name": f"{server}",
                     "value": "Online"
@@ -267,11 +254,18 @@ class SystemActions:
             "value": event_status
         }
         
-        # Get tmux sessions information
-        tmux_sessions = cls.get_tmux_sessions()
+        # Get server-related tmux sessions only
+        all_tmux_sessions = cls.get_tmux_sessions()
+        server_sessions = []
+        # Filter to only server-related sessions (end with _session or named 'sdk')
+        for session in all_tmux_sessions:
+            session_name = session['name']
+            if session_name.endswith('_session') or session_name == 'sdk':
+                server_sessions.append(session)
+
         server_statuses["tmux_sessions"] = {
             "name": "TMUX SESSIONS",
-            "value": tmux_sessions,
+            "value": server_sessions,
             "type": "tmux_list"
         }
 
@@ -287,7 +281,7 @@ class SystemActions:
         stopped = []
 
         for server in servers:
-            if cls.get_server_pid(server):
+            if cls.is_server_running(server):
                 running.append(server)
             else:
                 stopped.append(server)
@@ -317,10 +311,11 @@ class SystemActions:
         # Start running servers if force restart
         if force_restart:
             for server in running_servers:
-                # Kill existing process first
-                pid = cls.get_server_pid(server)
-                if pid:
-                    cls.kill_process(pid, force=True)
+                # Stop existing server gracefully first
+                cls.stop_server(server)
+                # Wait a bit for graceful shutdown
+                import time
+                time.sleep(1)
                 # Start new instance
                 cls.start_server(server)
 
@@ -341,14 +336,13 @@ class SystemActions:
 
         return ["Đã thành công khởi động server"], False
 
+
     @classmethod
     def do_force_stop_all(cls) -> List[str]:
         """Force stop all servers. Returns simplified success message."""
         # Stop all servers in reverse order
         for server in cls.STOP_SERVER_ORDER:
-            pid = cls.get_server_pid(server)
-            if pid:
-                cls.kill_process(pid, force=True)
+            cls.stop_server(server)
 
         # Stop SDK server by killing tmux session
         cls.stop_sdk_server()
@@ -406,9 +400,7 @@ class SystemActions:
         target_branch = event_branches[event_name.lower()]
 
         try:
-            # git checkout target branch
             subprocess.run(["git", "checkout", target_branch], cwd=data_path, check=True)
-            # git pull target branch
             subprocess.run(["git", "pull", "origin", target_branch], cwd=data_path, check=True)
             return True
         except subprocess.CalledProcessError as e:
@@ -416,6 +408,32 @@ class SystemActions:
         except Exception as e:
             return False
     
-    def auto_restart_game_servers(cls) -> bool:
-        """Auto restart game servers."""
-        return cls.do_start_servers(cls.GAME_SERVERS, start_sdk=False, force_restart=True)
+
+    @classmethod
+    def do_restart_servers(cls, servers: List[str]) -> Tuple[List[str], bool]:
+        """Restart servers with proper stop/start sequence."""
+        messages = []
+
+        for server in servers:
+            if cls.is_server_running(server):
+                # Stop server gracefully
+                cls.stop_server(server)
+
+                # Wait for graceful shutdown (check session is gone)
+                import time
+                timeout = 10
+                while timeout > 0:
+                    if not cls.is_server_running(server):
+                        break
+                    time.sleep(1)
+                    timeout -= 1
+
+                # Start server
+                cls.start_server(server)
+                messages.append(f"Đã khởi động lại {server}")
+            else:
+                # Not running, just start
+                cls.start_server(server)
+                messages.append(f"Đã khởi động {server}")
+
+        return messages, False

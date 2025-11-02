@@ -279,7 +279,27 @@ class SYS(commands.Cog):
         color = discord.Color.blue() if files_deleted > 0 else discord.Color.yellow()
         desc = f"Người dùng {interaction.user.mention} đã xóa {files_deleted} file log" if files_deleted > 0 else f"Người dùng {interaction.user.mention} đã thử xóa logs nhưng không có file nào để xóa"
         await Utils.log_system_event(self.bot, self.log_channel, f"Logs Cleared ({status})", desc, color)
-    
+
+    async def do_restart_servers(self, interaction: Interaction, servers: List[str]):
+        """Restart specific servers."""
+        if not permission(interaction, self.bot):
+            await interaction.response.send_message("Bạn không có quyền sử dụng bot", ephemeral=True)
+            return
+
+        results, _ = SystemActions.do_restart_servers(servers)
+
+        for result in results:
+            await interaction.followup.send(result, ephemeral=True)
+
+        # Log restart action
+        server_list = ", ".join(servers)
+        await Utils.log_system_event(
+            self.bot, self.log_channel,
+            "Servers Restarted",
+            f"Người dùng {interaction.user.mention} đã khởi động lại servers: {server_list}",
+            discord.Color.orange()
+        )
+
     async def do_start_laylines(self, interaction: Interaction, event: str):
         """Handle starting/stopping laylines events (confirmation handled in view)."""
         if not permission(interaction, self.bot):

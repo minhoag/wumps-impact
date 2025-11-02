@@ -23,7 +23,6 @@ class SystemActions:
     def is_server_running(server_name: str) -> bool:
         """Check if server process is running (matches bash script logic)."""
         try:
-            # Match bash script: ps -ef|grep "$1 -i "|grep -v grep|grep -v _session
             result = subprocess.run(["ps", "-ef"], capture_output=True, text=True)
             if result.returncode == 0:
                 for line in result.stdout.split('\n'):

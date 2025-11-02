@@ -137,8 +137,10 @@ class SystemActions:
                     # Start server in tmux session
                     server_args = ' '.join(server_configs[server_name])
                     # Use the format that matches the bash script
+                    # Each server has its own subdirectory: /gio/servername/servername
+                    server_subdir = os.path.join(SERVER_DIR, server_name)
                     cmd = ["tmux", "new-session", "-d", "-s", f"{server_name}_session",
-                           f"cd {SERVER_DIR} && exec ./{server_name} {server_args}"]
+                           f"cd {server_subdir} && ./{server_name} {server_args}"]
                     logger.info(f"Starting {server_name} with command: {cmd}")
                     result = subprocess.run(cmd, env=env, capture_output=True, text=True)
                     if result.returncode != 0:

@@ -95,13 +95,11 @@ class SYS(commands.Cog):
                     server_display = "SDK SERVER"
                 combined_text += f"[OFFLINE] {server_display}\n"
 
-        combined_text += "```\n**TRẠNG THÁI SỰ KIỆN**\n```\n"
-
         # Add event status
-        for server_name, status in statuses.items():
-            if "event_status" in server_name:
-                combined_text += f"{status['value']}\n"
-                break
+        event_status = statuses.get("event_status", {})
+        if event_status:
+            combined_text += f"```\n**{event_status['name']}**\n```\n"
+            combined_text += f"{event_status['value']}\n"
 
         combined_text += "```\n**TMUX SESSIONS**\n```\n"
         

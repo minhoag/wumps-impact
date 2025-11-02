@@ -269,11 +269,9 @@ class SystemActions:
         # Get server-related tmux sessions only
         all_tmux_sessions = cls.get_tmux_sessions()
         server_sessions = []
-        # Filter to only server-related sessions (end with _session or named 'sdk')
-        for session in all_tmux_sessions:
-            session_name = session['name']
-            if session_name.endswith('_session') or session_name == 'sdk':
-                server_sessions.append(session)
+        # Only wumpscord session
+        if "wumpscord" in all_tmux_sessions:
+            server_sessions.append(all_tmux_sessions["wumpscord"])
 
         server_statuses["tmux_sessions"] = {
             "name": "TMUX SESSIONS",

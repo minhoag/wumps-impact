@@ -6,8 +6,7 @@ import os
 import subprocess
 from typing import List, Dict, Tuple
 
-from utils.logger import logger
-
+SERVER_DIR = "/gio"
 
 class SystemActions:
     START_SERVER_ORDER = [
@@ -110,8 +109,7 @@ class SystemActions:
             else:
                 env["HOOK_PRELOAD"] = "./hook/build/lib/libhook.so"
             # Change to server directory and make executable
-            server_dir = "/gio/bin"
-            server_path = os.path.join(server_dir, server_name)
+            server_path = os.path.join(SERVER_DIR, server_name)
             original_dir = os.getcwd()
             try:
                 # Check if server executable exists
@@ -119,7 +117,7 @@ class SystemActions:
                     print(f"Server executable not found: {server_path}")
                     return False
 
-                os.chdir(server_dir)
+                os.chdir(SERVER_DIR)
                 os.chmod(server_name, 0o755)
 
                 # Server configurations from bash script
@@ -143,7 +141,7 @@ class SystemActions:
                         pass
 
                     # Start server in tmux session
-                    full_server_path = os.path.join(server_dir, server_name)
+                    full_server_path = os.path.join(SERVER_DIR, server_name)
                     cmd = ["tmux", "new-session", "-d", "-s", f"{server_name}_session",
                            "bash", "-c", f"exec {full_server_path} {' '.join(server_configs[server_name])}"]
                     print(f"Starting {server_name} with command: {' '.join(cmd)}")
@@ -284,7 +282,7 @@ class SystemActions:
             "type": "tmux_list"
         }
 
-        gameserver_log = "/gio/bin/log/gameserver.log"
+        gameserver_log = os.path.join(SERVER_DIR, "log", "gameserver.log")
         cls.check_and_clean_large_log(gameserver_log)
 
         return server_statuses
@@ -367,7 +365,7 @@ class SystemActions:
     @classmethod
     def do_clear_logs(cls) -> Tuple[List[str], int, int]:
         """Clear all log files by truncating them. Returns simplified success message."""
-        log_dir = "/gio/bin/log"
+        log_dir = os.path.join(SERVER_DIR, "log")
 
         files_cleared, errors = cls.clear_log_directory(log_dir)
         if files_cleared > 0:

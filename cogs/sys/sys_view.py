@@ -55,42 +55,42 @@ class ServerPanelView(View):
     }
         
     @discord.ui.button(label="Start", style=discord.ButtonStyle.success, custom_id="sys_start_all")
-    async def start_all(self, interaction: Interaction):
+    async def start_all(self, interaction: Interaction, button: Button):
         cog = interaction.client.get_cog('SYS')
-        
+
         await interaction.response.defer(ephemeral=True)
         await cog.do_start_servers(interaction)
-    
+
     @discord.ui.button(label="Stop", style=discord.ButtonStyle.danger, custom_id="sys_stop_all")
-    async def stop_all(self, interaction: Interaction):
+    async def stop_all(self, interaction: Interaction, button: Button):
         cog = interaction.client.get_cog('SYS')
-        
+
         await interaction.response.defer(ephemeral=True)
         await cog.do_stop_servers(interaction)
 
     @discord.ui.button(label="Restart", style=discord.ButtonStyle.secondary, custom_id="sys_restart_all")
-    async def restart_all(self, interaction: Interaction):
+    async def restart_all(self, interaction: Interaction, button: Button):
         cog = interaction.client.get_cog('SYS')
-        
+
         await interaction.response.defer(ephemeral=True)
         await cog.do_restart_servers(interaction)
-    
+
     @discord.ui.button(label="Laylines", style=discord.ButtonStyle.secondary, custom_id="sys_start_laylines")
-    async def start_laylines(self, interaction: Interaction):
+    async def start_laylines(self, interaction: Interaction, button: Button):
         cog = interaction.client.get_cog('SYS')
-        
+
         await interaction.response.defer(ephemeral=True)
         await cog.do_start_laylines(interaction)
-    
+
     @discord.ui.button(label="Gameserver", style=discord.ButtonStyle.secondary, custom_id="sys_stop_laylines")
-    async def restart_gameserver(self, interaction: Interaction):
+    async def restart_gameserver(self, interaction: Interaction, button: Button):
         cog = interaction.client.get_cog('SYS')
-        
+
         await interaction.response.defer(ephemeral=True)
         await cog.do_restart_gameserver(interaction)
-    
+
     @discord.ui.button(label="Dọn Logs", style=discord.ButtonStyle.secondary, custom_id="sys_clear_logs")
-    async def clear_logs(self, interaction: Interaction):
+    async def clear_logs(self, interaction: Interaction, button: Button):
         cog = interaction.client.get_cog('SYS')
 
         await interaction.response.defer(ephemeral=True)

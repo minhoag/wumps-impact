@@ -113,8 +113,10 @@ class SystemActions:
                 })
                 continue
             server_binary = server_dir.split('/')[-1]
-            self.tm.cmd("new-session", "-d", "-s", f"{server_binary}_session",
-                       TMUX_PARAM.replace("${server}", server_binary).replace("${server_path}", SERVER_DIR))
+            appid = APP_ID[server_name]['appid']
+            # Use subprocess to run tmux command directly (matching bash script)
+            cmd = f"tmux new-session -d -s {server_binary}_session '{TMUX_PARAM.replace('${server}', server_binary).replace('${server_path}', SERVER_DIR).replace(f'$(eval echo \\${{server}}_appid)', appid).replace(r'\\$', '$')}'"
+            subprocess.run(cmd, shell=True, capture_output=True, text=True)
         return status # empty means all run
     
     def stop_server(self, service_name: str = None) -> List[Dict[str, str]]:
@@ -155,6 +157,7 @@ class SystemActions:
         for server_name, server_dir in servers:
             server_binary = server_dir.split('/')[-1]
 
+            appid = APP_ID[server_name]['appid']
             if self.is_service_running(server_name):
                 # Use pgrep to get PID and kill -9 to force kill
                 while self.is_service_running(server_name):
@@ -168,11 +171,13 @@ class SystemActions:
                     if result.returncode != 0:  # session not found
                         break
                     time.sleep(1)
-                self.tm.cmd("new-session", "-d", "-s", f"{server_binary}_session",
-                           TMUX_PARAM.replace("${server}", server_binary).replace("${server_path}", SERVER_DIR))
+                # Use subprocess to run tmux command directly
+                cmd = f"tmux new-session -d -s {server_binary}_session '{TMUX_PARAM.replace('${server}', server_binary).replace('${server_path}', SERVER_DIR).replace(f'$(eval echo \\${{server}}_appid)', appid).replace(r'\\$', '$')}'"
+                subprocess.run(cmd, shell=True, capture_output=True, text=True)
             else:
-                self.tm.cmd("new-session", "-d", "-s", f"{server_binary}_session",
-                           TMUX_PARAM.replace("${server}", server_binary).replace("${server_path}", SERVER_DIR))
+                # Use subprocess to run tmux command directly
+                cmd = f"tmux new-session -d -s {server_binary}_session '{TMUX_PARAM.replace('${server}', server_binary).replace('${server_path}', SERVER_DIR).replace(f'$(eval echo \\${{server}}_appid)', appid).replace(r'\\$', '$')}'"
+                subprocess.run(cmd, shell=True, capture_output=True, text=True)
 
         return status # empty means all restarted successfully
     

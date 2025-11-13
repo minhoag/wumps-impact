@@ -114,16 +114,16 @@ class SystemActions:
                 continue
             server_binary = server_dir.split('/')[-1]
             appid = APP_ID[server_name]['appid']
+            # Build the command string - replace placeholders
             tmux_cmd = TMUX_PARAM.replace('${server}', server_binary).replace('${server_path}', SERVER_DIR).replace(r'\$', '$')
             tmux_cmd = tmux_cmd.replace(f'$(eval echo ${{{server_binary}}}_appid)', appid)
             cmd = f'tmux new-session -d -s {server_binary}_session "{tmux_cmd}"'
+            logger.info(f"Executing command: {cmd}")
             result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-            logger.warning(f"Result: {result.stdout}")
-            logger.warning(f"Result: {result.stderr}")
             if result.returncode != 0:
                 logger.error(f"Lỗi khi khởi động server {server_name}: {result.stderr}")
             else:
-                logger.info(f"Server {server_name} chạy thành công")
+                logger.info(f"Server {server_name} started successfully")
         return status # empty means all run
     
     def stop_server(self, service_name: str = None) -> List[Dict[str, str]]:

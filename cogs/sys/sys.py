@@ -172,14 +172,31 @@ class SYS(commands.Cog):
         # Clear the manually stopped flag when starting servers
         self.manually_stopped = False
         status = self.sys_actions.start_server(server_name)
-        msg = ""
+
         if status:
+            embed = discord.Embed(
+                title="Trạng Thái Khởi Động Server",
+                color=discord.Color.orange(),
+                timestamp=discord.utils.utcnow()
+            )
             for s in status:
-                msg += f"{s['name']}: {s['reason']}\n"
+                embed.add_field(
+                    name=f"🔸 {s['name'].upper()}",
+                    value=s['reason'],
+                    inline=False
+                )
         else:
-            msg = f"Đã khởi động tất cả servers: {status['reason']}"
-        await interaction.followup.send(msg, ephemeral=True)
+            embed = discord.Embed(
+                title="Khởi Động Server Thành Công",
+                description="Tất cả các server đã được khởi động thành công!",
+                color=discord.Color.green(),
+                timestamp=discord.utils.utcnow()
+            )
+
+        await interaction.followup.send(embed=embed, ephemeral=True)
+
         # Log action
+        msg = "\n".join([f"{s['name']}: {s['reason']}" for s in status]) if status else "Đã khởi động tất cả servers"
         await Utils.log_system_event(
             self.bot, self.log_channel,
             f"{interaction.user.name}",
@@ -194,19 +211,37 @@ class SYS(commands.Cog):
         # Set the manually stopped flag to prevent auto-restart
         self.manually_stopped = True
         status = self.sys_actions.stop_server()
-        msg = ""
+
         if status:
+            embed = discord.Embed(
+                title="Trạng Thái Dừng Server",
+                color=discord.Color.orange(),
+                timestamp=discord.utils.utcnow()
+            )
             for s in status:
-                msg += f"{s['name']}: {s['reason']}\n"
+                embed.add_field(
+                    name=f"{s['name'].upper()}",
+                    value=s['reason'],
+                    inline=False
+                )
         else:
-            msg = f"Đã dừng tất cả servers: {status['reason']}"
-        await interaction.followup.send(msg, ephemeral=True)
+            embed = discord.Embed(
+                title="Dừng Server Thành Công",
+                description="Tất cả các server đã được dừng thành công!",
+                color=discord.Color.red(),
+                timestamp=discord.utils.utcnow()
+            )
+
+        await interaction.followup.send(embed=embed, ephemeral=True)
+
+        # Log action
+        msg = "\n".join([f"{s['name']}: {s['reason']}" for s in status]) if status else "Đã dừng tất cả servers"
         await Utils.log_system_event(
             self.bot,
             self.log_channel,
             f"{interaction.user.name}",
             f"{msg}",
-            discord.Color.green()
+            discord.Color.red()
         )
 
     async def do_restart_servers(self, interaction: Interaction):
@@ -216,19 +251,37 @@ class SYS(commands.Cog):
         # Clear the manually stopped flag when restarting servers
         self.manually_stopped = False
         status = self.sys_actions.restart_server()
-        msg = ""
+
         if status:
+            embed = discord.Embed(
+                title="⚠️ Trạng Thái Khởi Động Lại Server",
+                color=discord.Color.orange(),
+                timestamp=discord.utils.utcnow()
+            )
             for s in status:
-                msg += f"{s['name']}: {s['reason']}\n"
+                embed.add_field(
+                    name=f"🔸 {s['name'].upper()}",
+                    value=s['reason'],
+                    inline=False
+                )
         else:
-            msg = "Đã khởi động lại tất cả servers"
-        await interaction.followup.send(msg, ephemeral=True)
+            embed = discord.Embed(
+                title="Khởi Động Lại Server Thành Công",
+                description="Tất cả các server đã được khởi động lại thành công!",
+                color=discord.Color.blue(),
+                timestamp=discord.utils.utcnow()
+            )
+
+        await interaction.followup.send(embed=embed, ephemeral=True)
+
+        # Log action
+        msg = "\n".join([f"{s['name']}: {s['reason']}" for s in status]) if status else "Đã khởi động lại tất cả servers"
         await Utils.log_system_event(
             self.bot,
             self.log_channel,
             f"{interaction.user.name}",
             f"{msg}",
-            discord.Color.green()
+            discord.Color.blue()
         )
 
     async def do_restart_gameserver(self, interaction: Interaction):
@@ -238,19 +291,37 @@ class SYS(commands.Cog):
         # Clear the manually stopped flag when restarting gameserver
         self.manually_stopped = False
         status = self.sys_actions.restart_server("gameserver")
-        msg = ""
+
         if status:
+            embed = discord.Embed(
+                title="Trạng Thái Khởi Động Lại Gameserver",
+                color=discord.Color.orange(),
+                timestamp=discord.utils.utcnow()
+            )
             for s in status:
-                msg += f"{s['name']}: {s['reason']}\n"
+                embed.add_field(
+                    name=f"🔸 {s['name'].upper()}",
+                    value=s['reason'],
+                    inline=False
+                )
         else:
-            msg = "Đã khởi động lại gameserver"
-        await interaction.followup.send(msg, ephemeral=True)
+            embed = discord.Embed(
+                title="Khởi Động Lại Gameserver Thành Công",
+                description="Gameserver đã được khởi động lại thành công!",
+                color=discord.Color.blue(),
+                timestamp=discord.utils.utcnow()
+            )
+
+        await interaction.followup.send(embed=embed, ephemeral=True)
+
+        # Log action
+        msg = "\n".join([f"{s['name']}: {s['reason']}" for s in status]) if status else "Đã khởi động lại gameserver"
         await Utils.log_system_event(
             self.bot,
             self.log_channel,
             f"{interaction.user.name}",
             f"{msg}",
-            discord.Color.green()
+            discord.Color.blue()
         )
 
     async def do_start_laylines(self, interaction: Interaction):

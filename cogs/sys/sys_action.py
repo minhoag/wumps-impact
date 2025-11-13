@@ -114,8 +114,8 @@ class SystemActions:
                 continue
             server_binary = server_dir.split('/')[-1]
             appid = APP_ID[server_name]['appid']
-            # Build the command string - replace placeholders
-            tmux_cmd = TMUX_PARAM.replace('${server}', server_binary).replace('${server_path}', SERVER_DIR).replace(r'\$', '$')
+            # Build the command string - replace placeholders and strip newlines
+            tmux_cmd = TMUX_PARAM.strip().replace('${server}', server_binary).replace('${server_path}', SERVER_DIR).replace(r'\$', '$')
             tmux_cmd = tmux_cmd.replace(f'$(eval echo ${{{server_binary}}}_appid)', appid)
             cmd = f'tmux new-session -d -s {server_binary}_session "{tmux_cmd}"'
             logger.info(f"Executing command: {cmd}")
@@ -178,12 +178,14 @@ class SystemActions:
                     if result.returncode != 0:  # session not found
                         break
                     time.sleep(1)
-                tmux_cmd = TMUX_PARAM.replace('${server}', server_binary).replace('${server_path}', SERVER_DIR).replace(r'\$', '$')
+                # Build command and strip newlines
+                tmux_cmd = TMUX_PARAM.strip().replace('${server}', server_binary).replace('${server_path}', SERVER_DIR).replace(r'\$', '$')
                 tmux_cmd = tmux_cmd.replace(f'$(eval echo ${{{server_binary}}}_appid)', appid)
                 cmd = f'tmux new-session -d -s {server_binary}_session "{tmux_cmd}"'
                 subprocess.run(cmd, shell=True, capture_output=True, text=True)
             else:
-                tmux_cmd = TMUX_PARAM.replace('${server}', server_binary).replace('${server_path}', SERVER_DIR).replace(r'\$', '$')
+                # Build command and strip newlines
+                tmux_cmd = TMUX_PARAM.strip().replace('${server}', server_binary).replace('${server_path}', SERVER_DIR).replace(r'\$', '$')
                 tmux_cmd = tmux_cmd.replace(f'$(eval echo ${{{server_binary}}}_appid)', appid)
                 cmd = f'tmux new-session -d -s {server_binary}_session "{tmux_cmd}"'
                 subprocess.run(cmd, shell=True, capture_output=True, text=True)

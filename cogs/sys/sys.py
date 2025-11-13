@@ -2,15 +2,20 @@
 import discord
 from discord import app_commands, Interaction
 from discord.ext import commands
-from cogs.sys.sys_view import ServerPanelView, ConfirmationView
+from cogs.sys.sys_view import ServerPanelView
 from cogs.sys.sys_action import SystemActions
 from utils.utils import Utils
 import asyncio
 import json
-import subprocess
-from typing import List
+import datetime
 from cogs.permission import permission
+from utils.logger import logger
 
+# Event branches - easy to maintain and change
+EVENTS = {
+    "blossom": "event/blossom",
+    "off": "develop"  # develop branch = all events off
+}
 class SYS(commands.Cog):
     """Cog for handling System commands."""
     def __init__(self, bot: commands.Bot):
@@ -18,6 +23,8 @@ class SYS(commands.Cog):
         self.status_message = None
         self.update_task = None
         self.log_channel = None
+        self.sys_actions = SystemActions()
+        self.sys_actions.init()
         try:
             with open('status_panel.json', 'r') as f:
                 data = json.load(f)
@@ -36,6 +43,21 @@ class SYS(commands.Cog):
             channel = self.bot.get_channel(self.status_message[0])
             if not channel:
                 break
+
+            # gameserver tracking auto restart
+            gameserver_running = self.sys_actions.is_service_running("gameserver")
+            # gameserver is dead then make it up again
+            if not gameserver_running:
+                logger.warning("Gameserver is down, restarting...")
+                self.sys_actions.restart_server("gameserver")
+                # log it
+                await Utils.log_system_event(
+                    self.bot, self.log_channel,
+                    "Gameserver Crashed",
+                    f"Gameserver đã bị crash lúc {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}, đã khởi động lại",
+                    discord.Color.red()
+                )
+
             try:
                 message = await channel.fetch_message(self.status_message[1])
                 statuses = self.get_server_statuses()
@@ -45,10 +67,10 @@ class SYS(commands.Cog):
                 self.status_message = None
                 break
             except Exception as e:
-                print(f"Error updating status: {e}")
+                logger.error(f"Error updating status: {e}")
 
     def get_server_statuses(self):
-        return SystemActions.get_server_statuses()
+        return self.sys_actions.status()
 
     def create_status_embed(self, statuses):
         embed = discord.Embed(
@@ -61,107 +83,46 @@ class SYS(commands.Cog):
         running_servers = []
         stopped_servers = []
 
-        for server_name, status in statuses.items():
-            if status["value"] == "Online":
-                running_servers.append((server_name, status))
-            elif status["value"] == "Offline":
-                stopped_servers.append((server_name, status))
+        for status in statuses:
+            server_name = status["name"]
+            if status["value"] == "ONLINE":
+                running_servers.append(server_name)
+            elif status["value"] == "OFFLINE":
+                stopped_servers.append(server_name)
 
-        # Running servers section
+        # Left column: Running and stopped servers
+        left_column = "**ĐANG HOẠT ĐỘNG**\n```\n"
         if running_servers:
-            running_text = "```\n"
-            for server_name, status in running_servers:
-                server_display = server_name.upper()
-                if server_name == "sdk":
-                    server_display = "SDK SERVER"
-
-                running_text += f"[ONLINE] {server_display}\n"
-                running_text += "\n"
-            running_text += "```"
-            embed.add_field(name="ĐANG HOẠT ĐỘNG", value=running_text, inline=True)
-
-        # Combined information section with specific formatting
-        combined_text = "\n```\n"
-        cpu_usage = self.get_cpu_usage()
-        ram_usage = self.get_ram_usage()
-        combined_text += f"{cpu_usage}\n{ram_usage}\n```\n"
-        combined_text += "**KHÔNG HOẠT ĐỘNG**\n```\n"
-
-        # Add stopped servers
-        if stopped_servers:
-            for server_name, status in stopped_servers:
-                server_display = server_name.upper()
-                if server_name == "sdk":
-                    server_display = "SDK SERVER"
-                combined_text += f"[OFFLINE] {server_display}\n"
-
-        # Add event status
-        event_status = statuses.get("event_status", {})
-        if event_status:
-            combined_text += f"```\n**{event_status['name']}**\n```\n"
-            combined_text += f"{event_status['value']}\n"
-
-        combined_text += "```\n**TMUX SESSIONS**\n```\n"
-        
-        # Add tmux sessions information
-        tmux_info = statuses.get("tmux_sessions", {})
-        tmux_sessions = tmux_info.get("value", [])
-        if tmux_sessions:
-            for session in tmux_sessions:
-                combined_text += f"[ACTIVE] {session['name']}\n"
+            for server_name in running_servers:
+                left_column += f"[ONLINE] {server_name.upper()}\n"
         else:
-            combined_text += "Không có session nào đang chạy\n"
-        
-        combined_text += "```"
+            left_column += "Không có server nào đang chạy\n"
+        left_column += "```\n"
 
-        embed.add_field(name="THÔNG TIN", value=combined_text, inline=True)
+        left_column += "**KHÔNG HOẠT ĐỘNG**\n```\n"
+        if stopped_servers:
+            for server_name in stopped_servers:
+                left_column += f"[OFFLINE] {server_name.upper()}\n"
+        else:
+            left_column += "Tất cả server đang hoạt động\n"
+        left_column += "```"
 
+        embed.add_field(name="SERVERS", value=left_column, inline=True)
+
+        # Right column: System usage
+        system_usage = self.sys_actions.get_system_usage()
+        right_column = "```\n"
+        right_column += f"CPU: {system_usage['cpu']}\n"
+        right_column += f"RAM: {system_usage['ram']}\n"
+        right_column += f"STORAGE: {system_usage['storage']}\n"
+        right_column += "```"
+
+        embed.add_field(name="SYSTEM INFO", value=right_column, inline=True)
         # Footer with last update time
         embed.set_footer(text="Cập nhật lần cuối")
-
         return embed
 
-    def get_cpu_usage(self) -> str:
-        """Get CPU usage using top command."""
-        try:
-            # Run top command and parse CPU usage
-            result = subprocess.run(
-                ["top", "-bn1"],
-                capture_output=True, text=True, check=True
-            )
-            # Find the Cpu(s) line and extract usage
-            for line in result.stdout.split('\n'):
-                if 'Cpu(s)' in line:
-                    # Parse the CPU percentage from the line
-                    parts = line.split()
-                    if len(parts) >= 2:
-                        cpu_percent = parts[1]
-                        return f"CPU: sử dụng {cpu_percent}%"
-            return "CPU: unavailable"
-        except subprocess.CalledProcessError:
-            return "CPU: unavailable"
-
-    def get_ram_usage(self) -> str:
-        """Get RAM usage using free command."""
-        try:
-            # Run free command with --giga flag and parse memory usage
-            result = subprocess.run(
-                ["free", "--giga"],
-                capture_output=True, text=True, check=True
-            )
-            # Find the Mem: line and extract used memory
-            for line in result.stdout.split('\n'):
-                if line.startswith('Mem:'):
-                    parts = line.split()
-                    if len(parts) >= 3:
-                        used_ram = parts[2]  # Used memory in GB
-                        return f"RAM: sử dụng {used_ram} GB"
-            return "RAM: unavailable"
-        except subprocess.CalledProcessError:
-            return "RAM: unavailable"
-
     sys = app_commands.Group(name="sys", description="Lệnh hệ thống để quản lý server Genshin Impact 3.4")
-
     @sys.command(name="panel", description="Thiết lập bảng trạng thái server trong kênh")
     @app_commands.describe(
         channel="Kênh để gửi bảng trạng thái (mặc định: kênh hiện tại)",
@@ -203,124 +164,98 @@ class SYS(commands.Cog):
 
         await interaction.followup.send(" ".join(response_parts), ephemeral=True)
 
-    async def do_start_servers(self, interaction: Interaction, servers: List[str], start_sdk: bool = False, force_restart: bool = False):
+    async def do_start_servers(self, interaction: Interaction, server_name: str = None, force_restart: bool = False):
         if not permission(interaction, self.bot):
             await interaction.response.send_message("Bạn không có quyền sử dụng bot", ephemeral=True)
             return
-        results, has_running = SystemActions.do_start_servers(servers, start_sdk, force_restart)
-
-        if has_running and not force_restart:
-            # Show confirmation dialog
-            confirm_embed = discord.Embed(
-                title="Phát hiện server đang chạy",
-                description="\n".join(results),
-                color=discord.Color.orange()
-            )
-            confirm_embed.set_footer(text="Chọn 'Xác nhận' để khởi động lại server hoặc 'Hủy' để dừng.")
-
-            confirm_view = ConfirmationView()
-            await interaction.followup.send(embed=confirm_embed, view=confirm_view, ephemeral=True)
-            await confirm_view.wait()
-
-            if confirm_view.confirmed:
-                # Force restart
-                await self.do_start_servers(interaction, servers, start_sdk, force_restart=True)
-            else:
-                await interaction.followup.send("Đã hủy thao tác khởi động.", ephemeral=True)
-                # Log cancelled action
-                await Utils.log_system_event(
-                    self.bot, self.log_channel,
-                    "Server Start Cancelled",
-                    f"Người dùng {interaction.user.mention} đã hủy khởi động server",
-                    discord.Color.orange()
-                )
+        status = self.sys_actions.start_server(server_name)
+        msg = ""
+        if status:
+            for s in status:
+                msg += f"{s['name']}: {s['reason']}\n"
         else:
-            for result in results:
-                await interaction.followup.send(result, ephemeral=True)
-            action_type = "Force Restart" if force_restart else "Start"
-            server_list = ", ".join(servers)
-            sdk_info = " + SDK" if start_sdk else ""
-            await Utils.log_system_event(
-                self.bot, self.log_channel,
-                f"Servers {action_type}",
-                f"Người dùng {interaction.user.mention} đã {action_type.lower()} servers: {server_list}{sdk_info}",
-                discord.Color.green()
-            )
-
-    async def do_force_stop_all(self, interaction: Interaction):
-        if not permission(interaction, self.bot):
-            await interaction.response.send_message("Bạn không có quyền sử dụng bot", ephemeral=True)
-            return
-        results = SystemActions.do_force_stop_all()
-        for result in results:
-            await interaction.followup.send(result, ephemeral=True)
-
-        # Log server stop action
+            msg = f"Đã khởi động tất cả servers: {status['reason']}"
+        await interaction.followup.send(msg, ephemeral=True)
+        # Log action
         await Utils.log_system_event(
             self.bot, self.log_channel,
-            "Servers Force Stopped",
-            f"Người dùng {interaction.user.mention} đã dừng tất cả servers",
-            discord.Color.red()
+            f"{interaction.user.name}",
+            f"{msg}",
+            discord.Color.green()
         )
 
+    async def do_stop_servers(self, interaction: Interaction):
+        if not permission(interaction, self.bot):
+            await interaction.response.send_message("Bạn không có quyền sử dụng bot", ephemeral=True)
+            return
+        status = self.sys_actions.stop_server()
+        msg = ""
+        if status:
+            for s in status:
+                msg += f"{s['name']}: {s['reason']}\n"
+        else:
+            msg = f"Đã dừng tất cả servers: {status['reason']}"
+        await interaction.followup.send(msg, ephemeral=True)
+        await Utils.log_system_event(
+            self.bot, 
+            self.log_channel,
+            f"{interaction.user.name}",
+            f"{msg}",
+            discord.Color.green()
+        )
     async def do_clear_logs(self, interaction: Interaction):
         """Clear all log files in the log directory."""
         if not permission(interaction, self.bot):
             await interaction.response.send_message("Bạn không có quyền sử dụng bot", ephemeral=True)
             return
-        messages, files_deleted, errors = SystemActions.do_clear_logs()
-        for message in messages:
-            await interaction.followup.send(message, ephemeral=True)
-
-        # Log log clearing action
-        status = "SUCCESS" if files_deleted > 0 else "NO_FILES"
-        color = discord.Color.blue() if files_deleted > 0 else discord.Color.yellow()
-        desc = f"Người dùng {interaction.user.mention} đã xóa {files_deleted} file log" if files_deleted > 0 else f"Người dùng {interaction.user.mention} đã thử xóa logs nhưng không có file nào để xóa"
-        await Utils.log_system_event(self.bot, self.log_channel, f"Logs Cleared ({status})", desc, color)
-
-    async def do_restart_servers(self, interaction: Interaction, servers: List[str]):
-        """Restart specific servers."""
-        if not permission(interaction, self.bot):
-            await interaction.response.send_message("Bạn không có quyền sử dụng bot", ephemeral=True)
-            return
-
-        results, _ = SystemActions.do_restart_servers(servers)
-
-        for result in results:
-            await interaction.followup.send(result, ephemeral=True)
-
-        # Log restart action
-        server_list = ", ".join(servers)
+        status = self.sys_actions.clear_logs()
         await Utils.log_system_event(
             self.bot, self.log_channel,
-            "Servers Restarted",
-            f"Người dùng {interaction.user.mention} đã khởi động lại servers: {server_list}",
-            discord.Color.orange()
+            f"{interaction.user.name}",
+            f"{status['reason']}",
+            discord.Color.green()
         )
 
-    async def do_start_laylines(self, interaction: Interaction, event: str):
-        """Handle starting/stopping laylines events (confirmation handled in view)."""
+    async def do_toggle_event(self, interaction: Interaction, event: str):
+        """Handle starting/stopping events via git branch switching."""
         if not permission(interaction, self.bot):
             await interaction.response.send_message("Bạn không có quyền sử dụng bot", ephemeral=True)
             return
-        success = SystemActions.do_toggle_event(event)
-        if success:
-            action = "bắt đầu" if event != "develop" else "dừng"
-            status_msg = f"Đã {action} sự kiện {event} thành công!"
-            color = discord.Color.green() if event != "develop" else discord.Color.red()
-            await interaction.followup.send(status_msg, ephemeral=True)
 
-            # Log to designated channel
-            event_action = "Started" if event != "develop" else "Stopped"
-            await Utils.log_system_event(
-                self.bot, self.log_channel,
-                f"Event {event_action}",
-                f"Người dùng {interaction.user.mention} đã {action} sự kiện {event}",
-                color
+        # Get the branch name from the EVENTS constant
+        if event not in EVENTS:
+            await interaction.followup.send(
+                f"Event '{event}' không tồn tại. Events có sẵn: {', '.join(EVENTS.keys())}",
+                ephemeral=True
             )
+            return
+
+        branch = EVENTS[event]
+        status = self.sys_actions.toggle_event(branch)
+
+        # Determine action type
+        action = "bật" if event != "off" else "tắt"
+        event_display = f"sự kiện {event}" if event != "off" else "tất cả sự kiện"
+
+        # Send result to user
+        if "Lỗi" in status['reason']:
+            await interaction.followup.send(f"❌ {status['reason']}", ephemeral=True)
+            color = discord.Color.red()
         else:
-            action = "bắt đầu" if event != "develop" else "dừng"
-            await interaction.followup.send(f"Lỗi khi {action} sự kiện!", ephemeral=True)
+            await interaction.followup.send(
+                f"✅ Đã {action} {event_display} thành công! (Branch: {branch})",
+                ephemeral=True
+            )
+            color = discord.Color.green() if event != "off" else discord.Color.orange()
+
+        # Log the event toggle
+        await Utils.log_system_event(
+            self.bot,
+            self.log_channel,
+            f"Event {'Enabled' if event != 'off' else 'Disabled'}",
+            f"Người dùng {interaction.user.mention} đã {action} {event_display} (Branch: {branch})",
+            color
+        )
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(SYS(bot))

@@ -2,3 +2,4 @@ discord.py==2.6.3
 python-dotenv
 pymysql
 httpx
+libtmux

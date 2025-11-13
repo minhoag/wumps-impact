@@ -115,8 +115,8 @@ class SystemActions:
             server_binary = server_dir.split('/')[-1]
             appid = APP_ID[server_name]['appid']
             # Build the command string - replace placeholders and strip newlines
-            tmux_cmd = TMUX_PARAM.strip().replace('${server}', server_binary).replace('${server_path}', SERVER_DIR).replace(r'\$', '$')
-            tmux_cmd = tmux_cmd.replace(f'$(eval echo ${{{server_binary}}}_appid)', appid)
+            tmux_cmd = TMUX_PARAM.strip().replace('${server}', server_binary).replace('${server_path}', SERVER_DIR)
+            tmux_cmd = tmux_cmd.replace(r'\$', '$').replace(f'$(eval echo ${server_binary}_appid)', appid)
             cmd = f'tmux new-session -d -s {server_binary}_session "{tmux_cmd}"'
             logger.info(f"Executing command: {cmd}")
             result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
@@ -147,7 +147,7 @@ class SystemActions:
             else:
                 status.append({
                     "name": server_name,
-                    "reason": "Server đã đang dừng"
+                    "reason": "Server đang dừng..."
                 })
         return status # empty means all stopped
 
@@ -179,14 +179,16 @@ class SystemActions:
                         break
                     time.sleep(1)
                 # Build command and strip newlines
-                tmux_cmd = TMUX_PARAM.strip().replace('${server}', server_binary).replace('${server_path}', SERVER_DIR).replace(r'\$', '$')
-                tmux_cmd = tmux_cmd.replace(f'$(eval echo ${{{server_binary}}}_appid)', appid)
+                tmux_cmd = TMUX_PARAM.strip().replace('${server}', server_binary).replace('${server_path}', SERVER_DIR)
+                # Replace the bash variable substitution with actual appid
+                tmux_cmd = tmux_cmd.replace(r'\$', '$').replace(f'$(eval echo ${server_binary}_appid)', appid)
                 cmd = f'tmux new-session -d -s {server_binary}_session "{tmux_cmd}"'
                 subprocess.run(cmd, shell=True, capture_output=True, text=True)
             else:
                 # Build command and strip newlines
-                tmux_cmd = TMUX_PARAM.strip().replace('${server}', server_binary).replace('${server_path}', SERVER_DIR).replace(r'\$', '$')
-                tmux_cmd = tmux_cmd.replace(f'$(eval echo ${{{server_binary}}}_appid)', appid)
+                tmux_cmd = TMUX_PARAM.strip().replace('${server}', server_binary).replace('${server_path}', SERVER_DIR)
+                # Replace the bash variable substitution with actual appid
+                tmux_cmd = tmux_cmd.replace(r'\$', '$').replace(f'$(eval echo ${server_binary}_appid)', appid)
                 cmd = f'tmux new-session -d -s {server_binary}_session "{tmux_cmd}"'
                 subprocess.run(cmd, shell=True, capture_output=True, text=True)
 

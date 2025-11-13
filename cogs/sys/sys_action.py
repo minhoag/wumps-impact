@@ -109,7 +109,7 @@ class SystemActions:
             if self.is_service_running(server_name):
                 status.append({
                     "name": server_name,
-                    "reason": "Server đã đang chạy"
+                    "reason": "Server đang chạy"
                 })
                 continue
             server_binary = server_dir.split('/')[-1]
@@ -118,18 +118,12 @@ class SystemActions:
             tmux_cmd = tmux_cmd.replace(f'$(eval echo ${{{server_binary}}}_appid)', appid)
             cmd = f'tmux new-session -d -s {server_binary}_session "{tmux_cmd}"'
             result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+            logger.warning(f"Result: {result.stdout}")
+            logger.warning(f"Result: {result.stderr}")
             if result.returncode != 0:
                 logger.error(f"Lỗi khi khởi động server {server_name}: {result.stderr}")
-                status.append({
-                    "name": server_name,
-                    "reason": f"Lỗi khi khởi động server: {result.stderr}",
-                })
             else:
-                logger.info(f"Server {server_name} đã đang chạy thành công")
-                status.append({
-                    "name": server_name,
-                    "reason": "Server đã đang chạy thành công"
-                })
+                logger.info(f"Server {server_name} chạy thành công")
         return status # empty means all run
     
     def stop_server(self, service_name: str = None) -> List[Dict[str, str]]:

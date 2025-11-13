@@ -23,6 +23,7 @@ class SYS(commands.Cog):
         self.status_message = None
         self.update_task = None
         self.log_channel = None
+        self.manually_stopped = False  # Flag to track manual stops
         self.sys_actions = SystemActions()
         self.sys_actions.init()
         try:
@@ -46,8 +47,8 @@ class SYS(commands.Cog):
 
             # gameserver tracking auto restart
             gameserver_running = self.sys_actions.is_service_running("gameserver")
-            # gameserver is dead then make it up again
-            if not gameserver_running:
+            # gameserver is dead then make it up again (only if not manually stopped)
+            if not gameserver_running and not self.manually_stopped:
                 logger.warning("Gameserver is down, restarting...")
                 self.sys_actions.restart_server("gameserver")
                 # log it
@@ -168,6 +169,8 @@ class SYS(commands.Cog):
         if not permission(interaction, self.bot):
             await interaction.response.send_message("Bạn không có quyền sử dụng bot", ephemeral=True)
             return
+        # Clear the manually stopped flag when starting servers
+        self.manually_stopped = False
         status = self.sys_actions.start_server(server_name)
         msg = ""
         if status:
@@ -188,6 +191,8 @@ class SYS(commands.Cog):
         if not permission(interaction, self.bot):
             await interaction.response.send_message("Bạn không có quyền sử dụng bot", ephemeral=True)
             return
+        # Set the manually stopped flag to prevent auto-restart
+        self.manually_stopped = True
         status = self.sys_actions.stop_server()
         msg = ""
         if status:
@@ -197,12 +202,61 @@ class SYS(commands.Cog):
             msg = f"Đã dừng tất cả servers: {status['reason']}"
         await interaction.followup.send(msg, ephemeral=True)
         await Utils.log_system_event(
-            self.bot, 
+            self.bot,
             self.log_channel,
             f"{interaction.user.name}",
             f"{msg}",
             discord.Color.green()
         )
+
+    async def do_restart_servers(self, interaction: Interaction):
+        if not permission(interaction, self.bot):
+            await interaction.response.send_message("Bạn không có quyền sử dụng bot", ephemeral=True)
+            return
+        # Clear the manually stopped flag when restarting servers
+        self.manually_stopped = False
+        status = self.sys_actions.restart_server()
+        msg = ""
+        if status:
+            for s in status:
+                msg += f"{s['name']}: {s['reason']}\n"
+        else:
+            msg = "Đã khởi động lại tất cả servers"
+        await interaction.followup.send(msg, ephemeral=True)
+        await Utils.log_system_event(
+            self.bot,
+            self.log_channel,
+            f"{interaction.user.name}",
+            f"{msg}",
+            discord.Color.green()
+        )
+
+    async def do_restart_gameserver(self, interaction: Interaction):
+        if not permission(interaction, self.bot):
+            await interaction.response.send_message("Bạn không có quyền sử dụng bot", ephemeral=True)
+            return
+        # Clear the manually stopped flag when restarting gameserver
+        self.manually_stopped = False
+        status = self.sys_actions.restart_server("gameserver")
+        msg = ""
+        if status:
+            for s in status:
+                msg += f"{s['name']}: {s['reason']}\n"
+        else:
+            msg = "Đã khởi động lại gameserver"
+        await interaction.followup.send(msg, ephemeral=True)
+        await Utils.log_system_event(
+            self.bot,
+            self.log_channel,
+            f"{interaction.user.name}",
+            f"{msg}",
+            discord.Color.green()
+        )
+
+    async def do_start_laylines(self, interaction: Interaction):
+        # Laylines button triggers blossom event
+        await self.do_toggle_event(interaction, "blossom")
+
     async def do_clear_logs(self, interaction: Interaction):
         """Clear all log files in the log directory."""
         if not permission(interaction, self.bot):
@@ -232,29 +286,14 @@ class SYS(commands.Cog):
 
         branch = EVENTS[event]
         status = self.sys_actions.toggle_event(branch)
-
-        # Determine action type
-        action = "bật" if event != "off" else "tắt"
-        event_display = f"sự kiện {event}" if event != "off" else "tất cả sự kiện"
-
-        # Send result to user
-        if "Lỗi" in status['reason']:
-            await interaction.followup.send(f"❌ {status['reason']}", ephemeral=True)
-            color = discord.Color.red()
-        else:
-            await interaction.followup.send(
-                f"✅ Đã {action} {event_display} thành công! (Branch: {branch})",
-                ephemeral=True
-            )
-            color = discord.Color.green() if event != "off" else discord.Color.orange()
-
-        # Log the event toggle
+        msg = f"{status['reason']}"
+        await interaction.followup.send(msg, ephemeral=True)
         await Utils.log_system_event(
             self.bot,
             self.log_channel,
-            f"Event {'Enabled' if event != 'off' else 'Disabled'}",
-            f"Người dùng {interaction.user.mention} đã {action} {event_display} (Branch: {branch})",
-            color
+            f"{interaction.user.name}",
+            f"{msg}",
+            discord.Color.green()
         )
 
 async def setup(bot: commands.Bot):

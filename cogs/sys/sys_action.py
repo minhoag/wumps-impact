@@ -110,9 +110,13 @@ class SystemActions:
         status = [] # list of dict: {"name": server_name, "reason": reason}
         for server_name, server_dir in servers:
             if self.is_service_running(server_name):
+                # Use pgrep to get PID and kill -9 to force kill
+                cmd = f"pgrep {server_name} | xargs kill -9"
+                subprocess.run(cmd, shell=True, capture_output=True, text=True)
+
+                # Kill tmux session
                 server_binary = server_dir.split('/')[-1]
-                # Send Ctrl+C to the tmux session
-                cmd = f"tmux send-keys -t {server_binary}_session C-c"
+                cmd = f"tmux kill-session -t {server_binary}_session 2>/dev/null"
                 subprocess.run(cmd, shell=True, capture_output=True, text=True)
             else:
                 status.append({
@@ -134,8 +138,9 @@ class SystemActions:
             server_binary = server_dir.split('/')[-1]
 
             if self.is_service_running(server_name):
+                # Use pgrep to get PID and kill -9 to force kill
                 while self.is_service_running(server_name):
-                    cmd = f"tmux send-keys -t {server_binary}_session C-c"
+                    cmd = f"pgrep {server_name} | xargs kill -9"
                     subprocess.run(cmd, shell=True, capture_output=True, text=True)
                     time.sleep(1)
 

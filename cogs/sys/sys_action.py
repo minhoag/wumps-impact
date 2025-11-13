@@ -114,8 +114,9 @@ class SystemActions:
                 continue
             server_binary = server_dir.split('/')[-1]
             appid = APP_ID[server_name]['appid']
-            # Use subprocess to run tmux command directly (matching bash script)
-            cmd = f"tmux new-session -d -s {server_binary}_session '{TMUX_PARAM.replace('${server}', server_binary).replace('${server_path}', SERVER_DIR).replace(f'$(eval echo \\${{server}}_appid)', appid).replace(r'\\$', '$')}'"
+            tmux_cmd = TMUX_PARAM.replace('${server}', server_binary).replace('${server_path}', SERVER_DIR).replace(r'\$', '$')
+            tmux_cmd = tmux_cmd.replace(f'$(eval echo ${{{server_binary}}}_appid)', appid)
+            cmd = f'tmux new-session -d -s {server_binary}_session "{tmux_cmd}"'
             subprocess.run(cmd, shell=True, capture_output=True, text=True)
         return status # empty means all run
     
@@ -171,12 +172,14 @@ class SystemActions:
                     if result.returncode != 0:  # session not found
                         break
                     time.sleep(1)
-                # Use subprocess to run tmux command directly
-                cmd = f"tmux new-session -d -s {server_binary}_session '{TMUX_PARAM.replace('${server}', server_binary).replace('${server_path}', SERVER_DIR).replace(f'$(eval echo \\${{server}}_appid)', appid).replace(r'\\$', '$')}'"
+                tmux_cmd = TMUX_PARAM.replace('${server}', server_binary).replace('${server_path}', SERVER_DIR).replace(r'\$', '$')
+                tmux_cmd = tmux_cmd.replace(f'$(eval echo ${{{server_binary}}}_appid)', appid)
+                cmd = f'tmux new-session -d -s {server_binary}_session "{tmux_cmd}"'
                 subprocess.run(cmd, shell=True, capture_output=True, text=True)
             else:
-                # Use subprocess to run tmux command directly
-                cmd = f"tmux new-session -d -s {server_binary}_session '{TMUX_PARAM.replace('${server}', server_binary).replace('${server_path}', SERVER_DIR).replace(f'$(eval echo \\${{server}}_appid)', appid).replace(r'\\$', '$')}'"
+                tmux_cmd = TMUX_PARAM.replace('${server}', server_binary).replace('${server_path}', SERVER_DIR).replace(r'\$', '$')
+                tmux_cmd = tmux_cmd.replace(f'$(eval echo ${{{server_binary}}}_appid)', appid)
+                cmd = f'tmux new-session -d -s {server_binary}_session "{tmux_cmd}"'
                 subprocess.run(cmd, shell=True, capture_output=True, text=True)
 
         return status # empty means all restarted successfully

@@ -10,46 +10,57 @@ SERVER_DIR = "/gio"
 TMUX_PARAM = """
 export ASAN_OPTIONS=poison_heap=false:poison_partial=false:poison_array_cookie=false:allow_user_poisoning=false:alloc_dealloc_mismatch=false:new_delete_type_mismatch=false:detect_leaks=false:check_printf=false:detect_container_overflow=false:detect_deadlocks=false:detect_write_exec=false:detect_odr_violation=0:strict_string_checks=false:strict_memcmp=false:intercept_strstr=false:intercept_strspn=false:intercept_strtok=false:intercept_strpbrk=false:intercept_strlen=false:intercept_strndup=false:intercept_strchr=false:intercept_memcmp=false:intercept_memmem=false:intercept_intrin=false:intercept_stat=false:intercept_send=false:replace_intrin=false:replace_str=false:report_globals=0:malloc_context_size=0:allocator_release_to_os_interval_ms=5000:quarantine_size_mb=64:max_malloc_fill_size=512:max_redzone=64;cd ${server_path}/${server}; ./${server} -i $(eval echo \$${server}_appid)
 """
+# Default servers configuration
 APP_ID = {
+    "dispatch": {
+        "appid": "9001.5.1.1",
+        "dir": "/gio/dispatch",
+        "enabled": True,
+    },
     "nodeserver": {
         "appid": "9001.3.1.1",
         "dir": "/gio/nodeserver",
+        "enabled": True,
     },
     "dbgate": {
         "appid": "9001.4.1.1",
         "dir": "/gio/dbgate",
-    },
-    "dispatch": {
-        "appid": "9001.5.1.1",
-        "dir": "/gio/dispatch",
+        "enabled": True,
     },
     "gateserver": {
         "appid": "9001.1.1.1",
         "dir": "/gio/gateserver",
+        "enabled": True,
     },
     "gameserver": {
         "appid": "9001.2.1.1",
         "dir": "/gio/gameserver",
-    },
-    "muipserver": {
-        "appid": "9001.6.1.1",
-        "dir": "/gio/muipserver",
-    },
-    "tothemoonserver": {
-        "appid": "9001.10.1.1",
-        "dir": "/gio/tothemoonserver",
-    },
-    "pathfindingserver": {
-        "appid": "9001.8.1.1",
-        "dir": "/gio/pathfindingserver",
+        "enabled": True,
     },
     "multiserver": {
         "appid": "9001.7.1.1",
         "dir": "/gio/multiserver",
+        "enabled": True,
+    },
+    "muipserver": {
+        "appid": "9001.6.1.1",
+        "dir": "/gio/muipserver",
+        "enabled": True,
+    },
+    "tothemoonserver": {
+        "appid": "9001.10.1.1",
+        "dir": "/gio/tothemoonserver",
+        "enabled": False,
+    },
+    "pathfindingserver": {
+        "appid": "9001.8.1.1",
+        "dir": "/gio/pathfindingserver",
+        "enabled": False,
     },
     "oa_server": {
         "appid": "9001.9.1.1",
         "dir": "/gio/oa_server",
+        "enabled": False,
     },
 }
 
@@ -86,14 +97,19 @@ class SystemActions:
             return False
 
     def start_server(self, name: str = None) -> List[Dict[str, str]]:
-        servers = [(name, APP_ID[name]['dir']) for name in APP_ID.keys()] if name is None else [(name, APP_ID[name]['dir'])]
+        # Use only enabled servers when no specific server is specified
+        if name is None:
+            servers = [(name, APP_ID[name]['dir']) for name in APP_ID.keys() if APP_ID[name].get('enabled', True)]
+        else:
+            servers = [(name, APP_ID[name]['dir'])]
+
         status = [] # list of dict: {"name": server_name, "reason": reason}
         for server_name, server_dir in servers:
             logger.info(f"Starting {server_name}...")
             if self.is_service_running(server_name):
                 status.append({
                     "name": server_name,
-                    "reason": "Server is already running"
+                    "reason": "Server đã đang chạy"
                 })
                 continue
             server_binary = server_dir.split('/')[-1]
@@ -106,7 +122,8 @@ class SystemActions:
             names = service_name.split(",")
             servers = [(name, APP_ID[name]['dir']) for name in names if name in APP_ID]
         else:
-            servers = [(name, APP_ID[name]['dir']) for name in APP_ID.keys()]
+            # Use only enabled servers when no specific server is specified
+            servers = [(name, APP_ID[name]['dir']) for name in APP_ID.keys() if APP_ID[name].get('enabled', True)]
         status = [] # list of dict: {"name": server_name, "reason": reason}
         for server_name, server_dir in servers:
             if self.is_service_running(server_name):
@@ -121,7 +138,7 @@ class SystemActions:
             else:
                 status.append({
                     "name": server_name,
-                    "reason": "Server is already stopped"
+                    "reason": "Server đã đang dừng"
                 })
         return status # empty means all stopped
 
@@ -130,7 +147,8 @@ class SystemActions:
             names = service_name.split(",")
             servers = [(name, APP_ID[name]['dir']) for name in names if name in APP_ID]
         else:
-            servers = [(name, APP_ID[name]['dir']) for name in APP_ID.keys()]
+            # Use only enabled servers when no specific server is specified
+            servers = [(name, APP_ID[name]['dir']) for name in APP_ID.keys() if APP_ID[name].get('enabled', True)]
 
         status = [] # list of dict: {"name": server_name, "reason": reason}
 

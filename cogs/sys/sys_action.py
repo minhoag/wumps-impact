@@ -211,6 +211,13 @@ class SystemActions:
             "name": branch,
             "reason": f"Đã chuyển sang branch {branch}",
         }
+    
+    def get_active_events(self) -> str | None:
+        cmd = f"cd {SERVER_DIR}/data && git branch --show-current" # event/blossom
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+        if result.returncode != 0:
+            return None
+        return result.stdout.strip()
 
     # system action
     def clear_logs(self, service_name: str = None) -> List[Dict[str, str]]:

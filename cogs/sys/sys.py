@@ -23,6 +23,7 @@ class SYS(commands.Cog):
         self.status_message = None
         self.update_task = None
         self.log_channel = None
+        self.current_event = None
         self.manually_stopped = False  # Flag to track manual stops
         self.sys_actions = SystemActions()
         self.sys_actions.init()
@@ -58,6 +59,15 @@ class SYS(commands.Cog):
                     f"Gameserver đã bị crash lúc {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}, đã khởi động lại",
                     discord.Color.red()
                 )
+            
+            # current active events
+            active_events = self.sys_actions.get_active_events()
+            if active_events and active_events in EVENTS:
+                self.current_event = active_events
+            else:
+                self.current_event = "off" # develop branch = all events off
+            # update status embed
+
 
             try:
                 message = await channel.fetch_message(self.status_message[1])
@@ -92,7 +102,7 @@ class SYS(commands.Cog):
                 stopped_servers.append(server_name)
 
         # Left column: Running and stopped servers
-        left_column = "**ĐANG HOẠT ĐỘNG**\n```\n"
+        left_column = "\n```\n"
         if running_servers:
             for server_name in running_servers:
                 left_column += f"[ONLINE] {server_name.upper()}\n"
@@ -119,6 +129,21 @@ class SYS(commands.Cog):
         right_column += "```"
 
         embed.add_field(name="SYSTEM INFO", value=right_column, inline=True)
+
+        # Active event section
+        event_info = "```\n"
+        if self.current_event and self.current_event != "off":
+            event_name = self.current_event.upper()
+            event_branch = EVENTS.get(self.current_event, "unknown")
+            event_info += f"EVENT: {event_name}\n"
+            event_info += f"BRANCH: {event_branch}\n"
+        else:
+            event_info += "EVENT: NONE\n"
+            event_info += "STATUS: OFF\n"
+        event_info += "```"
+
+        embed.add_field(name="ACTIVE EVENT", value=event_info, inline=False)
+
         # Footer with last update time
         embed.set_footer(text="Cập nhật lần cuối")
         return embed

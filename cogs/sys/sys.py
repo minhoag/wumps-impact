@@ -61,12 +61,17 @@ class SYS(commands.Cog):
                 )
             
             # current active events
-            active_events = self.sys_actions.get_active_events()
-            if active_events and active_events in EVENTS:
-                self.current_event = active_events
+            active_branch = self.sys_actions.get_active_events()
+            if active_branch:
+                self.current_event = None
+                for event_name, branch_name in EVENTS.items():
+                    if branch_name == active_branch:
+                        self.current_event = event_name
+                        break
+                if self.current_event is None:
+                    self.current_event = "off"
             else:
                 self.current_event = "off" # develop branch = all events off
-            # update status embed
 
 
             try:

@@ -33,10 +33,10 @@ class GachaEmbed(Embed):
         self.banner2 = banner2
         self.display_up4_item_list = GachaActions.get_display_up4_item_list(banner1, banner2)
         self.featured_item_names = tuple(
-            Utils.get_item_name(item_id) for item_id in (self.id1, self.id2) if item_id
+            Utils.get_item_name(int(item_id)) for item_id in (self.id1, self.id2) if item_id
         )
         self.up4_item_names = tuple(
-            Utils.get_item_name(item_id) for item_id in self.display_up4_item_list
+            Utils.get_item_name(int(item_id)) for item_id in self.display_up4_item_list
         ) if self.display_up4_item_list else tuple()
         self.gacha_type_name = {
             201: "Banner nhân vật 2",

@@ -5,7 +5,7 @@ from typing import Optional, List, Dict, Callable, Any
 from cogs.gacha.gacha_embed import GachaEmbed, DraftGachaEmbed
 from cogs.gacha.gacha_action import GachaActions
 from cogs.ui import SearchModal, TimeModal, ItemSelectionView
-from utils.constants import BANNERS, ITEMS
+from utils.constants import BANNERS
 from utils.utils import Utils
 
 
@@ -89,7 +89,7 @@ class GachaView(discord.ui.View):
             return
 
         async def on_submit_cb(search_query: str, inter: discord.Interaction):
-            matching_items = Utils.search_items(search_query, BANNERS) or Utils.search_items(search_query, ITEMS)
+            matching_items = Utils.search_items(search_query, BANNERS)
             if not matching_items:
                 await inter.response.send_message(
                     f"Không tìm thấy item nào với từ khóa: `{search_query}`.",

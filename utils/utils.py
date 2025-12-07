@@ -3,6 +3,7 @@ import discord
 from discord.ext import commands
 import os
 import polars as pl
+from utils.constants import ITEMS
 
 def is_allowed_guild(func):
     async def wrapper(interaction: discord.Interaction):
@@ -17,6 +18,12 @@ class Utils:
         df = pl.read_csv(file)
         df = df.filter(pl.col('vietnameseName').str.contains(query) | pl.col('globalName').str.contains(query))
         return df.to_dicts()
+    
+    @staticmethod
+    def get_item_name(item_id: int) -> str:
+        df = pl.read_csv(ITEMS)
+        df = df.filter(pl.col('value') == str(item_id))
+        return df.to_dicts()[0]['vietnameseName'] or df.to_dicts()[0]['globalName']
 
     @staticmethod
     def get_image_file(filename: str) -> discord.File:

@@ -52,10 +52,6 @@ class MailActions:
         return True, recipient_list, ""
     
     @staticmethod
-    def search_items(query: str) -> List[Dict]:
-        return Utils.search_items(query, ITEMS, ['vietnameseName', 'globalName'], max_results=25)
-    
-    @staticmethod
     def split_item_by_limit(item: Dict, quantity: int) -> List[Dict]:
         item_id = int(item.get('value', 0))
         max_per_attachment = MAIL_ITEM_LIMITS.get(item_id)

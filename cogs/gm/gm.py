@@ -14,14 +14,14 @@ class GM(commands.Cog):
     
     gm = app_commands.Group(name="gm", description="Lệnh GM để quản lý server Genshin Impact 3.4")
 
-    async def item_autocomplete(self, interaction: Interaction, current: str) -> List[app_commands.Choice[int]]:
+    async def item_autocomplete(self, current: str) -> List[app_commands.Choice[int]]:
         """Autocomplete for item IDs using search."""
-        matching_items = await self.bot.loop.run_in_executor(None, lambda: Utils.search_items(current, ITEMS, ['vietnameseName', 'globalName'], 25))
+        matching = Utils.search_items(current, ITEMS)
         return [
             app_commands.Choice(
-                name=Utils.get_item_name(item),
+                name=item['vietnameseName'] or item['globalName'],
                 value=int(item['value'])
-            ) for item in matching_items
+            ) for item in matching
         ]
     
     @gm.command(name="general", description="Thực hiện lệnh GM chung không cần tham số bổ sung")

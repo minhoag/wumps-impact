@@ -14,7 +14,7 @@ class GM(commands.Cog):
     
     gm = app_commands.Group(name="gm", description="Lệnh GM để quản lý server Genshin Impact 3.4")
 
-    async def item_autocomplete(self, current: str) -> List[app_commands.Choice[int]]:
+    async def item_autocomplete(self, interaction: Interaction, current: str) -> List[app_commands.Choice[int]]:
         """Autocomplete for item IDs using search."""
         matching = Utils.search_items(current, ITEMS)
         return [

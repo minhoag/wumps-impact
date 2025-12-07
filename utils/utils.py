@@ -2,8 +2,6 @@ from typing import List, Dict
 import discord
 from discord.ext import commands
 import os
-import re
-from utils.constants import ITEMS
 import polars as pl
 
 def is_allowed_guild(func):
@@ -15,8 +13,8 @@ def is_allowed_guild(func):
 
 class Utils:
     @staticmethod
-    def search_items(query: str, filename: str):
-        df = pl.read_csv(f'../data/{filename}.csv')
+    def search_items(query: str, file):
+        df = pl.read_csv(file)
         df = df.filter(pl.col('vietnameseName').str.contains(query) | pl.col('globalName').str.contains(query))
         return df.to_dicts()
 

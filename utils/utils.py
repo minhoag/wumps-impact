@@ -22,7 +22,7 @@ class Utils:
     @staticmethod
     def get_item_name(item_id: int) -> str:
         df = pl.read_csv(ITEMS)
-        df = df.filter(pl.col('value') == str(item_id))
+        df = df.filter(pl.col('value') == item_id)
         return df.to_dicts()[0]['vietnameseName'] or df.to_dicts()[0]['globalName']
 
     @staticmethod

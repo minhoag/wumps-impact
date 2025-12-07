@@ -2,7 +2,6 @@
 import discord
 from discord import Interaction
 from discord.ui import View, Button
-from cogs.sys.sys_action import SystemActions
 
 class ConfirmationView(View):
     """Confirmation view for dangerous operations."""
@@ -55,115 +54,44 @@ class ServerPanelView(View):
         "blossom": "Hoa Địa Mạch",
     }
         
-    @discord.ui.button(label="Khởi động tất cả", style=discord.ButtonStyle.success, custom_id="sys_start_all")
+    @discord.ui.button(label="Start", style=discord.ButtonStyle.success, custom_id="sys_start_all")
     async def start_all(self, interaction: Interaction, button: Button):
         cog = interaction.client.get_cog('SYS')
-        
-        await interaction.response.defer(ephemeral=True)
-        await cog.do_start_servers(interaction, SystemActions.START_SERVER_ORDER, start_sdk=True)
 
-    @discord.ui.button(label="Khởi động Gameserver", style=discord.ButtonStyle.primary, custom_id="sys_start_gameserver")
-    async def start_gameserver(self, interaction: Interaction, button: Button):
+        await interaction.response.defer(ephemeral=True)
+        await cog.do_start_servers(interaction)
+
+    @discord.ui.button(label="Stop", style=discord.ButtonStyle.danger, custom_id="sys_stop_all")
+    async def stop_all(self, interaction: Interaction, button: Button):
         cog = interaction.client.get_cog('SYS')
 
         await interaction.response.defer(ephemeral=True)
-        await cog.do_start_servers(interaction, ["gameserver"], start_sdk=False)
+        await cog.do_stop_servers(interaction)
 
-    @discord.ui.button(label="Khởi động lại Gameserver", style=discord.ButtonStyle.primary, custom_id="sys_restart_gameserver")
+    @discord.ui.button(label="Restart", style=discord.ButtonStyle.secondary, custom_id="sys_restart_all")
+    async def restart_all(self, interaction: Interaction, button: Button):
+        cog = interaction.client.get_cog('SYS')
+
+        await interaction.response.defer(ephemeral=True)
+        await cog.do_restart_servers(interaction)
+
+    @discord.ui.button(label="Laylines", style=discord.ButtonStyle.secondary, custom_id="sys_start_laylines")
+    async def start_laylines(self, interaction: Interaction, button: Button):
+        cog = interaction.client.get_cog('SYS')
+
+        await interaction.response.defer(ephemeral=True)
+        await cog.do_start_laylines(interaction)
+
+    @discord.ui.button(label="Gameserver", style=discord.ButtonStyle.secondary, custom_id="sys_stop_laylines")
     async def restart_gameserver(self, interaction: Interaction, button: Button):
         cog = interaction.client.get_cog('SYS')
 
         await interaction.response.defer(ephemeral=True)
-        await cog.do_restart_servers(interaction, ["gameserver"])
+        await cog.do_restart_gameserver(interaction)
 
-    @discord.ui.button(label="Xóa Logs", style=discord.ButtonStyle.secondary, custom_id="sys_clear_logs")
+    @discord.ui.button(label="Dọn Logs", style=discord.ButtonStyle.secondary, custom_id="sys_clear_logs")
     async def clear_logs(self, interaction: Interaction, button: Button):
         cog = interaction.client.get_cog('SYS')
+
         await interaction.response.defer(ephemeral=True)
         await cog.do_clear_logs(interaction)
-
-    @discord.ui.button(label="Dừng tất cả", style=discord.ButtonStyle.danger, custom_id="sys_stop_all")
-    async def stop_all(self, interaction: Interaction, button: Button):
-        cog = interaction.client.get_cog('SYS')
-
-        try:
-            await interaction.response.defer(ephemeral=True)
-        except discord.NotFound:
-            # Interaction already handled or expired
-            return
-
-        # Create a more user-friendly confirmation dialog
-        confirm_embed = discord.Embed(
-            title="KHẨN CẤP: Dừng tất cả Server",
-            description="**CẢNH BÁO QUAN TRỌNG**\n\n"
-                        "Hành động này sẽ **dừng ngay lập tức** tất cả server:\n\n"
-                        "**TÁC ĐỘNG:**\n"
-                        "• Dừng tất cả tiến trình server\n"
-                        "• Dừng server SDK một cách mạnh mẽ\n"
-                        "• Nguy cơ mất dữ liệu hoặc hỏng dữ liệu\n\n"
-                        "**LỜI KHUYÊN:**\n"
-                        "Hãy thử tắt server một cách bình thường trước. Chỉ dùng dừng khẩn cấp trong trường hợp khẩn cấp!",
-            color=discord.Color.red()
-        )
-        confirm_embed.set_footer(text="Bạn có 30 giây để xác nhận hoặc hủy. Hành động này không thể hoàn tác!")
-
-        confirm_view = ConfirmationView()
-        try:
-            await interaction.followup.send(embed=confirm_embed, view=confirm_view, ephemeral=True)
-            print(f"[DEBUG] Confirmation dialog sent, waiting for response...")
-            await confirm_view.wait()
-            print(f"[DEBUG] Confirmation wait completed. confirmed={confirm_view.confirmed}")
-            if confirm_view.confirmed:
-                print(f"[DEBUG] User confirmed - calling do_force_stop_all")
-                await cog.do_force_stop_all(interaction)
-            else:
-                print(f"[DEBUG] User cancelled or timed out - sending cancellation message")
-                await interaction.followup.send("Đã hủy thao tác.", ephemeral=True)
-        except discord.NotFound:
-            # Interaction expired during confirmation process
-            print(f"[DEBUG] Interaction expired during confirmation process")
-            pass
-
-    @discord.ui.select(placeholder="Quản lý sự kiện", custom_id="sys_event_toggle", row=0, options=[
-        discord.SelectOption(label="Sự kiện địa mạch", value="toggle_blossom", description="Bật/tắt sự kiện Hoa Địa Mạch"),
-    ])
-    async def manage_event(self, interaction: Interaction, select: discord.ui.Select):
-        value = select.values[0]
-        if value == "toggle_blossom":
-            await self._handle_event_toggle(interaction, "blossom")
-
-    async def _handle_event_toggle(self, interaction: Interaction, event_name: str):
-        """Handle toggling an event on/off. Start requires confirmation, stop does not."""
-        cog = interaction.client.get_cog('SYS')
-
-        # Check current event status - if on event branch, event is active
-        try:
-            import subprocess
-            result = subprocess.run(["git", "branch", "--show-current"], cwd="/gio/data/",
-                                  capture_output=True, text=True, check=True)
-            current_branch = result.stdout.strip()
-            is_event_active = current_branch == "event/blossom"
-        except subprocess.CalledProcessError:
-            is_event_active = False
-
-        if is_event_active:
-            # Event is active, stop it and switch to develop branch
-            await interaction.response.defer(ephemeral=True)
-            await cog.do_start_laylines(interaction, "develop")
-        else:
-            # Event is not active, start it (requires confirmation)
-            confirm_embed = discord.Embed(
-                title="XÁC NHẬN BẮT ĐẦU SỰ KIỆN",
-                description=f"Bạn có muốn bắt đầu sự kiện **{self.EVENT_NAME[event_name]}** không?\n\n",
-                color=discord.Color.orange()
-            )
-            confirm_embed.set_footer(text="Chọn 'Xác nhận' để bắt đầu sự kiện hoặc 'Hủy' để dừng.")
-
-            confirm_view = ConfirmationView()
-            await interaction.response.send_message(embed=confirm_embed, view=confirm_view, ephemeral=True)
-            await confirm_view.wait()
-
-            if confirm_view.confirmed:
-                await cog.do_start_laylines(interaction, event_name)
-            else:
-                await interaction.followup.send("Đã hủy bắt đầu sự kiện.", ephemeral=True)

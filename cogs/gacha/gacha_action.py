@@ -5,6 +5,7 @@ from utils.db import create_gacha_record, create_log_record, validate_gacha_reco
 from utils.constants import BANNERS
 from utils.utils import Utils
 from utils.logger import logger
+from utils.utils import Utils
 
 class GachaActions:
     """Gacha operate logic"""
@@ -93,7 +94,8 @@ class GachaActions:
     @staticmethod
     def can_add_item(current_item_count: int, gacha_type: int) -> tuple[bool, str]:
         """Check if an item can be added based on current count and gacha type."""
-        if gacha_type in [301, 201] and current_item_count >= 1:
+        if gacha_type in [301, 201] and current_item_count > 1:
+            logger.info(f"Nhân vật chỉ được hoạt động với 1 nhân vật. Current item count: {current_item_count}, Gacha type: {gacha_type}")
             return False, "Nhân vật chỉ được hoạt động với 1 nhân vật."
         elif gacha_type == 302 and current_item_count >= 2:
             return False, "Vũ khí chỉ được phép hoạt động với 2 vũ khí."
@@ -102,34 +104,22 @@ class GachaActions:
     @staticmethod
     def get_banner_from_id(item_id: int) -> Optional[Dict]:
         """Find banner object from item ID."""
-        for banner in BANNERS:
-            if banner.get('value') and str(banner.get('value')) == str(item_id):
-                return banner
-        return None
+        banner = Utils.search_items(item_id, BANNERS)
+        return banner[0] if banner else None
 
     @staticmethod
     def set_default_time(start: Optional[str], end: Optional[str]) -> Tuple[str, str]:
-        """
-        Set default start and end times for gacha events.
-        Returns a tuple of (start_time_str, end_time_str).
-        Always ensures valid datetime strings are returned.
-        """
         now = datetime.now()
-
         if start is None and end is None:
-            # Both None: Set start to now, end to 2 weeks later
             start = now.strftime("%Y-%m-%d %H:%M:%S")
             end = (now + timedelta(weeks=2)).strftime("%Y-%m-%d %H:%M:%S")
             return start, end
-
         elif start is not None and end is None:
-            # Only start provided: Set end to 2 weeks after start
             try:
                 start_dt = datetime.strptime(start, "%Y-%m-%d %H:%M:%S")
                 end = (start_dt + timedelta(weeks=2)).strftime("%Y-%m-%d %H:%M:%S")
                 return start, end
             except ValueError:
-                # Invalid start format, fall back to defaults
                 start = now.strftime("%Y-%m-%d %H:%M:%S")
                 end = (now + timedelta(weeks=2)).strftime("%Y-%m-%d %H:%M:%S")
                 return start, end

@@ -15,15 +15,43 @@ def is_allowed_guild(func):
 class Utils:
     @staticmethod
     def search_items(query: str, file):
+        query = str(query).strip()
+        if not query:
+            return []
+
+        query_lower = query.lower()
         df = pl.read_csv(file)
-        df = df.filter(pl.col('vietnameseName').str.contains(query) | pl.col('globalName').str.contains(query))
+        vn_col = pl.col('vietnameseName').cast(pl.Utf8).str.to_lowercase()
+        global_col = pl.col('globalName').cast(pl.Utf8).str.to_lowercase()
+        value_col = pl.col('value').cast(pl.Utf8).str.to_lowercase()
+        df = df.filter(
+            vn_col.str.contains(query_lower, literal=True)
+            | global_col.str.contains(query_lower, literal=True)
+            | value_col.str.contains(query_lower, literal=True)
+        )
         return df.to_dicts()
     
     @staticmethod
-    def get_item_name(item_id: int) -> str:
+    def get_item_name(item_id: int | str | Dict) -> str:
+        """Return display name for item by id or item dict."""
+        # Accept either a raw id or a dict row containing 'value'.
+        if isinstance(item_id, dict):
+            item_id = item_id.get('value')
+
+        if item_id is None:
+            return 'Unknown'
+
+        try:
+            item_id_int = int(item_id)
+        except (TypeError, ValueError):
+            item_id_int = item_id
+
         df = pl.read_csv(ITEMS)
-        df = df.filter(pl.col('value') == item_id)
-        return df.to_dicts()[0]['vietnameseName'] or df.to_dicts()[0]['globalName']
+        df = df.filter(pl.col('value') == item_id_int)
+        if df.height == 0:
+            return str(item_id)
+        record = df.to_dicts()[0]
+        return record.get('vietnameseName') or record.get('globalName') or str(item_id)
 
     @staticmethod
     def get_image_file(filename: str) -> discord.File:

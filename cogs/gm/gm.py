@@ -17,6 +17,8 @@ class GM(commands.Cog):
     async def item_autocomplete(self, interaction: Interaction, current: str) -> List[app_commands.Choice[int]]:
         """Autocomplete for item IDs using search."""
         matching = Utils.search_items(current, ITEMS)
+        if len(matching) > 25:
+            matching = matching[:25]
         return [
             app_commands.Choice(
                 name=item['vietnameseName'] or item['globalName'],

@@ -45,21 +45,6 @@ class SYS(commands.Cog):
             channel = self.bot.get_channel(self.status_message[0])
             if not channel:
                 break
-
-            # gameserver tracking auto restart
-            gameserver_running = self.sys_actions.is_service_running("gameserver")
-            # gameserver is dead then make it up again (only if not manually stopped)
-            if not gameserver_running and not self.manually_stopped:
-                logger.warning("Gameserver is down, restarting...")
-                self.sys_actions.restart_server("gameserver")
-                # log it
-                await Utils.log_system_event(
-                    self.bot, self.log_channel,
-                    "Gameserver Crashed",
-                    f"Gameserver đã bị crash lúc {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}, đã khởi động lại",
-                    discord.Color.red()
-                )
-            
             # current active events
             active_branch = self.sys_actions.get_active_events()
             if active_branch:
@@ -72,7 +57,6 @@ class SYS(commands.Cog):
                     self.current_event = "off"
             else:
                 self.current_event = "off" # develop branch = all events off
-
 
             try:
                 message = await channel.fetch_message(self.status_message[1])

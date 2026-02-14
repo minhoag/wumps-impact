@@ -4,6 +4,7 @@ import pymysql
 import json
 from utils.logger import logger
 from utils.constants import *
+from utils.utils import Utils
 
 def get_db_hk4e_config_gio():
     db = pymysql.connect(
@@ -119,17 +120,15 @@ def create_gacha_record(
         return {"gacha_up_list": gacha_up_list}
 
     def generate_prefab_path(item_1):
-        for banner in BANNERS:
-            if str(banner.get('value')) == str(item_1):
-                return banner.get('prefabPath')
-        return None
+        banner = Utils.search_items(str(item_1), BANNERS)
+        return banner[0].get('prefabPath') if banner else None
 
     def generate_title_textmap(item_1):
-        for banner in BANNERS:
-            if str(banner.get('value')) == str(item_1):
-                return banner.get('titlePath')
-        return None
-
+        banner = Utils.search_items(str(item_1), BANNERS)
+        return banner[0].get('titlePath') if banner else None
+    prefab_path = generate_prefab_path(item_1)
+    title_textmap = generate_title_textmap(item_1)
+    logger.error(f"prefab_path: {prefab_path}")
     data = {
         "gacha_type": gacha_type,
         "begin_time": start,
@@ -140,15 +139,15 @@ def create_gacha_record(
         "gacha_prob_rule_id": PROBABILITY_RULE_ID[gacha_type],
         "gacha_up_config": json.dumps(get_gacha_up_config(display_up4_item_list, item_1, item_2)),
         "gacha_rule_config": '{}',
-        "gacha_prefab_path": generate_prefab_path(item_1),
-        "gacha_preview_prefab_path": 'UI_Tab_' + str(generate_prefab_path(item_1) or ''),
+        "gacha_prefab_path": prefab_path,
+        "gacha_preview_prefab_path": 'UI_Tab_' + str(prefab_path or ''),
         "gacha_prob_url": SERVER_URL + GACHA_INFO + f"/{gacha_type}",
         "gacha_record_url": SERVER_URL + GACHA_RECORD,
         "gacha_prob_url_oversea": SERVER_URL + GACHA_INFO + f"/{gacha_type}",
         "gacha_record_url_oversea": SERVER_URL + GACHA_RECORD,
         "gacha_sort_id": SORT_ID[gacha_type],
         "enabled": enabled,
-        "title_textmap": generate_title_textmap(item_1),
+        "title_textmap": title_textmap,
         "display_up4_item_list": ",".join(display_up4_item_list)
       }
 
@@ -162,7 +161,7 @@ def create_gacha_record(
         db.commit()
         db.close()
     except Exception as e:
-        logger.info(f"Error creating gacha record: {e}")
+        logger.error(f"Error creating gacha record: {e}")
         return False
     return True
 

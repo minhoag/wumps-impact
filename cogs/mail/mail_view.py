@@ -223,8 +223,8 @@ class MailView(discord.ui.View):
             return
 
         item_quantity = int(quantity) if quantity and quantity.strip() else 1
-        search_results = Utils.search_items(query, ITEMS, ['vietnameseName', 'globalName'], 25)
-        
+        search_results = Utils.search_items(query, ITEMS)
+            
         if not search_results:
             await interaction.response.send_message(
                 f"Không tìm thấy item nào với từ khóa '{query}'.",

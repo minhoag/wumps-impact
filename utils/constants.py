@@ -1,10 +1,9 @@
 # utils/utils.py
 
-import json
 import os
 
-BANNERS = json.load(open(os.path.join(os.path.dirname(__file__), '../data/event.json'), 'r', encoding='utf-8'))
-ITEMS = json.load(open(os.path.join(os.path.dirname(__file__), '../data/item.json'), 'r', encoding='utf-8'))
+BANNERS = os.path.join(os.path.dirname(__file__), '../data/event.csv')
+ITEMS = os.path.join(os.path.dirname(__file__), '../data/item.csv')
 
 SENDER = "P・A・I・M・O・N"
 

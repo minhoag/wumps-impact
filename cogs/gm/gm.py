@@ -16,12 +16,14 @@ class GM(commands.Cog):
 
     async def item_autocomplete(self, interaction: Interaction, current: str) -> List[app_commands.Choice[int]]:
         """Autocomplete for item IDs using search."""
-        matching_items = await self.bot.loop.run_in_executor(None, lambda: Utils.search_items(current, ITEMS, ['vietnameseName', 'globalName'], 25))
+        matching = Utils.search_items(current, ITEMS)
+        if len(matching) > 25:
+            matching = matching[:25]
         return [
             app_commands.Choice(
-                name=Utils.get_item_name(item),
+                name=item['vietnameseName'] or item['globalName'],
                 value=int(item['value'])
-            ) for item in matching_items
+            ) for item in matching
         ]
     
     @gm.command(name="general", description="Thực hiện lệnh GM chung không cần tham số bổ sung")

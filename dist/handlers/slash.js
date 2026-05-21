@@ -14,10 +14,11 @@ const isSlashCommand = (value) => {
     const v = value;
     return !!v.data && typeof v.public === 'boolean' && typeof v.run === 'function' && typeof v.data.name === 'string' && typeof v.data.toJSON === 'function';
 };
+const getRuntimeCommandExtension = () => (node_path_1.default.extname(__filename) === '.ts' ? '.ts' : '.js');
 const isCommandFile = (file) => {
     if (file.endsWith('.d.ts'))
         return false;
-    return file.endsWith('.js') || file.endsWith('.ts');
+    return file.endsWith(getRuntimeCommandExtension());
 };
 const resolveSlashRoot = () => {
     const candidate = node_path_1.default.join(__dirname, '../slashCommands');
@@ -29,6 +30,8 @@ const resolveSlashRoot = () => {
 async function loadSlash(client) {
     const slashRoot = resolveSlashRoot();
     const slash = [];
+    const seen = new Set();
+    let skippedDuplicates = 0;
     for (const dir of node_fs_1.default.readdirSync(slashRoot)) {
         const dirPath = node_path_1.default.join(slashRoot, dir);
         if (!node_fs_1.default.statSync(dirPath).isDirectory())
@@ -41,18 +44,30 @@ async function loadSlash(client) {
                 console.warn(`[SLASH] Skipped invalid module: ${filePath} (expected { data, public, run })`);
                 continue;
             }
+            if (seen.has(command.data.name)) {
+                skippedDuplicates += 1;
+                console.warn(`[SLASH] Skipped duplicate command name: ${command.data.name}`);
+                continue;
+            }
+            seen.add(command.data.name);
             client.slash.set(command.data.name, command);
             slash.push(command.data.toJSON());
         }
     }
+    console.log(`[SLASH] Loaded ${slash.length} command(s). Skipped duplicates: ${skippedDuplicates}.`);
     const token = process.env.TOKEN;
     const clientId = process.env.CLIENTID;
     if (!token || !clientId)
         throw new Error('TOKEN and CLIENTID are required for slash registration.');
-    const guildId = process.env.GUILD_ID;
+    const guildId = process.env.GUILD_ID ?? process.env.GUILDID;
     const rest = new discord_js_1.REST({ version: '10' }).setToken(token);
-    const route = guildId ? discord_js_1.Routes.applicationGuildCommands(clientId, guildId) : discord_js_1.Routes.applicationCommands(clientId);
-    await rest.put(route, { body: slash });
-    const target = guildId ? `guild ${guildId}` : 'global';
-    console.log(`[SLASH] Registered ${slash.length} command(s) to ${target}.`);
+    if (guildId) {
+        await rest.put(discord_js_1.Routes.applicationCommands(clientId), { body: [] });
+        console.log('[SLASH] Cleared global commands.');
+        await rest.put(discord_js_1.Routes.applicationGuildCommands(clientId, guildId), { body: slash });
+        console.log(`[SLASH] Registered ${slash.length} command(s) to guild ${guildId}.`);
+        return;
+    }
+    await rest.put(discord_js_1.Routes.applicationCommands(clientId), { body: slash });
+    console.log(`[SLASH] Registered ${slash.length} command(s) to global.`);
 }

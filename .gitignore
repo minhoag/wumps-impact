@@ -1,9 +1,8 @@
-__pycache__/
+# Node dependencies
+node_modules/
+
+# Environment variables
 .env
-.DS_Store
-.vscode/
-.idea/
-discord
-.repomix/
-codebase.xml
-.python-version
+
+# Package lock file
+package-lock.json

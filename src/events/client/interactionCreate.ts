@@ -1,7 +1,7 @@
 import { MessageFlags } from 'discord.js';
 import rawConfig from '../../config/config.json';
 import type { BotEvent } from '../../types/bot';
-import { canUseSlashCommand } from '../../utils/permission';
+import { canUseSlashCommand } from '../../core/permission';
 
 const config = rawConfig as { crossmark_emoji?: string };
 

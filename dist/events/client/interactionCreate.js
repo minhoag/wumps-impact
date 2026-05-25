@@ -4,7 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 const discord_js_1 = require("discord.js");
 const config_json_1 = __importDefault(require("../../config/config.json"));
-const permission_1 = require("../../utils/permission");
+const permission_1 = require("../../core/permission");
 const config = config_json_1.default;
 const event = {
     name: 'interactionCreate',

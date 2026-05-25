@@ -1,8 +1,4 @@
 # Node dependencies
 node_modules/
-
-# Environment variables
-.env
-
 # Package lock file
 package-lock.json

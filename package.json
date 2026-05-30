@@ -1,38 +1,39 @@
 {
-  "name": "discord.js-v14-v2-template",
-  "version": "1.1.1",
-  "description": "A Discord.js v14 template with v2 components",
-  "license": "ISC",
-  "keywords": [
-    "discord.js",
-    "v14",
-    "template",
-    "v2",
-    "components",
-    "ZarScape",
-    "zar",
-    "discord-bot"
-  ],
-  "main": "dist/index.js",
-  "scripts": {
-    "build": "tsc",
-    "start": "node dist/index.js",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "npm run typecheck",
-    "dev": "tsx watch src/index.ts"
-  },
-  "type": "commonjs",
-  "author": "ZarScape",
-  "homepage": "https://github.com/ZarScape/discord.js-v14-v2-template.git",
-  "dependencies": {
-    "discord.js": "^14.26.2",
-    "dotenv": "^17.4.2",
-    "drizzle-orm": "^0.45.2",
-    "mysql2": "^3.22.3"
-  },
-  "devDependencies": {
-    "@types/node": "^22.15.31",
-    "tsx": "^4.20.5",
-    "typescript": "^6.0.3"
-  }
+	"name": "discord.js-v14-v2-template",
+	"version": "1.1.1",
+	"description": "A Discord.js v14 template with v2 components",
+	"license": "ISC",
+	"keywords": [
+		"discord.js",
+		"v14",
+		"template",
+		"v2",
+		"components",
+		"ZarScape",
+		"zar",
+		"discord-bot"
+	],
+	"main": "dist/index.js",
+	"scripts": {
+		"build": "tsc",
+		"start": "node dist/index.js",
+		"typecheck": "tsc -p tsconfig.json --noEmit",
+		"test": "tsx watch src/utils/test.ts",
+		"dev": "tsx watch src/index.ts"
+	},
+	"type": "commonjs",
+	"author": "ZarScape",
+	"homepage": "https://github.com/ZarScape/discord.js-v14-v2-template.git",
+	"dependencies": {
+		"csv-parser": "^3.2.1",
+		"discord.js": "^14.26.2",
+		"dotenv": "^17.4.2",
+		"drizzle-orm": "^0.45.2",
+		"mysql2": "^3.22.3"
+	},
+	"devDependencies": {
+		"@types/node": "^22.15.31",
+		"tsx": "^4.20.5",
+		"typescript": "^6.0.3"
+	}
 }

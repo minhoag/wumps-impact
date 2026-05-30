@@ -1,115 +1,133 @@
-import { db_config } from "../core/database"
-import { sql } from "drizzle-orm"
-import fs from "fs"
-import path from "path"
+import fs from "node:fs";
+import path from "node:path";
+import csvParser from "csv-parser";
+import { sql } from "drizzle-orm";
+import { db_config } from "../core/database";
 
-const COST_ITEM_ID = 223;
-const COST_ITEM_NUM = 1;
-const GACHA_POOL_ID = 201;
-const GACHA_RULE_CONFIG = "{}";
-const GACHA_PROB_URL = "http://103.195.188.90:21000/static/hk4e/event/e20190909gacha/index.html?authkey_ver=1&sign_type=2&auth_appid=webview_gacha&gacha_id=fecafa7b6560db5f3182222395d88aaa6aaac1bc";
-const GACHA_RECORD_URL = "http://103.195.188.90:21000/static/hk4e/event/e20190909gacha/index.html?authkey_ver=1&sign_type=2&auth_appid=webview_gacha&init_type=302&gacha_id=fecafa7b6560db5f3182222395d88aaa6aaac1bc";
-const SCHEDULE_CSV_PATH = path.resolve(__dirname, "../data/schedule.csv");
-
-type GACHA_TYPE = 301 | 302 | 400;
-
-type Input = {
-	gachaType: GACHA_TYPE;
-	select5: string | string[],
-  beginTime: Date;
-  endTime: Date;
-}
-
-type ScheduleRow = {
-    name: string;
-    vi_name: string;
-    value: number;
-    prefabPath: string;
-    previewprefabPath: string;
-    titlePath: string;
-    up4ids: string;
+export type Input = {
+	gachaType: number;
+	beginTime: Date;
+	endTime: Date;
+	select: string[];
 };
+type GachaScheduleRow = {
+	name: string;
+	vi_name: string;
+	value: string;
+	prefabPath: string;
+	previewprefabPath: string;
+	titlePath: string;
+	up4ids: string;
+};
+const FILE = "../data/schedule.csv";
+export const GACHA_TYPE = {
+	Primary: 301,
+	Weapon: 302,
+	Secondary: 400,
+} as const;
+const GACHA_COST_ITEM_ID = 223;
+const GACHA_COST_ITEM_NUM = 1;
+const GACHA_POOL_ID = 201;
+const GACHA_PROB_RULE_ID = 2;
+const GACHA_RULE_CONFIG = "{}";
+const GACHA_PROB_URL =
+	"http://103.195.188.90:21000/static/hk4e/event/e20190909gacha/index.html?authkey_ver=1&sign_type=2&auth_appid=webview_gacha&gacha_id=fecafa7b6560db5f3182222395d88aaa6aaac1bc";
+const GACHA_RECORD_URL =
+	"http://103.195.188.90:21000/static/hk4e/event/e20190909gacha/index.html?authkey_ver=1&sign_type=2&auth_appid=webview_gacha&init_type=302&gacha_id=fecafa7b6560db5f3182222395d88aaa6aaac1bc";
 
-class Schedule {
+export class Schedule {
 	async create(input: Input) {
-        const gachaType: GACHA_TYPE = input.gachaType;
-        const begin: Date = input.beginTime;
-        const end: Date = input.endTime;
-        if (begin.getTime() >= end.getTime()) {
-            return "End time must be after begin time";
-        }
-        const overlapRows = await db_config.execute(sql`
-            SELECT schedule_id
-            FROM t_gacha_schedule_config
-            WHERE gacha_type = ${gachaType} AND end_time >= ${begin}
-        `);
-        if (overlapRows.length > 0) {
-            return "Overlapping schedule found";
-				}
-				let data;
-        // query data from csv
-        if (typeof input.select5 === "string") {
-            data = this.getRow(input.select5);
-        } else {
-        	data = input.select5.map((name) => this.getRow(name));
-				}
-				if (!data) {
-					return "No data found";
-				}
-				console.log(data)
-    }
-
-    async delete(_scheduleId: number): Promise<void> {
-        throw new Error("Not implemented");
-		}
-
-		public getRow(name: string): ScheduleRow | undefined {
-			const content = fs.readFileSync(SCHEDULE_CSV_PATH, "utf8");
-			const lines = content.split(/\r?\n/);
-			const keyword = name.toLowerCase();
-
-			for (let i = 1; i < lines.length; i++) {
-				const line = lines[i];
-				const cols: string[] = [];
-				let current = "";
-				let inQuotes = false;
-				for (let j = 0; j < line.length; j++) {
-					const ch = line[j];
-					if (ch === '"') {
-						inQuotes = !inQuotes;
-						continue;
-					}
-					if (ch === "," && !inQuotes) {
-						cols.push(current);
-						current = "";
-						continue;
-					}
-					current += ch;
-				}
-				cols.push(current);
-				const row: ScheduleRow = {
-					name: cols[0],
-					prefabPath: cols[3],
-					previewprefabPath: cols[4],
-					titlePath: cols[5],
-					up4ids: cols[6],
+		const { gachaType, beginTime, endTime, select } = input;
+		// check if database have active gachaType of the same date range
+		// this query should not return any value because same gacha_type has to end before start a new one
+		const check = await db_config.execute(sql`
+			SELECT
+				gacha_type,
+				end_time
+			FROM t_gacha_schedule_config
+			WHERE
+				gacha_type = ${gachaType}
+				AND end_time > ${beginTime};`);
+		if (check.length > 0) return false; // return false
+		// if valid to add then browse for data
+		const result = await this.browse(select);
+		// TODO: handle if no result
+		await Promise.all(
+			result.map(async (r) => {
+				const gacha_up_config = {
+					gacha_up_list: [
+						{ item_parent_type: 2, prob: 500, item_list: [r.up4ids] },
+						{ item_parent_type: 1, prob: 500, item_list: [r.value] },
+					],
 				};
-				if (row.name.toLowerCase() === keyword) {
-					return row;
-				}
-			}
-			return undefined;
-    }
+				await db_config.execute(sql`
+				INSERT INTO t_gacha_schedule_config (
+					gacha_type,
+					begin_time,
+					end_time,
+					cost_item_id,
+					cost_item_num,
+					gacha_pool_id,
+					gacha_prob_rule_id,
+					gacha_up_config,
+					gacha_rule_config,
+					gacha_prefab_path,
+					gacha_preview_prefab_path,
+					gacha_prob_url,
+					gacha_record_url,
+					gacha_prob_url_oversea,
+					gacha_record_url_oversea,
+					gacha_sort_id,
+					enabled,
+					title_textmap,
+					display_up4_item_list
+				)
+				VALUES (
+					${gachaType},
+					${beginTime},
+					${endTime},
+					${GACHA_COST_ITEM_ID},
+					${GACHA_COST_ITEM_NUM},
+					${GACHA_POOL_ID},
+					${GACHA_PROB_RULE_ID},
+					${gacha_up_config},
+					${GACHA_RULE_CONFIG},
+					${r.prefabPath},
+					${r.previewprefabPath},
+					${GACHA_PROB_URL},
+					${GACHA_RECORD_URL},
+					${GACHA_PROB_URL},
+					${GACHA_RECORD_URL},
+					${""},
+					${1},
+					${r.titlePath},
+					${r.up4ids}
+				);`);
+			}),
+		);
+	}
 
-    private randomUp(pool: Array<string | number>, count: number): Array<string | number> {
-        const unique = [...new Set(pool.map((x) => String(x)))];
-        const copy = [...unique];
-        for (let i = copy.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [copy[i], copy[j]] = [copy[j], copy[i]];
-        }
-        return copy.slice(0, count);
-    }
+	// brose the select 5 star given
+	private browse(select: string[]): Promise<GachaScheduleRow[]> {
+		// search in csv
+		const results: GachaScheduleRow[] = [];
+		const filepath = path.join(__dirname, FILE);
+		const data = fs.createReadStream(filepath);
+		return new Promise((resolve, reject) => {
+			data
+				.pipe(csvParser())
+				.on("data", (row) => {
+					// search by header name value
+					select.forEach((s: string) => {
+						if (s === row.name) results.push(row);
+					});
+				})
+				.on("end", () => {
+					resolve(results);
+				})
+				.on("error", (err) => {
+					reject(err);
+				});
+		});
+	}
 }
-
-export { Schedule, type Input };

@@ -1,84 +1,77 @@
 import { ButtonStyle, MessageFlags } from "discord.js";
-import { Button, ButtonRow, Container, Separator, Text } from "../components";
-import config from "../config/config.json";
+import { ButtonSection, Container, Separator, Text } from "../components";
 
-const accentColor = parseInt(
-	String(config.color || "000000").replace("#", ""),
-	16,
-);
-
-export function buildAdminPanelPayload() {
-	const container = Container("# Wumps Admin Controller", accentColor)
-		.addTextDisplayComponents(Text("## Active Banner"))
+export function AdminPanel() {
+	const container = Container("# Bảng điều khiển")
+		.addTextDisplayComponents(Text("### Banner đang hoạt động"))
 		.addTextDisplayComponents(
 			Text(
 				[
-					"Primary: Not loaded yet",
-					"Secondary: Not loaded yet",
-					"Weapon: Not loaded yet",
-					"Ends: Not loaded yet",
+					"Nhân vật 1: Not loaded yet",
+					"Nhân vật 2: Not loaded yet",
+					"Vũ khí: Not loaded yet",
 				].join("\n"),
 			),
 		)
-		.addTextDisplayComponents(
-			Text(
-				"Active banner lookup will be connected from schedule utilities later.",
-			),
-		)
 		.addSeparatorComponents(Separator())
-		.addTextDisplayComponents(Text("## Actions"))
+		.addTextDisplayComponents(Text("### Sự kiện"))
 		.addTextDisplayComponents(
 			Text("Open schedule workflows or refresh this panel."),
+		)
+		.addSectionComponents(
+			ButtonSection("Open schedule workflows.", {
+				label: "Schedule",
+				customId: "admin:schedule",
+				style: ButtonStyle.Primary,
+			}),
+			ButtonSection("Refresh this panel.", {
+				label: "Refresh",
+				customId: "admin:controller:refresh",
+				style: ButtonStyle.Secondary,
+			}),
 		);
 
 	return {
 		flags: MessageFlags.IsComponentsV2 as const,
-		components: [
-			container,
-			ButtonRow(
-				Button("admin:schedule", "Schedule", ButtonStyle.Primary),
-				Button("admin:controller:refresh", "Refresh", ButtonStyle.Secondary),
-			),
-		],
+		components: [container],
 	};
 }
 
-export function buildSchedulePanelPayload() {
-	const container = Container(
-		"# Schedule Management",
-		accentColor,
-	).addTextDisplayComponents(Text("Choose a schedule action."));
-
-	const editButton = Button(
-		"admin:schedule:edit",
-		"Edit (not yet)",
-		ButtonStyle.Secondary,
-	);
-	editButton.setDisabled(true);
-
-	const deleteButton = Button(
-		"admin:schedule:delete",
-		"Delete (not yet)",
-		ButtonStyle.Danger,
-	);
-	deleteButton.setDisabled(true);
-
+export function SchedulePanel() {
+	const container = Container("# Schedule Management")
+		.addTextDisplayComponents(Text("Choose a schedule action."))
+		.addSectionComponents(
+			ButtonSection("Create a new schedule.", {
+				label: "Create",
+				customId: "admin:schedule:create",
+				style: ButtonStyle.Primary,
+			}),
+			ButtonSection("Edit is not yet available.", {
+				label: "Edit (not yet)",
+				customId: "admin:schedule:edit",
+				style: ButtonStyle.Secondary,
+				disabled: true,
+			}),
+			ButtonSection("Delete is not yet available.", {
+				label: "Delete (not yet)",
+				customId: "admin:schedule:delete",
+				style: ButtonStyle.Danger,
+				disabled: true,
+			}),
+			ButtonSection("Return to the admin panel.", {
+				label: "Back",
+				customId: "admin:schedule:back",
+				style: ButtonStyle.Secondary,
+			}),
+		);
 	return {
 		flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2,
-		components: [
-			container,
-			ButtonRow(
-				Button("admin:schedule:create", "Create", ButtonStyle.Primary),
-				editButton,
-				deleteButton,
-			),
-			ButtonRow(Button("admin:schedule:back", "Back", ButtonStyle.Secondary)),
-		],
+		components: [container],
 	};
 }
 
-export function buildCreateSchedulePanelPayload() {
-	const container = Container("# Create Gacha Schedule", accentColor)
+export function CreateSchedulePanel() {
+	const container = Container("# Create Gacha Schedule")
 		.addTextDisplayComponents(
 			Text(
 				[
@@ -90,57 +83,59 @@ export function buildCreateSchedulePanelPayload() {
 			),
 		)
 		.addSeparatorComponents(Separator())
-		.addTextDisplayComponents(Text("Set parameters, then review."));
+		.addTextDisplayComponents(Text("Set parameters, then review."))
+		.addSectionComponents(
+			ButtonSection("Set the primary character.", {
+				label: "Set Primary",
+				customId: "admin:schedule:create:primary",
+				style: ButtonStyle.Secondary,
+			}),
+			ButtonSection("Set the secondary character.", {
+				label: "Set Secondary",
+				customId: "admin:schedule:create:secondary",
+				style: ButtonStyle.Secondary,
+			}),
+			ButtonSection("Set the schedule dates.", {
+				label: "Set Dates",
+				customId: "admin:schedule:create:dates",
+				style: ButtonStyle.Secondary,
+			}),
+			ButtonSection("Review the schedule before saving.", {
+				label: "Review",
+				customId: "admin:schedule:create:review",
+				style: ButtonStyle.Primary,
+			}),
+			ButtonSection("Go back to schedule actions.", {
+				label: "Back",
+				customId: "admin:schedule:create:back",
+				style: ButtonStyle.Secondary,
+			}),
+			ButtonSection("Cancel schedule creation.", {
+				label: "Cancel",
+				customId: "admin:schedule:create:cancel",
+				style: ButtonStyle.Danger,
+			}),
+		);
 
 	return {
 		flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2,
-		components: [
-			container,
-			ButtonRow(
-				Button(
-					"admin:schedule:create:primary",
-					"Set Primary",
-					ButtonStyle.Secondary,
-				),
-				Button(
-					"admin:schedule:create:secondary",
-					"Set Secondary",
-					ButtonStyle.Secondary,
-				),
-				Button(
-					"admin:schedule:create:dates",
-					"Set Dates",
-					ButtonStyle.Secondary,
-				),
-			),
-			ButtonRow(
-				Button("admin:schedule:create:review", "Review", ButtonStyle.Primary),
-			),
-			ButtonRow(
-				Button("admin:schedule:create:back", "Back", ButtonStyle.Secondary),
-				Button("admin:schedule:create:cancel", "Cancel", ButtonStyle.Danger),
-			),
-		],
+		components: [container],
 	};
 }
 
-export function buildScheduleCancelledPayload() {
-	const container = Container(
-		"# Create Gacha Schedule",
-		accentColor,
-	).addTextDisplayComponents(Text("Schedule creation cancelled."));
+export function CancelSchedulePanel() {
+	const container = Container("Create Gacha Schedule")
+		.addTextDisplayComponents(Text("Schedule creation cancelled."))
+		.addSectionComponents(
+			ButtonSection("Return to the schedule panel.", {
+				label: "Back to Schedule",
+				customId: "admin:schedule:create:back",
+				style: ButtonStyle.Secondary,
+			}),
+		);
 
 	return {
 		flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2,
-		components: [
-			container,
-			ButtonRow(
-				Button(
-					"admin:schedule:create:back",
-					"Back to Schedule",
-					ButtonStyle.Secondary,
-				),
-			),
-		],
+		components: [container],
 	};
 }

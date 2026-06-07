@@ -1,6 +1,7 @@
 export { Button } from "./Button";
 export { Container } from "./Container";
 export { ButtonRow, SelectRow } from "./Row";
+export { ButtonSection } from "./Section";
 export type { StringSelectOption } from "./Select";
 export { StringSelect } from "./Select";
 export { Separator } from "./Separator";

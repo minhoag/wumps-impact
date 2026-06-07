@@ -13,13 +13,12 @@ const {
   ContainerBuilder,
   MediaGalleryBuilder,
   MediaGalleryItemBuilder,
-  ButtonBuilder,
-  ButtonStyle,
   FileBuilder,
   AttachmentBuilder,
   SlashCommandBuilder
 } = require('discord.js');
 const config = require('../../config/config.json');
+const { ButtonSection } = require('../../components');
 
 module.exports = {
   public: true,
@@ -65,30 +64,18 @@ module.exports = {
 
     // Sections with Buttons
     const sectionWithButtons = [
-      new SectionBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent('🌐 GitHub'))
-        .setButtonAccessory(
-          new ButtonBuilder()
-            .setLabel('GitHub')
-            .setURL('https://github.com/ZarScape')
-            .setStyle(ButtonStyle.Link)
-        ),
-      new SectionBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent('📺 **YouTube**'))
-        .setButtonAccessory(
-          new ButtonBuilder()
-            .setLabel('Channel')
-            .setURL('https://www.youtube.com/@ZarScape')
-            .setStyle(ButtonStyle.Link)
-        ),
-      new SectionBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent('💬 **Discord**'))
-        .setButtonAccessory(
-          new ButtonBuilder()
-            .setLabel('Zar HQ')
-            .setURL('https://discord.gg/6YVmxA4Qsf')
-            .setStyle(ButtonStyle.Link)
-        )
+      ButtonSection('🌐 GitHub', {
+        label: 'GitHub',
+        url: 'https://github.com/ZarScape'
+      }),
+      ButtonSection('📺 **YouTube**', {
+        label: 'Channel',
+        url: 'https://www.youtube.com/@ZarScape'
+      }),
+      ButtonSection('💬 **Discord**', {
+        label: 'Zar HQ',
+        url: 'https://discord.gg/6YVmxA4Qsf'
+      })
     ];
 
     // Generate dummy JSON in memory

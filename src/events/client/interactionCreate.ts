@@ -1,6 +1,6 @@
 import type { Interaction } from "discord.js";
 import { MessageFlags } from "discord.js";
-import { AdminInteraction } from "../../admin/admin";
+import { AdminInteraction } from "../../admin/flow";
 import rawConfig from "../../config/config.json";
 import { canUseSlashCommand } from "../../core/permission";
 import type { BotEvent } from "../../types/bot";
